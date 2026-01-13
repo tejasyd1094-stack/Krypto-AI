@@ -1,0 +1,9 @@
+{
+  "name": "Krypto AI Recruitment Platform",
+  "description": "A professional AI-driven recruitment platform featuring a resume scorer, career path predictor, and an intelligent career coach interface.",
+  "requestFramePermissions": [
+    "camera",
+    "microphone",
+    "geolocation"
+  ]
+}
