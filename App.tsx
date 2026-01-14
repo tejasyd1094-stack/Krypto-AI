@@ -76,20 +76,34 @@ const App: React.FC = () => {
         async (position) => {
           const { latitude, longitude } = position.coords;
           try {
-            const geoRes = await fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${latitude}&lon=${longitude}&zoom=18&addressdetails=1`);
+            // Using a higher zoom level (18) and explicit language to get better detail
+            const geoRes = await fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${latitude}&lon=${longitude}&zoom=18&addressdetails=1&accept-language=en`);
             const geoData = await geoRes.json();
             const address = geoData.address;
             
-            const area = address.suburb || address.neighbourhood || address.quarter || address.city_district || address.township || '';
-            const city = address.city || address.town || address.village || '';
+            // Priority list for precise city/locality detection
+            const city = address.city || 
+                         address.town || 
+                         address.village || 
+                         address.municipality || 
+                         address.suburb || 
+                         address.neighbourhood ||
+                         address.city_district || 
+                         address.state_district || 
+                         address.county || 
+                         address.region || '';
+            
             const country = address.country || '';
             
-            const parts = [];
-            if (area) parts.push(area);
-            if (city && city !== area) parts.push(city);
-            if (country) parts.push(country);
+            let locationStr = '';
+            if (city) {
+              locationStr = city.toUpperCase();
+            } else if (country) {
+              locationStr = country.toUpperCase();
+            } else {
+              locationStr = 'GLOBAL MARKET';
+            }
             
-            const locationStr = parts.length > 0 ? parts.join(', ') : 'Verified Location';
             setUser(prev => ({ ...prev, location: locationStr }));
           } catch (e) {
             await fetchIpBasedLocation();
@@ -111,17 +125,40 @@ const App: React.FC = () => {
 
   const fetchIpBasedLocation = async () => {
     try {
-      const res = await fetch('https://ipapi.co/json/');
+      // First attempt with ipinfo.io (usually very accurate for city)
+      const res = await fetch('https://ipinfo.io/json');
       const data = await res.json();
-      const locationStr = data.city && data.country_name ? `${data.city}, ${data.country_name}` : 'Global Market';
-      setUser(prev => ({ ...prev, location: locationStr }));
+      if (data.city) {
+        setUser(prev => ({ ...prev, location: data.city.toUpperCase() }));
+        return;
+      }
+      throw new Error('ipinfo failed');
     } catch (err) {
-      setUser(prev => ({ ...prev, location: 'Global Market' }));
+      try {
+        // Fallback to ip-api.com
+        const res = await fetch('http://ip-api.com/json/');
+        const data = await res.json();
+        if (data.status === 'success' && data.city) {
+          setUser(prev => ({ ...prev, location: data.city.toUpperCase() }));
+        } else {
+          throw new Error('ip-api failed');
+        }
+      } catch (err2) {
+        // Final fallback to ipapi.co
+        try {
+          const res = await fetch('https://ipapi.co/json/');
+          const data = await res.json();
+          const locationStr = data.city ? data.city.toUpperCase() : (data.country_name ? data.country_name.toUpperCase() : 'GLOBAL MARKET');
+          setUser(prev => ({ ...prev, location: locationStr }));
+        } catch (e) {
+          setUser(prev => ({ ...prev, location: 'GLOBAL MARKET' }));
+        }
+      }
     }
   };
 
   const setManualLocation = (loc: string) => {
-    setUser(prev => ({ ...prev, location: loc }));
+    setUser(prev => ({ ...prev, location: loc.toUpperCase() }));
   };
 
   const handleLogout = async () => {
