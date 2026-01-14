@@ -34,6 +34,12 @@ export const generateCareerStrategy = async (
     config: {
       systemInstruction: `You are the Krypto Strategy Architect. Create a tactical plan for targeting the role: ${role}. 
       All monetary values must be presented in ${symbol}.
+      
+      STRICT FORMATTING RULE: 
+      - DO NOT use markdown tables under any circumstances.
+      - Present all learning tracks, courses, and financial breakdowns in clean, STACKED bullet points.
+      - Use bold highlights for course names and estimated costs.
+      
       Focus on: 
       1. Priority technical and soft skills to sharpen for ${role}.
       2. Specific high-ROI courses (mention platforms like Coursera, Udemy, edX, LinkedIn Learning, etc.) matching the user's budget (${symbol}) and timeline.
@@ -70,9 +76,13 @@ export const generateMarketIntelligence = async (
       Conduct a real-time audit of the hiring landscape specifically for ${role} in ${location}.
       All salary benchmarks must use ${symbol}.
       
-      CRITICAL FORMATTING:
-      Reform the "Top 4 Active Employers (Strategic Fit)" section. Use clean bullet points with a header. 
-      For each employer include:
+      STRICT FORMATTING RULE: 
+      - DO NOT use markdown tables.
+      - Present the "Top 4 Active Employers (Strategic Fit)" as a clean, stacked list.
+      - Salary benchmarks and market signals should be bolded bullet points.
+      
+      CRITICAL FORMATTING for Employers:
+      For each of the Top 4 employers include:
       - **Company Name**: Brief strategic fit reason.
       - **Hiring Zone**: Specific office location in ${location}.
       

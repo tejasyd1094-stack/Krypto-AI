@@ -76,7 +76,6 @@ const ExperiencedIllustration = () => (
           <stop offset="100%" stopColor="#eab308" />
         </linearGradient>
       </defs>
-      {/* Professional Suit/Shield Motif */}
       <path d="M20 30C20 25 25 20 30 20H70C75 20 80 25 80 30V70C80 85 50 95 50 95C50 95 20 85 20 70V30Z" fill="#18181b" stroke="url(#exp-grad-prof)" strokeWidth="2.5" />
       <path d="M35 50L45 60L65 40" stroke="url(#exp-grad-prof)" strokeWidth="4" strokeLinecap="round" strokeLinejoin="round" />
       <rect x="45" y="10" width="10" height="4" rx="2" fill="url(#exp-grad-prof)" />
@@ -93,7 +92,6 @@ const FresherIllustration = () => (
           <stop offset="100%" stopColor="#2563eb" />
         </linearGradient>
       </defs>
-      {/* Compass/Star Launch Motif */}
       <circle cx="50" cy="50" r="40" stroke="url(#fresh-grad-prof)" strokeWidth="2" strokeDasharray="8 4" fill="none" />
       <path d="M50 20V80M20 50H80" stroke="url(#fresh-grad-prof)" strokeWidth="1" opacity="0.3" />
       <path d="M50 15L60 45L90 55L60 65L50 95L40 65L10 55L40 45L50 15Z" fill="url(#fresh-grad-prof)" className="animate-pulse" />
@@ -124,23 +122,19 @@ const RadarChart = ({ scores }: { scores: PersonalityTraitScores }) => {
   return (
     <div className="relative flex items-center justify-center p-4">
       <svg width={size} height={size} viewBox={`0 0 ${size} ${size}`} className="overflow-visible">
-        {/* Modern Clean Axes (No Grid Polygons) */}
         {labels.map((_, i) => {
           const p = getPoint(i, max);
           return <line key={i} x1={center} y1={center} x2={p.x} y2={p.y} className="stroke-zinc-800/40" strokeWidth="1" />;
         })}
-        {/* Score Polygon */}
         <polygon
           points={polygonPath}
           className="fill-yellow-500/10 stroke-yellow-500 animate-in fade-in zoom-in duration-1000"
           strokeWidth="3"
           strokeLinejoin="round"
         />
-        {/* Points */}
         {points.map((p, i) => (
           <circle key={i} cx={p.x} cy={p.y} r="4" className="fill-yellow-500" />
         ))}
-        {/* Minimalist Labels */}
         {labels.map((label, i) => {
           const p = getPoint(i, max + 22);
           return (
@@ -180,6 +174,7 @@ const CareerPath: React.FC<CareerPathProps> = ({
   const [currentStep, setCurrentStep] = useState(-1);
   const [scores, setScores] = useState<PersonalityTraitScores>({ analytic: 0, creative: 0, leadership: 0, social: 0, practical: 0, investigative: 0 });
   const [loading, setLoading] = useState(false);
+  const [loadingProgress, setLoadingProgress] = useState(0);
   const [analysisStep, setAnalysisStep] = useState(0);
   const [result, setResult] = useState<CareerPathResponse | null>(null);
   const [resumeData, setResumeData] = useState<{ data: string, mimeType: string } | string | null>(null);
@@ -192,14 +187,23 @@ const CareerPath: React.FC<CareerPathProps> = ({
   const [strategyResults, setStrategyResults] = useState<Record<number, string>>({});
   const [insightResults, setInsightResults] = useState<Record<number, string>>({});
   const [subLoading, setSubLoading] = useState<Record<string, boolean>>({});
+  const [subLoadingProgress, setSubLoadingProgress] = useState<Record<string, number>>({});
 
   useEffect(() => {
     let interval: any;
     if (loading) {
-      interval = setInterval(() => setAnalysisStep(p => (p < ANALYSIS_STEPS.length - 1 ? p + 1 : p)), 2000);
+      interval = setInterval(() => {
+        setLoadingProgress(prev => {
+          const next = prev + (Math.random() * 2);
+          return next > 99 ? 99 : next;
+        });
+        setAnalysisStep(p => (p < ANALYSIS_STEPS.length - 1 && loadingProgress > (p + 1) * 20 ? p + 1 : p));
+      }, 150);
+    } else {
+      setLoadingProgress(0);
     }
     return () => clearInterval(interval);
-  }, [loading]);
+  }, [loading, loadingProgress]);
 
   const generateDnaCode = () => {
     const codes = Object.entries(scores).map(([k, v]) => `${k[0].toUpperCase()}${v}`).join('');
@@ -214,11 +218,12 @@ const CareerPath: React.FC<CareerPathProps> = ({
     try {
       const response = await predictCareerPaths(scores, userLocation || 'GLOBAL', userType || 'fresher', resumeData as any);
       if (!response.refused) onUse(cost);
+      setLoadingProgress(100);
       setResult(response);
     } catch (e) {
       console.error(e);
     } finally {
-      setLoading(false);
+      setTimeout(() => setLoading(false), 500);
     }
   };
 
@@ -255,31 +260,70 @@ const CareerPath: React.FC<CareerPathProps> = ({
 
   const unlockStrategy = async (idx: number, role: string) => {
     if (userCredits < 10) { onNavigatePricing(); return; }
-    setSubLoading(prev => ({ ...prev, [`strat-${idx}`]: true }));
+    const key = `strat-${idx}`;
+    setSubLoading(prev => ({ ...prev, [key]: true }));
+    setSubLoadingProgress(prev => ({ ...prev, [key]: 0 }));
+    
+    const progressInterval = setInterval(() => {
+      setSubLoadingProgress(prev => ({
+        ...prev,
+        [key]: Math.min(99, (prev[key] || 0) + (Math.random() * 5))
+      }));
+    }, 200);
+
     try {
       const strategy = await generateCareerStrategy(role, strategyInputs, userSymbol, resumeData as any);
       onUse(10);
+      setSubLoadingProgress(prev => ({ ...prev, [key]: 100 }));
       setStrategyResults(prev => ({ ...prev, [idx]: strategy }));
       setActiveStrategyIdx(null);
     } catch (e) {
       console.error(e);
     } finally {
-      setSubLoading(prev => ({ ...prev, [`strat-${idx}`]: false }));
+      clearInterval(progressInterval);
+      setTimeout(() => setSubLoading(prev => ({ ...prev, [key]: false })), 500);
     }
   };
 
   const unlockInsights = async (idx: number, role: string) => {
     if (userCredits < 10) { onNavigatePricing(); return; }
-    setSubLoading(prev => ({ ...prev, [`insight-${idx}`]: true }));
+    const key = `insight-${idx}`;
+    setSubLoading(prev => ({ ...prev, [key]: true }));
+    setSubLoadingProgress(prev => ({ ...prev, [key]: 0 }));
+    
+    const progressInterval = setInterval(() => {
+      setSubLoadingProgress(prev => ({
+        ...prev,
+        [key]: Math.min(99, (prev[key] || 0) + (Math.random() * 5))
+      }));
+    }, 200);
+
     try {
       const insight = await generateMarketIntelligence(role, userLocation || 'GLOBAL', userSymbol, resumeData as any);
       onUse(10);
+      setSubLoadingProgress(prev => ({ ...prev, [key]: 100 }));
       setInsightResults(prev => ({ ...prev, [idx]: insight }));
     } catch (e) {
       console.error(e);
     } finally {
-      setSubLoading(prev => ({ ...prev, [`insight-${idx}`]: false }));
+      clearInterval(progressInterval);
+      setTimeout(() => setSubLoading(prev => ({ ...prev, [key]: false })), 500);
     }
+  };
+
+  const handleSaveToVault = (type: 'strategy' | 'market-insight', idx: number, role: string) => {
+    const content = type === 'strategy' ? strategyResults[idx] : insightResults[idx];
+    if (!content) return;
+    
+    onSaveHistory({
+      id: Math.random().toString(36).substr(2, 9),
+      type,
+      title: `${type === 'strategy' ? 'Career Strategy' : 'Market Insights'}: ${role}`,
+      date: new Date().toLocaleDateString(),
+      inputs: { role, location: userLocation || 'GLOBAL' },
+      result: content
+    });
+    alert(`${type === 'strategy' ? 'Strategy' : 'Insights'} saved to vault successfully.`);
   };
 
   const handleReset = () => {
@@ -429,19 +473,23 @@ const CareerPath: React.FC<CareerPathProps> = ({
       )}
 
       {loading && (
-        <div className="text-center py-32">
-          <div className="relative w-40 h-40 mx-auto mb-12">
-             <div className="absolute inset-0 border-2 border-yellow-500 border-t-transparent rounded-full animate-spin"></div>
-             <div className="absolute inset-4 border-2 border-blue-500 border-b-transparent rounded-full animate-spin-slow"></div>
+        <div className="text-center py-32 space-y-12">
+          <div className="relative w-48 h-12 mx-auto bg-zinc-900/50 rounded-full border border-zinc-800 overflow-hidden">
+             <div 
+               className="h-full bg-yellow-500 transition-all duration-300 shadow-[0_0_15px_#eab308]" 
+               style={{ width: `${loadingProgress}%` }}
+             ></div>
              <div className="absolute inset-0 flex items-center justify-center">
-                <KryptoLogo size={48} className="animate-pulse" />
+                <span className="text-[10px] font-black text-zinc-100 uppercase tracking-widest">{Math.round(loadingProgress)}%</span>
              </div>
           </div>
-          <p className="text-2xl font-black text-zinc-100 uppercase tracking-tighter mb-4">{ANALYSIS_STEPS[analysisStep]}</p>
-          <div className="flex items-center justify-center gap-2">
-             <span className="w-1 h-1 rounded-full bg-yellow-500 animate-bounce delay-0"></span>
-             <span className="w-1 h-1 rounded-full bg-yellow-500 animate-bounce delay-150"></span>
-             <span className="w-1 h-1 rounded-full bg-yellow-500 animate-bounce delay-300"></span>
+          <div className="space-y-4">
+            <p className="text-2xl font-black text-zinc-100 uppercase tracking-tighter">{ANALYSIS_STEPS[analysisStep]}</p>
+            <div className="flex items-center justify-center gap-2">
+              <span className="w-1 h-1 rounded-full bg-yellow-500 animate-bounce delay-0"></span>
+              <span className="w-1 h-1 rounded-full bg-yellow-500 animate-bounce delay-150"></span>
+              <span className="w-1 h-1 rounded-full bg-yellow-500 animate-bounce delay-300"></span>
+            </div>
           </div>
         </div>
       )}
@@ -528,15 +576,19 @@ const CareerPath: React.FC<CareerPathProps> = ({
                    </div>
                 </div>
 
-                {/* Sub-Feature Buttons */}
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 relative z-10">
                    <div className="space-y-4">
                       <button 
                         onClick={() => setActiveStrategyIdx(activeStrategyIdx === idx ? null : idx)}
                         disabled={subLoading[`strat-${idx}`]}
-                        className="w-full py-4 bg-zinc-100 text-zinc-950 rounded-[20px] text-[9px] font-black uppercase tracking-widest hover:bg-yellow-500 transition-all flex items-center justify-center gap-3 active:scale-95 shadow-lg border-b-2 border-zinc-300"
+                        className="w-full h-14 bg-zinc-100 text-zinc-950 rounded-[20px] text-[9px] font-black uppercase tracking-widest hover:bg-yellow-500 transition-all flex items-center justify-center gap-3 active:scale-95 shadow-lg border-b-2 border-zinc-300 relative overflow-hidden"
                       >
-                         {subLoading[`strat-${idx}`] ? <div className="w-3 h-3 border-2 border-zinc-950 border-t-transparent rounded-full animate-spin"></div> : "Unlock Strategy (10 Cr)"}
+                         {subLoading[`strat-${idx}`] ? (
+                           <>
+                             <div className="absolute inset-0 bg-yellow-500 transition-all duration-300" style={{ width: `${subLoadingProgress[`strat-${idx}`]}%` }}></div>
+                             <span className="relative z-10">Deploying Strategy {Math.round(subLoadingProgress[`strat-${idx}`])}%</span>
+                           </>
+                         ) : "Unlock Strategy (10 Cr)"}
                       </button>
                       
                       {activeStrategyIdx === idx && (
@@ -561,8 +613,17 @@ const CareerPath: React.FC<CareerPathProps> = ({
                       )}
 
                       {strategyResults[idx] && (
-                        <div className="bg-zinc-950 border border-zinc-800 p-8 rounded-[32px] animate-in fade-in slide-in-from-top-4 prose-krypto">
-                           <ReactMarkdown>{strategyResults[idx]}</ReactMarkdown>
+                        <div className="bg-zinc-950 border border-zinc-800 p-8 rounded-[32px] animate-in fade-in slide-in-from-top-4 relative group/result">
+                           <div className="prose-krypto">
+                              <ReactMarkdown>{strategyResults[idx]}</ReactMarkdown>
+                           </div>
+                           <button 
+                             onClick={() => handleSaveToVault('strategy', idx, career.title)}
+                             className="mt-6 w-full py-3 bg-zinc-900 border border-zinc-800 text-zinc-400 text-[8px] font-black uppercase tracking-widest rounded-xl hover:text-yellow-500 hover:border-yellow-500/30 transition-all flex items-center justify-center gap-2"
+                           >
+                              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7H5a2 2 0 00-2 2v9a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-3m-1 4l-3 3m0 0l-3-3m3 3V4" /></svg>
+                              Save Strategy to Vault
+                           </button>
                         </div>
                       )}
                    </div>
@@ -571,20 +632,33 @@ const CareerPath: React.FC<CareerPathProps> = ({
                       <button 
                         onClick={() => unlockInsights(idx, career.title)}
                         disabled={subLoading[`insight-${idx}`]}
-                        className="w-full py-4 bg-zinc-800 text-zinc-300 rounded-[20px] text-[9px] font-black uppercase tracking-widest border border-zinc-700 hover:bg-zinc-700 hover:text-white transition-all flex items-center justify-center gap-3 active:scale-95 shadow-lg"
+                        className="w-full h-14 bg-zinc-800 text-zinc-300 rounded-[20px] text-[9px] font-black uppercase tracking-widest border border-zinc-700 hover:bg-zinc-700 hover:text-white transition-all flex items-center justify-center gap-3 active:scale-95 shadow-lg relative overflow-hidden"
                       >
-                         {subLoading[`insight-${idx}`] ? <div className="w-3 h-3 border-2 border-zinc-300 border-t-transparent rounded-full animate-spin"></div> : "Market Insights (10 Cr)"}
+                         {subLoading[`insight-${idx}`] ? (
+                            <>
+                              <div className="absolute inset-0 bg-zinc-700 transition-all duration-300" style={{ width: `${subLoadingProgress[`insight-${idx}`]}%` }}></div>
+                              <span className="relative z-10">Auditing Market {Math.round(subLoadingProgress[`insight-${idx}`])}%</span>
+                            </>
+                         ) : "Market Insights (10 Cr)"}
                       </button>
 
                       {insightResults[idx] && (
-                        <div className="bg-zinc-950 border border-blue-500/20 p-8 rounded-[32px] animate-in fade-in slide-in-from-top-4 prose-krypto">
-                           <ReactMarkdown>{insightResults[idx]}</ReactMarkdown>
+                        <div className="bg-zinc-950 border border-blue-500/20 p-8 rounded-[32px] animate-in fade-in slide-in-from-top-4 relative group/result">
+                           <div className="prose-krypto">
+                              <ReactMarkdown>{insightResults[idx]}</ReactMarkdown>
+                           </div>
+                           <button 
+                             onClick={() => handleSaveToVault('market-insight', idx, career.title)}
+                             className="mt-6 w-full py-3 bg-zinc-900 border border-zinc-800 text-zinc-400 text-[8px] font-black uppercase tracking-widest rounded-xl hover:text-blue-500 hover:border-blue-500/30 transition-all flex items-center justify-center gap-2"
+                           >
+                              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7H5a2 2 0 00-2 2v9a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-3m-1 4l-3 3m0 0l-3-3m3 3V4" /></svg>
+                              Save Insights to Vault
+                           </button>
                         </div>
                       )}
                    </div>
                 </div>
 
-                {/* Job Specific Certification Section */}
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-8 pt-10 border-t border-zinc-900 relative z-10">
                    <div className="space-y-5">
                       <div className="flex items-center gap-3">
