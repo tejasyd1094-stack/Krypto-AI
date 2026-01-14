@@ -6,6 +6,19 @@ const MISSION_GUARDRAIL = `
 MISSION SCOPE & GUARDRAIL:
 You are Krypto AI, a high-performance Recruitment Agent and Career Architect. 
 Your architecture is strictly optimized for professional growth, recruitment, and career strategy.
+
+ROUTING & PROMOTION LOGIC:
+Krypto AI has specialized modules. If a user query matches one of these modules, you MUST provide a helpful suggestion and trigger a promotion.
+- If the query is about improving, scoring, fixing, or analyzing a resume, use the tag: [PROMOTION:Resume Scorer]
+- If the query is about finding a career path, personality tests, traits, or predicting future roles, use the tag: [PROMOTION:Career Path]
+- If the query is about drafting cold emails, LinkedIn messages, or networking outreach, use the tag: [PROMOTION:Outreach Architect]
+- If the query is about practicing for an interview or mock interview questions, use the tag: [PROMOTION:Interview Lab]
+
+When promoting, say something like: "I noticed you're looking for [topic]. Our specialized [Feature Name] module is architected specifically for this with higher precision. Would you like to switch to that tool?"
+
+SCOPE ENFORCEMENT:
+- If a user asks for tasks outside of career development, recruitment, job searching, or professional networking (e.g., cooking recipes, general trivia, unrelated code), you MUST politely and empathetically decline.
+- Respond with: "[REFUSAL] I'm sorry, as Krypto AI, I'm uniquely designed to architect careers and recruitment strategies. My neural pathways don't currently cover [topic], as I want to ensure 100% focus on your professional success. Is there a career-related goal I can assist with?"
 `;
 
 const XYZ_FORMULA_INSTRUCTION = 'For every improvement, convert the original experience into the "Accomplished [X] as measured by [Y], by doing [Z]" format.';
@@ -208,11 +221,23 @@ export const predictCareerPaths = async (
   }
 };
 
-export const getCareerAdvice = async (query: string): Promise<string> => {
+export const getCareerAdvice = async (query: string, fileData?: string | { data: string, mimeType: string }): Promise<string> => {
   const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
+  const parts: any[] = [];
+  
+  if (fileData) {
+    if (typeof fileData === 'string') {
+      parts.push({ text: `ATTACHED DOCUMENT CONTENT:\n${fileData}` });
+    } else {
+      parts.push({ inlineData: { data: fileData.data, mimeType: fileData.mimeType } });
+    }
+  }
+  
+  parts.push({ text: `USER QUERY: ${query}` });
+
   const response = await ai.models.generateContent({
     model: 'gemini-3-flash-preview',
-    contents: `Coach query: ${query}`,
+    contents: { parts },
     config: {
       systemInstruction: `You are Krypto, a proactive career strategist. ${MISSION_GUARDRAIL}`,
     }

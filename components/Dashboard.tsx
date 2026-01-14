@@ -14,22 +14,110 @@ interface DashboardProps {
   setActiveTab?: (tab: TabType) => void;
 }
 
+const PLACEHOLDERS = [
+  "How to negotiate a 30% salary hike?",
+  "Analyze this job description for keywords...",
+  "Draft a cold email for a FAANG recruiter.",
+  "What are the top skills for AI Engineering in 2025?",
+  "Analyze my attached cover letter...",
+  "Explain the RIASEC model for career growth."
+];
+
 const Dashboard: React.FC<DashboardProps> = ({ priority, userCredits, onUse, onNavigatePricing, setActiveTab }) => {
   const [query, setQuery] = useState('');
   const [advice, setAdvice] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
+  const [placeholderIdx, setPlaceholderIdx] = useState(0);
+  const [attachedFile, setAttachedFile] = useState<File | null>(null);
+  const [fileData, setFileData] = useState<any>(null);
+  const [promotionTarget, setPromotionTarget] = useState<TabType | null>(null);
+  
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const adviceRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setPlaceholderIdx(prev => (prev + 1) % PLACEHOLDERS.length);
+    }, 4000);
+    return () => clearInterval(interval);
+  }, []);
+
+  useEffect(() => {
+    if (advice && adviceRef.current) {
+      adviceRef.current.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }
+  }, [advice]);
+
+  const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    setAttachedFile(file);
+    try {
+      if (file.type === 'application/vnd.openxmlformats-officedocument.wordprocessingml.document') {
+        const arrayBuffer = await file.arrayBuffer();
+        const mammothResult = await mammoth.extractRawText({ arrayBuffer });
+        setFileData(mammothResult.value);
+      } else if (file.type.startsWith('image/') || file.type === 'application/pdf') {
+        const reader = new FileReader();
+        const base64Promise = new Promise<string>((resolve) => {
+          reader.onload = () => resolve((reader.result as string).split(',')[1]);
+          reader.readAsDataURL(file);
+        });
+        const base64 = await base64Promise;
+        setFileData({ data: base64, mimeType: file.type });
+      } else {
+        const text = await file.text();
+        setFileData(text);
+      }
+    } catch (err) {
+      console.error("File processing error", err);
+    }
+  };
+
+  const removeFile = () => {
+    setAttachedFile(null);
+    setFileData(null);
+    if (fileInputRef.current) fileInputRef.current.value = '';
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (!query.trim() && !attachedFile) return;
     if (userCredits < 2) { onNavigatePricing(); return; }
+    
     setLoading(true);
+    setAdvice(null);
+    setPromotionTarget(null);
+
     try {
-      const result = await getCareerAdvice(query);
-      onUse(2);
-      setAdvice(result);
+      const result = await getCareerAdvice(query, fileData);
+      
+      let finalAdvice = result;
+      let isRefusal = false;
+      let isPromotion = false;
+
+      if (result.includes('[REFUSAL]')) {
+        finalAdvice = result.replace('[REFUSAL]', '').trim();
+        isRefusal = true;
+      } 
+      
+      const promotionMatch = result.match(/\[PROMOTION:(.*?)\]/);
+      if (promotionMatch) {
+        const target = promotionMatch[1] as TabType;
+        setPromotionTarget(target);
+        finalAdvice = result.replace(/\[PROMOTION:.*?\]/, '').trim();
+        isPromotion = true;
+      }
+
+      // Only deduct credits if it's a successful processing, not a referral or refusal
+      if (!isRefusal && !isPromotion) {
+        onUse(2);
+      }
+
+      setAdvice(finalAdvice);
     } catch (error) {
-      setAdvice("Error processing query.");
+      setAdvice("Execution Error: The neural engine is temporarily unavailable.");
     } finally {
       setLoading(false);
     }
@@ -46,23 +134,110 @@ const Dashboard: React.FC<DashboardProps> = ({ priority, userCredits, onUse, onN
           Map your DNA, audit your assets, and dominate the market.
         </p>
         
-        <form onSubmit={handleSubmit} className="max-w-3xl mx-auto relative group">
-          <div className="bg-zinc-900/40 border border-zinc-800 rounded-[40px] p-6 flex flex-col sm:flex-row items-center gap-4 focus-within:border-yellow-500/50 focus-within:ring-8 focus-within:ring-yellow-500/5 transition-all shadow-2xl backdrop-blur-xl">
+        <div className="max-w-3xl mx-auto relative mt-12">
+          <form 
+            onSubmit={handleSubmit} 
+            className="bg-zinc-900/40 border border-zinc-800 rounded-[40px] p-2 flex flex-col focus-within:border-yellow-500/40 focus-within:ring-[12px] focus-within:ring-yellow-500/5 transition-all shadow-3xl backdrop-blur-2xl overflow-hidden relative group"
+          >
+            <div className="absolute inset-0 bg-gradient-to-br from-yellow-500/5 to-transparent opacity-0 group-focus-within:opacity-100 transition-opacity pointer-events-none"></div>
+            
+            {/* Attached File Preview */}
+            {attachedFile && (
+              <div className="px-6 pt-4 flex items-center gap-3 relative z-10">
+                <div className="flex items-center gap-2 bg-yellow-500/10 border border-yellow-500/20 rounded-xl px-3 py-1.5 animate-in slide-in-from-left-4">
+                  <svg className="w-4 h-4 text-yellow-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15.172 7l-6.586 6.586a2 2 0 102.828 2.828l6.414-6.586a4 4 0 00-5.656-5.656l-6.415 6.585a6 6 0 108.486 8.486L20.5 13" /></svg>
+                  <span className="text-[10px] font-black text-yellow-500 uppercase tracking-widest truncate max-w-[200px]">{attachedFile.name}</span>
+                  <button type="button" onClick={removeFile} className="ml-1 hover:text-white text-yellow-500 transition-colors">
+                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M6 18L18 6M6 6l12 12" /></svg>
+                  </button>
+                </div>
+              </div>
+            )}
+
+            <div className="flex flex-col sm:flex-row items-center gap-2 p-4 relative z-10">
+              <div className="flex-1 flex items-center gap-4 w-full">
+                <button 
+                  type="button" 
+                  onClick={() => fileInputRef.current?.click()}
+                  className="p-3 text-zinc-500 hover:text-yellow-500 transition-all bg-zinc-950/50 rounded-2xl border border-zinc-800 hover:border-yellow-500/30 shadow-lg"
+                >
+                  <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" /></svg>
+                </button>
+                <div className="flex-1 relative">
+                  <input 
+                    type="text" 
+                    value={query} 
+                    onChange={(e) => setQuery(e.target.value)} 
+                    placeholder={PLACEHOLDERS[placeholderIdx]}
+                    className="w-full bg-transparent border-none focus:outline-none text-zinc-100 text-lg font-medium py-3 placeholder:transition-opacity placeholder:duration-500"
+                  />
+                </div>
+              </div>
+              <button 
+                type="submit" 
+                disabled={loading || (!query.trim() && !attachedFile)} 
+                className="w-full sm:w-auto px-10 py-5 bg-yellow-500 text-zinc-950 rounded-[28px] font-black text-[11px] uppercase tracking-widest hover:bg-yellow-400 active:scale-95 transition-all shadow-2xl shadow-yellow-500/20 disabled:opacity-30 flex items-center justify-center gap-3 border-b-4 border-yellow-700"
+              >
+                {loading ? (
+                  <div className="w-4 h-4 border-2 border-zinc-950 border-t-transparent rounded-full animate-spin"></div>
+                ) : (
+                  <>
+                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M13 10V3L4 14h7v7l9-11h-7z" /></svg>
+                    Ask Krypto AI (2 Credits)
+                  </>
+                )}
+              </button>
+            </div>
             <input 
-              type="text" value={query} onChange={(e) => setQuery(e.target.value)} 
-              placeholder="Ask Krypto for career strategy..." 
-              className="flex-1 bg-transparent border-none focus:outline-none text-zinc-100 text-xl font-medium w-full px-4"
+              type="file" 
+              ref={fileInputRef} 
+              onChange={handleFileChange} 
+              className="hidden" 
+              accept=".pdf,.docx,.txt,image/*" 
             />
-            <button type="submit" disabled={loading || !query.trim()} className="px-10 py-4 bg-yellow-500 text-zinc-950 rounded-[24px] font-black text-[11px] uppercase tracking-widest hover:bg-yellow-400 active:scale-95 transition-all shadow-xl">
-              {loading ? "Calculating..." : "Execute Strategy (2 Credits)"}
-            </button>
-          </div>
-        </form>
+          </form>
+
+          {/* Hot Prompts / Neural Shortcuts */}
+          {!advice && !loading && (
+            <div className="mt-10 space-y-4 animate-in fade-in slide-in-from-top-4 duration-700 delay-300">
+               <div className="flex items-center gap-4 justify-center">
+                  <div className="h-px bg-zinc-900 flex-1"></div>
+                  <span className="text-[9px] font-black text-zinc-700 uppercase tracking-[0.6em]">Neural Shortcuts</span>
+                  <div className="h-px bg-zinc-900 flex-1"></div>
+               </div>
+               <div className="flex flex-wrap justify-center gap-3">
+                 {PLACEHOLDERS.slice(0, 4).map((p, i) => (
+                   <button 
+                     key={i} 
+                     onClick={() => setQuery(p)} 
+                     className="px-5 py-2.5 bg-yellow-500/5 border border-yellow-500/20 hover:border-yellow-500/50 hover:bg-yellow-500/10 rounded-2xl text-[10px] font-black text-yellow-500 hover:text-yellow-400 uppercase tracking-widest transition-all duration-300 active:scale-95 shadow-xl shadow-yellow-500/[0.02]"
+                   >
+                     {p.length > 32 ? p.substring(0, 29) + '...' : p}
+                   </button>
+                 ))}
+               </div>
+            </div>
+          )}
+        </div>
       </div>
 
       {advice && (
-        <div className="max-w-4xl mx-auto p-12 bg-[#0c0c0e] border border-yellow-500/10 rounded-[56px] shadow-3xl animate-in fade-in slide-in-from-bottom-8 duration-700">
+        <div ref={adviceRef} className="max-w-4xl mx-auto p-12 bg-[#0c0c0e] border border-yellow-500/10 rounded-[56px] shadow-3xl animate-in fade-in slide-in-from-bottom-8 duration-700 space-y-8 relative overflow-hidden">
+           <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-transparent via-yellow-500/30 to-transparent"></div>
            <div className="prose-krypto text-zinc-300 text-lg leading-relaxed"><ReactMarkdown>{advice}</ReactMarkdown></div>
+           
+           {promotionTarget && (
+             <div className="flex flex-col items-center pt-8 border-t border-zinc-900 animate-in slide-in-from-bottom-4 duration-1000">
+                <button 
+                  onClick={() => setActiveTab?.(promotionTarget)}
+                  className="px-10 py-5 bg-zinc-100 text-zinc-950 rounded-[24px] text-[11px] font-black uppercase tracking-widest hover:bg-yellow-500 transition-all shadow-2xl flex items-center gap-3 group"
+                >
+                  <svg className="w-5 h-5 group-hover:translate-x-1 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7l5 5m0 0l-5 5m5-5H6" /></svg>
+                  Switch to {promotionTarget} Module
+                </button>
+                <p className="mt-4 text-[9px] font-black text-zinc-600 uppercase tracking-widest italic">Precision tools optimized for this specific request.</p>
+             </div>
+           )}
         </div>
       )}
 
