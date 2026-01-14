@@ -14,12 +14,13 @@ Your architecture is strictly optimized for professional growth, recruitment, an
 export const generateCareerStrategy = async (
   role: string,
   inputs: { budget: string; months: string; hours: string },
+  symbol: string,
   resumeData?: string | { data: string; mimeType: string }
 ): Promise<string> => {
   const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
   const parts: any[] = [
     { text: `TASK: Generate a high-performance career pivot strategy for the role of ${role}.` },
-    { text: `CONSTRAINTS: Budget: ${inputs.budget}, Timeline: ${inputs.months} months, Daily Commitment: ${inputs.hours} hours.` }
+    { text: `CONSTRAINTS: Budget: ${inputs.budget} ${symbol}, Timeline: ${inputs.months} months, Daily Commitment: ${inputs.hours} hours. Use ${symbol} for all financial references.` }
   ];
 
   if (resumeData) {
@@ -31,10 +32,11 @@ export const generateCareerStrategy = async (
     model: 'gemini-3-pro-preview',
     contents: { parts },
     config: {
-      systemInstruction: `You are the Krypto Strategy Architect. Create a tactical plan for targeting the role: ${role}.
+      systemInstruction: `You are the Krypto Strategy Architect. Create a tactical plan for targeting the role: ${role}. 
+      All monetary values must be presented in ${symbol}.
       Focus on: 
       1. Priority technical and soft skills to sharpen for ${role}.
-      2. Specific high-ROI courses (mention platforms like Coursera, Udemy, etc.) matching the user's budget and timeline.
+      2. Specific high-ROI courses (mention platforms like Coursera, Udemy, edX, LinkedIn Learning, etc.) matching the user's budget (${symbol}) and timeline.
       3. Precise resume modifications tailored specifically for ${role}.
       4. A job application 'blitz' strategy to land this specific title. 
       Use Markdown with concise headers. Keep it professional and high-impact.`,
@@ -46,11 +48,12 @@ export const generateCareerStrategy = async (
 export const generateMarketIntelligence = async (
   role: string,
   location: string,
+  symbol: string,
   resumeData?: string | { data: string; mimeType: string }
 ): Promise<string> => {
   const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
   const parts: any[] = [
-    { text: `RESEARCH TARGET: ${role} in ${location}.` }
+    { text: `RESEARCH TARGET: ${role} in ${location}. Preferred currency: ${symbol}.` }
   ];
 
   if (resumeData) {
@@ -65,11 +68,20 @@ export const generateMarketIntelligence = async (
       tools: [{ googleSearch: {} }],
       systemInstruction: `You are the Krypto Market Intelligence Officer. 
       Conduct a real-time audit of the hiring landscape specifically for ${role} in ${location}.
+      All salary benchmarks must use ${symbol}.
+      
+      CRITICAL FORMATTING:
+      Reform the "Top 4 Active Employers (Strategic Fit)" section. Use clean bullet points with a header. 
+      For each employer include:
+      - **Company Name**: Brief strategic fit reason.
+      - **Hiring Zone**: Specific office location in ${location}.
+      
       Identify:
-      1. Top 3-5 specific companies in or near ${location} currently hiring for ${role} or similar titles.
-      2. Detailed salary ranges for ${role} at these specific companies based on market data.
-      3. Cultural audit: Extract sentiment specifically for engineering/professional teams in these firms.
-      4. Geographical Hubs: Pinpoint specific zones or technology parks in ${location} where ${role} roles are concentrated.
+      1. Top 4 specific companies in or near ${location} currently hiring.
+      2. Detailed salary ranges in ${symbol} based on local parity.
+      3. Cultural audit of engineering/professional teams.
+      4. Geographical Hubs pinpointed to ${location}.
+      
       Provide a highly professional summary with Markdown. List sources.`,
     }
   });
@@ -203,9 +215,9 @@ export const predictCareerPaths = async (
       systemInstruction: `You are Krypto AI Career Path Predictor. Map traits to job roles for ${CURRENT_DATE}. 
       1. Interpret scores as a DNA Code.
       2. Provide 3 specific recommendations for ${location}.
-      3. For each career, list required skills and top certifications. 
-      4. For certifications, explicitly include the platform name (e.g. "AWS Certified Solutions Architect (Amazon)", "Google Data Analytics (Coursera)").
-      5. Include localized salary benchmarks.`,
+      3. For each career, list required skills and 3-4 top-tier certifications. 
+      4. For certifications, explicitly include the platform name in brackets (e.g. "AWS Certified Solutions Architect [Amazon]", "Google Data Analytics [Coursera]", "Professional Certificate in Fintech [edX]", "IBM Data Science [Coursera]").
+      5. Include localized salary benchmarks using appropriate regional markers.`,
       responseMimeType: "application/json",
       responseSchema: {
         type: Type.OBJECT,

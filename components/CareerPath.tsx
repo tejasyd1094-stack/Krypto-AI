@@ -69,36 +69,35 @@ const QUIZ_QUESTIONS: QuizQuestion[] = [
 
 const ExperiencedIllustration = () => (
   <div className="relative w-32 h-32 mx-auto mb-6 group-hover:scale-110 transition-transform duration-700">
-    <svg viewBox="0 0 100 100" className="w-full h-full drop-shadow-[0_0_15px_rgba(234,179,8,0.2)]">
+    <svg viewBox="0 0 100 100" className="w-full h-full">
       <defs>
-        <linearGradient id="exp-grad-new" x1="0%" y1="0%" x2="100%" y2="100%">
+        <linearGradient id="exp-grad-prof" x1="0%" y1="0%" x2="100%" y2="100%">
           <stop offset="0%" stopColor="#fde047" />
           <stop offset="100%" stopColor="#eab308" />
         </linearGradient>
       </defs>
-      <rect x="20" y="35" width="60" height="45" rx="4" fill="#18181b" stroke="url(#exp-grad-new)" strokeWidth="2.5" />
-      <path d="M40 35V25C40 22.2386 42.2386 20 45 20H55C57.7614 20 60 22.2386 60 25V35" stroke="url(#exp-grad-new)" strokeWidth="2.5" fill="none" />
-      <circle cx="50" cy="57.5" r="8" stroke="url(#exp-grad-new)" strokeWidth="2" fill="none" />
-      <path d="M50 54V61M46.5 57.5H53.5" stroke="url(#exp-grad-new)" strokeWidth="2" strokeLinecap="round" />
-      <line x1="20" x2="80" y1="45" y2="45" stroke="url(#exp-grad-new)" strokeWidth="1" opacity="0.4" />
+      {/* Professional Suit/Shield Motif */}
+      <path d="M20 30C20 25 25 20 30 20H70C75 20 80 25 80 30V70C80 85 50 95 50 95C50 95 20 85 20 70V30Z" fill="#18181b" stroke="url(#exp-grad-prof)" strokeWidth="2.5" />
+      <path d="M35 50L45 60L65 40" stroke="url(#exp-grad-prof)" strokeWidth="4" strokeLinecap="round" strokeLinejoin="round" />
+      <rect x="45" y="10" width="10" height="4" rx="2" fill="url(#exp-grad-prof)" />
     </svg>
   </div>
 );
 
 const FresherIllustration = () => (
   <div className="relative w-32 h-32 mx-auto mb-6 group-hover:scale-110 transition-transform duration-700">
-    <svg viewBox="0 0 100 100" className="w-full h-full drop-shadow-[0_0_15px_rgba(59,130,246,0.2)]">
+    <svg viewBox="0 0 100 100" className="w-full h-full">
       <defs>
-        <linearGradient id="fresh-grad-new" x1="0%" y1="0%" x2="100%" y2="100%">
+        <linearGradient id="fresh-grad-prof" x1="0%" y1="0%" x2="100%" y2="100%">
           <stop offset="0%" stopColor="#60a5fa" />
           <stop offset="100%" stopColor="#2563eb" />
         </linearGradient>
       </defs>
-      <circle cx="50" cy="50" r="40" stroke="url(#fresh-grad-new)" strokeWidth="1.5" strokeDasharray="6 3" fill="none" />
-      <path d="M50 20L60 45H40L50 20Z" fill="url(#fresh-grad-new)" stroke="url(#fresh-grad-new)" strokeWidth="2" />
-      <rect x="35" y="50" width="30" height="25" rx="3" fill="#18181b" stroke="url(#fresh-grad-new)" strokeWidth="2.5" />
-      <circle cx="50" cy="62.5" r="4" fill="url(#fresh-grad-new)" className="animate-pulse" />
-      <path d="M50 15V85M15 50H85" stroke="url(#fresh-grad-new)" strokeWidth="0.5" opacity="0.2" />
+      {/* Compass/Star Launch Motif */}
+      <circle cx="50" cy="50" r="40" stroke="url(#fresh-grad-prof)" strokeWidth="2" strokeDasharray="8 4" fill="none" />
+      <path d="M50 20V80M20 50H80" stroke="url(#fresh-grad-prof)" strokeWidth="1" opacity="0.3" />
+      <path d="M50 15L60 45L90 55L60 65L50 95L40 65L10 55L40 45L50 15Z" fill="url(#fresh-grad-prof)" className="animate-pulse" />
+      <circle cx="50" cy="55" r="5" fill="#09090b" />
     </svg>
   </div>
 );
@@ -125,24 +124,31 @@ const RadarChart = ({ scores }: { scores: PersonalityTraitScores }) => {
   return (
     <div className="relative flex items-center justify-center p-4">
       <svg width={size} height={size} viewBox={`0 0 ${size} ${size}`} className="overflow-visible">
+        {/* Modern Clean Axes (No Grid Polygons) */}
         {labels.map((_, i) => {
           const p = getPoint(i, max);
-          return <line key={i} x1={center} y1={center} x2={p.x} y2={p.y} className="stroke-zinc-800/60" strokeWidth="1" />;
+          return <line key={i} x1={center} y1={center} x2={p.x} y2={p.y} className="stroke-zinc-800/40" strokeWidth="1" />;
         })}
+        {/* Score Polygon */}
         <polygon
           points={polygonPath}
-          className="fill-yellow-500/15 stroke-yellow-500 animate-in fade-in zoom-in duration-1000 shadow-[0_0_20px_rgba(234,179,8,0.3)]"
-          strokeWidth="2.5"
+          className="fill-yellow-500/10 stroke-yellow-500 animate-in fade-in zoom-in duration-1000"
+          strokeWidth="3"
           strokeLinejoin="round"
         />
+        {/* Points */}
+        {points.map((p, i) => (
+          <circle key={i} cx={p.x} cy={p.y} r="4" className="fill-yellow-500" />
+        ))}
+        {/* Minimalist Labels */}
         {labels.map((label, i) => {
-          const p = getPoint(i, max + 25);
+          const p = getPoint(i, max + 22);
           return (
             <text
               key={i}
               x={p.x}
               y={p.y}
-              className="text-[8px] font-black uppercase tracking-widest fill-zinc-500"
+              className="text-[9px] font-black uppercase tracking-widest fill-zinc-600"
               textAnchor="middle"
               alignmentBaseline="middle"
             >
@@ -251,7 +257,7 @@ const CareerPath: React.FC<CareerPathProps> = ({
     if (userCredits < 10) { onNavigatePricing(); return; }
     setSubLoading(prev => ({ ...prev, [`strat-${idx}`]: true }));
     try {
-      const strategy = await generateCareerStrategy(role, strategyInputs, resumeData as any);
+      const strategy = await generateCareerStrategy(role, strategyInputs, userSymbol, resumeData as any);
       onUse(10);
       setStrategyResults(prev => ({ ...prev, [idx]: strategy }));
       setActiveStrategyIdx(null);
@@ -266,7 +272,7 @@ const CareerPath: React.FC<CareerPathProps> = ({
     if (userCredits < 10) { onNavigatePricing(); return; }
     setSubLoading(prev => ({ ...prev, [`insight-${idx}`]: true }));
     try {
-      const insight = await generateMarketIntelligence(role, userLocation || 'GLOBAL', resumeData as any);
+      const insight = await generateMarketIntelligence(role, userLocation || 'GLOBAL', userSymbol, resumeData as any);
       onUse(10);
       setInsightResults(prev => ({ ...prev, [idx]: insight }));
     } catch (e) {
@@ -448,15 +454,15 @@ const CareerPath: React.FC<CareerPathProps> = ({
                 <RadarChart scores={scores} />
                 
                 <div className="mt-8 w-full flex flex-col items-center gap-4">
-                   <div className="px-5 py-2.5 bg-zinc-950 border border-zinc-800 rounded-xl text-center">
-                      <p className="text-[7px] font-black text-zinc-700 uppercase tracking-widest mb-0.5">DNA Token</p>
-                      <p className="text-sm font-black gold-text-gradient tracking-widest">{dnaCode}</p>
+                   <div className="px-4 py-2 bg-zinc-950 border border-zinc-800 rounded-xl text-center">
+                      <p className="text-[7px] font-black text-zinc-700 uppercase tracking-widest mb-0.5">DNA Code</p>
+                      <p className="text-xs font-black gold-text-gradient tracking-widest">{dnaCode}</p>
                    </div>
                    
                    <div className="max-w-[240px] p-4 bg-yellow-500/5 border border-yellow-500/10 rounded-xl text-center">
                       <p className="text-[8px] font-bold text-zinc-500 leading-relaxed uppercase tracking-tight">
-                        This signature maps your core professional DNA to global growth indices.
-                        It sequences hidden strengths into actionable market vectors.
+                        This unique sequence represents your professional signature based on multidimensional analysis. 
+                        It is used to calibrate your career trajectory against real-time market signals.
                       </p>
                    </div>
                 </div>
@@ -578,27 +584,37 @@ const CareerPath: React.FC<CareerPathProps> = ({
                    </div>
                 </div>
 
-                {/* Original Skills & Certs - Enhanced for visibility */}
+                {/* Job Specific Certification Section */}
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-8 pt-10 border-t border-zinc-900 relative z-10">
-                   <div className="space-y-4">
-                      <span className="text-[9px] font-black text-zinc-600 uppercase tracking-widest">Baseline Skills</span>
+                   <div className="space-y-5">
+                      <div className="flex items-center gap-3">
+                        <div className="w-8 h-8 rounded-lg bg-zinc-900 border border-zinc-800 flex items-center justify-center">
+                          <svg className="w-4 h-4 text-zinc-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" /></svg>
+                        </div>
+                        <span className="text-[10px] font-black text-zinc-600 uppercase tracking-widest">Baseline Skills</span>
+                      </div>
                       <div className="flex flex-wrap gap-2">
                          {career.requiredSkills.map((s, i) => (
-                           <span key={i} className="px-4 py-1.5 bg-zinc-950 border border-zinc-800 rounded-xl text-[9px] font-bold text-zinc-300 uppercase tracking-widest">{s}</span>
+                           <span key={i} className="px-4 py-2 bg-zinc-950 border border-zinc-800 rounded-xl text-[9px] font-bold text-zinc-400 uppercase tracking-widest hover:border-yellow-500/30 transition-all">{s}</span>
                          ))}
                       </div>
                    </div>
-                   <div className="space-y-4">
-                      <span className="text-[9px] font-black text-zinc-600 uppercase tracking-widest">Recommended Certifications</span>
+                   <div className="space-y-5">
+                      <div className="flex items-center gap-3">
+                        <div className="w-8 h-8 rounded-lg bg-blue-500/10 border border-blue-500/20 flex items-center justify-center">
+                          <svg className="w-4 h-4 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M9 12l2 2 4-4" /></svg>
+                        </div>
+                        <span className="text-[10px] font-black text-zinc-600 uppercase tracking-widest">Premium Certifications</span>
+                      </div>
                       <div className="grid grid-cols-1 gap-3">
                          {career.certifications.map((cert, i) => (
                             <div key={i} className="p-4 bg-zinc-950 border border-zinc-900 rounded-2xl flex items-center gap-4 hover:border-blue-500/30 transition-all group">
-                               <div className="w-8 h-8 rounded-full bg-blue-500/10 flex items-center justify-center border border-blue-500/20 group-hover:scale-110 transition-transform">
-                                 <svg className="w-4 h-4 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M9 12l2 2 4-4" /></svg>
+                               <div className="w-10 h-10 rounded-full bg-blue-500/5 flex items-center justify-center border border-blue-500/10 group-hover:scale-110 transition-transform">
+                                 <svg className="w-5 h-5 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
                                </div>
                                <div className="flex-1">
-                                  <span className="text-[11px] font-black text-zinc-200 uppercase tracking-tight leading-tight block">{cert}</span>
-                                  <span className="text-[8px] font-black text-blue-400 uppercase tracking-widest">Industry Standard Recognition</span>
+                                  <span className="text-[11px] font-black text-zinc-200 uppercase tracking-tight leading-tight block mb-0.5">{cert}</span>
+                                  <span className="text-[8px] font-black text-zinc-600 uppercase tracking-widest">Verified Internet Platform Recommendation</span>
                                </div>
                             </div>
                          ))}
