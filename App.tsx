@@ -11,7 +11,7 @@ import Pricing from './components/Pricing';
 import UnitLedger from './components/UnitLedger';
 import Login from './components/Login';
 import { supabase } from './lib/supabase';
-import { TabType, UserStatus, PricingPlan, PlanId, FeatureAccess, HistoryItem, ResumeScoreResponse } from './types';
+import { TabType, UserStatus, PricingPlan, PlanId, FeatureAccess, HistoryItem, ResumeScoreResponse, CareerPathResponse, PersonalityTraitScores } from './types';
 
 const App: React.FC = () => {
   const [session, setSession] = useState<any>(null);
@@ -26,6 +26,13 @@ const App: React.FC = () => {
   const [resumeResult, setResumeResult] = useState<ResumeScoreResponse | null>(null);
   const [formattedResume, setFormattedResume] = useState<string | null>(null);
   const [resumeData, setResumeData] = useState<{ data: string, mimeType: string } | string | null>(null);
+
+  // Persisted Career Path State
+  const [careerResult, setCareerResult] = useState<CareerPathResponse | null>(null);
+  const [careerScores, setCareerScores] = useState<PersonalityTraitScores>({ analytic: 0, creative: 0, leadership: 0, social: 0, practical: 0, investigative: 0 });
+  const [careerDnaCode, setCareerDnaCode] = useState<string>('');
+  const [careerUserType, setCareerUserType] = useState<'experienced' | 'fresher' | null>(null);
+  const [careerResumeData, setCareerResumeData] = useState<{ data: string, mimeType: string } | string | null>(null);
 
   const [user, setUser] = useState<UserStatus>({
     isPro: false,
@@ -76,12 +83,10 @@ const App: React.FC = () => {
         async (position) => {
           const { latitude, longitude } = position.coords;
           try {
-            // Using a higher zoom level (18) and explicit language to get better detail
             const geoRes = await fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${latitude}&lon=${longitude}&zoom=18&addressdetails=1&accept-language=en`);
             const geoData = await geoRes.json();
             const address = geoData.address;
             
-            // Priority list for precise city/locality detection
             const city = address.city || 
                          address.town || 
                          address.village || 
@@ -125,7 +130,6 @@ const App: React.FC = () => {
 
   const fetchIpBasedLocation = async () => {
     try {
-      // First attempt with ipinfo.io (usually very accurate for city)
       const res = await fetch('https://ipinfo.io/json');
       const data = await res.json();
       if (data.city) {
@@ -135,7 +139,6 @@ const App: React.FC = () => {
       throw new Error('ipinfo failed');
     } catch (err) {
       try {
-        // Fallback to ip-api.com
         const res = await fetch('http://ip-api.com/json/');
         const data = await res.json();
         if (data.status === 'success' && data.city) {
@@ -144,7 +147,6 @@ const App: React.FC = () => {
           throw new Error('ip-api failed');
         }
       } catch (err2) {
-        // Final fallback to ipapi.co
         try {
           const res = await fetch('https://ipapi.co/json/');
           const data = await res.json();
@@ -169,6 +171,9 @@ const App: React.FC = () => {
     setSession(null);
     setActiveTab('Home');
     setIsSidebarOpen(false);
+    // Clear persisted data on logout
+    setCareerResult(null);
+    setResumeResult(null);
   };
 
   const deductCredits = (amount: number): boolean => {
@@ -220,6 +225,20 @@ const App: React.FC = () => {
           isVerifyingLocation={isVerifyingLocation} 
           onNavigateResumeScorer={() => setActiveTab('Resume Scorer')} 
           onSetManualLocation={setManualLocation}
+          persistedData={{
+            result: careerResult,
+            scores: careerScores,
+            dnaCode: careerDnaCode,
+            userType: careerUserType,
+            resumeData: careerResumeData
+          }}
+          setPersistedData={{
+            setResult: setCareerResult,
+            setScores: setCareerScores,
+            setDnaCode: setCareerDnaCode,
+            setUserType: setCareerUserType,
+            setResumeData: setCareerResumeData
+          }}
         />
       );
       case 'Outreach Architect': return < OutreachArchitect userCredits={user.credits} onUse={deductCredits} onSaveHistory={saveToHistory} onNavigatePricing={() => setActiveTab('Pricing')} />;

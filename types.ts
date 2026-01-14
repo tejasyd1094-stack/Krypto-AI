@@ -55,12 +55,18 @@ export interface ResumeImprovement {
   suggestion: string;
   before: string;
   after: string;
-  interviewPrep: InterviewPrepItem[];
+  why: string; // New: Explaining the rationale for the change
 }
 
 export interface ResumeScoreResponse {
   score: number;
-  breakdown: { ats: number; keywords: number; formatting: number; };
+  breakdown: { 
+    ats: number; 
+    keywords: number; 
+    formatting: number; 
+    impact: number;       // New: Quantifiable impact scoring
+    readability: number;  // New: Visual hierarchy and scanning ease
+  };
   improvements: ResumeImprovement[];
   formattingRecommendations: string;
   refused?: boolean;
@@ -72,8 +78,8 @@ export interface CareerPathRecommendation {
   matchPercentage: number;
   salaryExpectation: string;
   localSalaryAnalysis: string;
-  localMarketInsights: string; // New: Topography and Geographical advantages
-  hubAnalysis: string;         // New: Specific local hubs
+  localMarketInsights: string; 
+  hubAnalysis: string;         
   requiredSkills: string[];
   certifications: string[];
   higherEducation: string[];

@@ -165,23 +165,35 @@ interface CareerPathProps {
   onVerifyLocation: () => void;
   isVerifyingLocation: boolean;
   onSetManualLocation: (loc: string) => void;
+  persistedData: {
+    result: CareerPathResponse | null;
+    scores: PersonalityTraitScores;
+    dnaCode: string;
+    userType: 'experienced' | 'fresher' | null;
+    resumeData: { data: string, mimeType: string } | string | null;
+  };
+  setPersistedData: {
+    setResult: (res: CareerPathResponse | null) => void;
+    setScores: (scores: PersonalityTraitScores) => void;
+    setDnaCode: (code: string) => void;
+    setUserType: (type: 'experienced' | 'fresher' | null) => void;
+    setResumeData: (data: { data: string, mimeType: string } | string | null) => void;
+  };
 }
 
 const CareerPath: React.FC<CareerPathProps> = ({ 
-  userCredits, userLocation, userSymbol = '$', onUse, onNavigatePricing, onSaveHistory, onVerifyLocation, isVerifyingLocation, onSetManualLocation
+  userCredits, userLocation, userSymbol = '$', onUse, onNavigatePricing, onSaveHistory, onVerifyLocation, isVerifyingLocation, onSetManualLocation,
+  persistedData, setPersistedData
 }) => {
-  const [userType, setUserType] = useState<'experienced' | 'fresher' | null>(null);
-  const [currentStep, setCurrentStep] = useState(-1);
-  const [scores, setScores] = useState<PersonalityTraitScores>({ analytic: 0, creative: 0, leadership: 0, social: 0, practical: 0, investigative: 0 });
+  const { result, scores, dnaCode, userType, resumeData } = persistedData;
+  const { setResult, setScores, setDnaCode, setUserType, setResumeData } = setPersistedData;
+
+  const [currentStep, setCurrentStep] = useState(result ? 6 : -1); 
   const [loading, setLoading] = useState(false);
   const [loadingProgress, setLoadingProgress] = useState(0);
   const [analysisStep, setAnalysisStep] = useState(0);
-  const [result, setResult] = useState<CareerPathResponse | null>(null);
-  const [resumeData, setResumeData] = useState<{ data: string, mimeType: string } | string | null>(null);
-  const [dnaCode, setDnaCode] = useState('');
   const [manualCity, setManualCity] = useState('');
 
-  // Sub-feature states
   const [activeStrategyIdx, setActiveStrategyIdx] = useState<number | null>(null);
   const [strategyInputs, setStrategyInputs] = useState({ budget: '', months: '', hours: '' });
   const [strategyResults, setStrategyResults] = useState<Record<number, string>>({});
@@ -192,12 +204,13 @@ const CareerPath: React.FC<CareerPathProps> = ({
   useEffect(() => {
     let interval: any;
     if (loading) {
+      // Slower progress: Target ~18 seconds total
       interval = setInterval(() => {
         setLoadingProgress(prev => {
-          const next = prev + (Math.random() * 2);
+          const next = prev + (Math.random() * 0.6 + 0.3); 
           return next > 99 ? 99 : next;
         });
-        setAnalysisStep(p => (p < ANALYSIS_STEPS.length - 1 && loadingProgress > (p + 1) * 20 ? p + 1 : p));
+        setAnalysisStep(p => (p < ANALYSIS_STEPS.length - 1 && loadingProgress > (p + 1) * 19 ? p + 1 : p));
       }, 150);
     } else {
       setLoadingProgress(0);
@@ -205,8 +218,8 @@ const CareerPath: React.FC<CareerPathProps> = ({
     return () => clearInterval(interval);
   }, [loading, loadingProgress]);
 
-  const generateDnaCode = () => {
-    const codes = Object.entries(scores).map(([k, v]) => `${k[0].toUpperCase()}${v}`).join('');
+  const generateDnaCode = (currentScores: PersonalityTraitScores) => {
+    const codes = Object.entries(currentScores).map(([k, v]) => `${k[0].toUpperCase()}${v}`).join('');
     setDnaCode(`KRYP-${codes}`);
   };
 
@@ -214,16 +227,17 @@ const CareerPath: React.FC<CareerPathProps> = ({
     const cost = 25; 
     if (userCredits < cost) { onNavigatePricing(); return; }
     setLoading(true);
-    generateDnaCode();
+    generateDnaCode(scores);
     try {
       const response = await predictCareerPaths(scores, userLocation || 'GLOBAL', userType || 'fresher', resumeData as any);
       if (!response.refused) onUse(cost);
       setLoadingProgress(100);
       setResult(response);
+      setCurrentStep(6);
     } catch (e) {
       console.error(e);
     } finally {
-      setTimeout(() => setLoading(false), 500);
+      setTimeout(() => setLoading(false), 800);
     }
   };
 
@@ -249,11 +263,10 @@ const CareerPath: React.FC<CareerPathProps> = ({
   };
 
   const handleOptionSelect = (traits: Partial<PersonalityTraitScores>) => {
-    setScores(p => {
-      const ns = { ...p };
-      Object.entries(traits).forEach(([k, v]) => { ns[k as keyof PersonalityTraitScores] += (v || 0); });
-      return ns;
-    });
+    const nextScores = { ...scores };
+    Object.entries(traits).forEach(([k, v]) => { nextScores[k as keyof PersonalityTraitScores] += (v || 0); });
+    setScores(nextScores);
+    
     if (currentStep < 5) setCurrentStep(p => p + 1);
     else handlePredict();
   };
@@ -267,9 +280,9 @@ const CareerPath: React.FC<CareerPathProps> = ({
     const progressInterval = setInterval(() => {
       setSubLoadingProgress(prev => ({
         ...prev,
-        [key]: Math.min(99, (prev[key] || 0) + (Math.random() * 5))
+        [key]: Math.min(99, (prev[key] || 0) + (Math.random() * 1.2 + 0.2)) 
       }));
-    }, 200);
+    }, 250);
 
     try {
       const strategy = await generateCareerStrategy(role, strategyInputs, userSymbol, resumeData as any);
@@ -281,7 +294,7 @@ const CareerPath: React.FC<CareerPathProps> = ({
       console.error(e);
     } finally {
       clearInterval(progressInterval);
-      setTimeout(() => setSubLoading(prev => ({ ...prev, [key]: false })), 500);
+      setTimeout(() => setSubLoading(prev => ({ ...prev, [key]: false })), 800);
     }
   };
 
@@ -294,9 +307,9 @@ const CareerPath: React.FC<CareerPathProps> = ({
     const progressInterval = setInterval(() => {
       setSubLoadingProgress(prev => ({
         ...prev,
-        [key]: Math.min(99, (prev[key] || 0) + (Math.random() * 5))
+        [key]: Math.min(99, (prev[key] || 0) + (Math.random() * 1.2 + 0.2)) 
       }));
-    }, 200);
+    }, 250);
 
     try {
       const insight = await generateMarketIntelligence(role, userLocation || 'GLOBAL', userSymbol, resumeData as any);
@@ -307,7 +320,7 @@ const CareerPath: React.FC<CareerPathProps> = ({
       console.error(e);
     } finally {
       clearInterval(progressInterval);
-      setTimeout(() => setSubLoading(prev => ({ ...prev, [key]: false })), 500);
+      setTimeout(() => setSubLoading(prev => ({ ...prev, [key]: false })), 800);
     }
   };
 
@@ -318,12 +331,12 @@ const CareerPath: React.FC<CareerPathProps> = ({
     onSaveHistory({
       id: Math.random().toString(36).substr(2, 9),
       type,
-      title: `${type === 'strategy' ? 'Career Strategy' : 'Market Insights'}: ${role}`,
+      title: `${type === 'strategy' ? 'Strategy' : 'Insights'}: ${role}`,
       date: new Date().toLocaleDateString(),
       inputs: { role, location: userLocation || 'GLOBAL' },
       result: content
     });
-    alert(`${type === 'strategy' ? 'Strategy' : 'Insights'} saved to vault successfully.`);
+    alert(`${type === 'strategy' ? 'Strategy' : 'Insights'} archived in vault.`);
   };
 
   const handleReset = () => {
@@ -346,7 +359,7 @@ const CareerPath: React.FC<CareerPathProps> = ({
           Career <span className="gold-text-gradient">DNA Mapping</span>
         </h2>
         
-        {!result && !loading && (
+        {currentStep < 6 && !loading && (
           <div className="max-w-2xl mx-auto p-1 bg-zinc-900/40 border border-zinc-800 rounded-[40px] shadow-3xl overflow-hidden">
              <div className="p-6 sm:p-8 space-y-6">
                <div className="flex flex-col sm:flex-row items-center gap-4">
@@ -393,7 +406,7 @@ const CareerPath: React.FC<CareerPathProps> = ({
         )}
       </div>
 
-      {!loading && !result && (
+      {!loading && currentStep < 6 && (
         <div className="max-w-4xl mx-auto">
           {currentStep === -1 ? (
              <div className="grid grid-cols-1 md:grid-cols-2 gap-8 animate-in slide-in-from-bottom-8 duration-700">
@@ -494,7 +507,7 @@ const CareerPath: React.FC<CareerPathProps> = ({
         </div>
       )}
 
-      {result && !loading && (
+      {result && !loading && currentStep === 6 && (
         <div className="space-y-20 animate-in fade-in slide-in-from-bottom-8 duration-1000">
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-10 items-center">
              <div className="bg-[#0c0c0e] border border-zinc-800 rounded-[48px] p-10 shadow-3xl flex flex-col items-center">
@@ -509,8 +522,7 @@ const CareerPath: React.FC<CareerPathProps> = ({
                    
                    <div className="max-w-[240px] p-4 bg-yellow-500/5 border border-yellow-500/10 rounded-xl text-center">
                       <p className="text-[8px] font-bold text-zinc-500 leading-relaxed uppercase tracking-tight">
-                        This unique sequence represents your professional signature based on multidimensional analysis. 
-                        It is used to calibrate your career trajectory against real-time market signals.
+                        This sequence represents your professional signature based on multidimensional analysis.
                       </p>
                    </div>
                 </div>
@@ -523,20 +535,6 @@ const CareerPath: React.FC<CareerPathProps> = ({
                    <p className="text-2xl font-black text-zinc-100 tracking-tighter leading-tight italic">
                      "{result.personaSummary}"
                    </p>
-                   <div className="mt-6 flex gap-3">
-                      <div className="flex-1 p-3 bg-zinc-900/50 rounded-xl border border-zinc-800">
-                         <p className="text-[7px] font-black text-zinc-600 uppercase tracking-widest mb-1">Primary Axis</p>
-                         <p className="text-[10px] font-black text-zinc-300 uppercase tracking-tight">
-                            {(Object.entries(scores) as [string, number][]).sort((a,b) => b[1]-a[1])[0][0]}
-                         </p>
-                      </div>
-                      <div className="flex-1 p-3 bg-zinc-900/50 rounded-xl border border-zinc-800">
-                         <p className="text-[7px] font-black text-zinc-600 uppercase tracking-widest mb-1">Secondary Axis</p>
-                         <p className="text-[10px] font-black text-zinc-300 uppercase tracking-tight">
-                            {(Object.entries(scores) as [string, number][]).sort((a,b) => b[1]-a[1])[1][0]}
-                         </p>
-                      </div>
-                   </div>
                 </div>
 
                 <div className="flex flex-wrap gap-4 justify-center lg:justify-start">
@@ -586,7 +584,7 @@ const CareerPath: React.FC<CareerPathProps> = ({
                          {subLoading[`strat-${idx}`] ? (
                            <>
                              <div className="absolute inset-0 bg-yellow-500 transition-all duration-300" style={{ width: `${subLoadingProgress[`strat-${idx}`]}%` }}></div>
-                             <span className="relative z-10">Deploying Strategy {Math.round(subLoadingProgress[`strat-${idx}`])}%</span>
+                             <span className="relative z-10">Strategy Forge {Math.round(subLoadingProgress[`strat-${idx}`])}%</span>
                            </>
                          ) : "Unlock Strategy (10 Cr)"}
                       </button>
@@ -613,13 +611,15 @@ const CareerPath: React.FC<CareerPathProps> = ({
                       )}
 
                       {strategyResults[idx] && (
-                        <div className="bg-zinc-950 border border-zinc-800 p-8 rounded-[32px] animate-in fade-in slide-in-from-top-4 relative group/result">
-                           <div className="prose-krypto">
-                              <ReactMarkdown>{strategyResults[idx]}</ReactMarkdown>
+                        <div className="space-y-6">
+                           <div className="bg-zinc-950 border border-zinc-800 p-8 rounded-[32px] animate-in fade-in slide-in-from-top-4 relative group/result">
+                              <div className="prose-krypto">
+                                 <ReactMarkdown>{strategyResults[idx]}</ReactMarkdown>
+                              </div>
                            </div>
                            <button 
                              onClick={() => handleSaveToVault('strategy', idx, career.title)}
-                             className="mt-6 w-full py-3 bg-zinc-900 border border-zinc-800 text-zinc-400 text-[8px] font-black uppercase tracking-widest rounded-xl hover:text-yellow-500 hover:border-yellow-500/30 transition-all flex items-center justify-center gap-2"
+                             className="w-full py-3 bg-zinc-900 border border-zinc-800 text-zinc-400 text-[8px] font-black uppercase tracking-widest rounded-xl hover:text-yellow-500 hover:border-yellow-500/30 transition-all flex items-center justify-center gap-2"
                            >
                               <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7H5a2 2 0 00-2 2v9a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-3m-1 4l-3 3m0 0l-3-3m3 3V4" /></svg>
                               Save Strategy to Vault
@@ -637,19 +637,21 @@ const CareerPath: React.FC<CareerPathProps> = ({
                          {subLoading[`insight-${idx}`] ? (
                             <>
                               <div className="absolute inset-0 bg-zinc-700 transition-all duration-300" style={{ width: `${subLoadingProgress[`insight-${idx}`]}%` }}></div>
-                              <span className="relative z-10">Auditing Market {Math.round(subLoadingProgress[`insight-${idx}`])}%</span>
+                              <span className="relative z-10">Market Audit {Math.round(subLoadingProgress[`insight-${idx}`])}%</span>
                             </>
                          ) : "Market Insights (10 Cr)"}
                       </button>
 
                       {insightResults[idx] && (
-                        <div className="bg-zinc-950 border border-blue-500/20 p-8 rounded-[32px] animate-in fade-in slide-in-from-top-4 relative group/result">
-                           <div className="prose-krypto">
-                              <ReactMarkdown>{insightResults[idx]}</ReactMarkdown>
+                        <div className="space-y-6">
+                           <div className="bg-zinc-950 border border-blue-500/20 p-8 rounded-[32px] animate-in fade-in slide-in-from-top-4 relative group/result">
+                              <div className="prose-krypto">
+                                 <ReactMarkdown>{insightResults[idx]}</ReactMarkdown>
+                              </div>
                            </div>
                            <button 
                              onClick={() => handleSaveToVault('market-insight', idx, career.title)}
-                             className="mt-6 w-full py-3 bg-zinc-900 border border-zinc-800 text-zinc-400 text-[8px] font-black uppercase tracking-widest rounded-xl hover:text-blue-500 hover:border-blue-500/30 transition-all flex items-center justify-center gap-2"
+                             className="w-full py-3 bg-zinc-900 border border-zinc-800 text-zinc-400 text-[8px] font-black uppercase tracking-widest rounded-xl hover:text-blue-500 hover:border-blue-500/30 transition-all flex items-center justify-center gap-2"
                            >
                               <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7H5a2 2 0 00-2 2v9a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-3m-1 4l-3 3m0 0l-3-3m3 3V4" /></svg>
                               Save Insights to Vault
@@ -658,7 +660,8 @@ const CareerPath: React.FC<CareerPathProps> = ({
                       )}
                    </div>
                 </div>
-
+                
+                {/* Baseline Skills & Roadmap */}
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-8 pt-10 border-t border-zinc-900 relative z-10">
                    <div className="space-y-5">
                       <div className="flex items-center gap-3">
@@ -669,7 +672,7 @@ const CareerPath: React.FC<CareerPathProps> = ({
                       </div>
                       <div className="flex flex-wrap gap-2">
                          {career.requiredSkills.map((s, i) => (
-                           <span key={i} className="px-4 py-2 bg-zinc-950 border border-zinc-800 rounded-xl text-[9px] font-bold text-zinc-400 uppercase tracking-widest hover:border-yellow-500/30 transition-all">{s}</span>
+                           <span key={i} className="px-4 py-2 bg-zinc-950 border border-zinc-800 rounded-xl text-[9px] font-bold text-zinc-400 uppercase tracking-widest">{s}</span>
                          ))}
                       </div>
                    </div>
@@ -682,13 +685,13 @@ const CareerPath: React.FC<CareerPathProps> = ({
                       </div>
                       <div className="grid grid-cols-1 gap-3">
                          {career.certifications.map((cert, i) => (
-                            <div key={i} className="p-4 bg-zinc-950 border border-zinc-900 rounded-2xl flex items-center gap-4 hover:border-blue-500/30 transition-all group">
-                               <div className="w-10 h-10 rounded-full bg-blue-500/5 flex items-center justify-center border border-blue-500/10 group-hover:scale-110 transition-transform">
-                                 <svg className="w-5 h-5 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
+                            <div key={i} className="p-4 bg-zinc-950 border border-zinc-900 rounded-2xl flex items-center gap-4 group hover:border-blue-500/30 transition-all">
+                               <div className="w-8 h-8 rounded-full bg-blue-500/5 flex items-center justify-center border border-blue-500/10">
+                                 <svg className="w-4 h-4 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
                                </div>
                                <div className="flex-1">
-                                  <span className="text-[11px] font-black text-zinc-200 uppercase tracking-tight leading-tight block mb-0.5">{cert}</span>
-                                  <span className="text-[8px] font-black text-zinc-600 uppercase tracking-widest">Verified Internet Platform Recommendation</span>
+                                  <span className="text-[10px] font-black text-zinc-200 uppercase tracking-tight block leading-none mb-1">{cert}</span>
+                                  <span className="text-[7px] font-black text-zinc-700 uppercase tracking-widest">Industry standard Verification</span>
                                </div>
                             </div>
                          ))}
@@ -700,7 +703,7 @@ const CareerPath: React.FC<CareerPathProps> = ({
           </div>
           
           <div className="text-center pt-10 animate-in slide-in-from-bottom-4 duration-1000">
-             <button onClick={handleReset} className="px-10 py-5 bg-zinc-100 text-zinc-950 rounded-[28px] text-[10px] font-black uppercase tracking-[0.3em] hover:bg-yellow-500 active:scale-95 transition-all shadow-3xl border-b-4 border-zinc-300">New Protocol</button>
+             <button onClick={handleReset} className="px-10 py-5 bg-zinc-100 text-zinc-950 rounded-[28px] text-[10px] font-black uppercase tracking-[0.3em] hover:bg-yellow-500 active:scale-95 transition-all shadow-3xl border-b-4 border-zinc-300">New Mapping Protocol</button>
           </div>
         </div>
       )}

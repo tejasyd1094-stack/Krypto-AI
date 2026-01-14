@@ -38,7 +38,8 @@ export const generateCareerStrategy = async (
       STRICT FORMATTING RULE: 
       - DO NOT use markdown tables under any circumstances.
       - Present all learning tracks, courses, and financial breakdowns in clean, STACKED bullet points.
-      - Use bold highlights for course names and estimated costs.
+      - Each item should follow the format: - **Field Name:** Description / Value.
+      - Use bold highlights for course names, platforms, and estimated costs.
       
       Focus on: 
       1. Priority technical and soft skills to sharpen for ${role}.
@@ -78,13 +79,14 @@ export const generateMarketIntelligence = async (
       
       STRICT FORMATTING RULE: 
       - DO NOT use markdown tables.
-      - Present the "Top 4 Active Employers (Strategic Fit)" as a clean, stacked list.
-      - Salary benchmarks and market signals should be bolded bullet points.
+      - Present all data including "Top 4 Active Employers" and "Salary Analysis" as clean, stacked bulleted lists.
+      - Format: - **Category:** Data Detail.
       
       CRITICAL FORMATTING for Employers:
       For each of the Top 4 employers include:
-      - **Company Name**: Brief strategic fit reason.
-      - **Hiring Zone**: Specific office location in ${location}.
+      - **Company Name**: Strategic fit reason.
+      - **Hiring Zone**: Office location in ${location}.
+      - **Key Projects/Culture**: Specific insights.
       
       Identify:
       1. Top 4 specific companies in or near ${location} currently hiring.
@@ -141,9 +143,9 @@ export const analyzeResume = async (resumeInput: string | { data: string, mimeTy
   const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
   const parts: any[] = [{ 
     text: `AUDIT REQUEST: Perform a deep structural and semantic analysis of the attached resume based on 2026 market requirements. 
-    Score it 0-100.
+    Score it 0-100 across professional benchmarks: ATS Parsability, Keyword Alignment, Impact Quantization, Structure, and Readability.
     Provide 5 high-precision improvements using the XYZ formula.
-    Generate an expert-level "formattingRecommendations".`
+    For each improvement, include a 'why' field explaining why the change is necessary for executive-level impact.`
   }];
   
   if (typeof resumeInput === 'string') {
@@ -158,7 +160,13 @@ export const analyzeResume = async (resumeInput: string | { data: string, mimeTy
     model: 'gemini-3-pro-preview',
     contents: { parts },
     config: {
-      systemInstruction: `You are the Krypto Executive Auditor.`,
+      systemInstruction: `You are the Krypto Executive Auditor. 
+      Your analysis must be brutal but constructive. 
+      Analyze the resume against elite recruitment standards including: 
+      - Impact Quantization (Presence of metrics/numbers)
+      - Keyword Alignment (Role-specific terminology)
+      - Readability (Skimmability for 6-second recruiter screen)
+      - ATS Parsability (Formatting compatibility)`,
       responseMimeType: "application/json",
       responseSchema: {
         type: Type.OBJECT,
@@ -170,9 +178,11 @@ export const analyzeResume = async (resumeInput: string | { data: string, mimeTy
             properties: {
               ats: { type: Type.NUMBER },
               keywords: { type: Type.NUMBER },
-              formatting: { type: Type.NUMBER }
+              formatting: { type: Type.NUMBER },
+              impact: { type: Type.NUMBER },
+              readability: { type: Type.NUMBER }
             },
-            required: ["ats", "keywords", "formatting"]
+            required: ["ats", "keywords", "formatting", "impact", "readability"]
           },
           formattingRecommendations: { type: Type.STRING },
           improvements: { 
@@ -183,9 +193,10 @@ export const analyzeResume = async (resumeInput: string | { data: string, mimeTy
                 category: { type: Type.STRING },
                 suggestion: { type: Type.STRING },
                 before: { type: Type.STRING },
-                after: { type: Type.STRING }
+                after: { type: Type.STRING },
+                why: { type: Type.STRING }
               },
-              required: ["category", "suggestion", "before", "after"]
+              required: ["category", "suggestion", "before", "after", "why"]
             }
           }
         },
@@ -198,7 +209,7 @@ export const analyzeResume = async (resumeInput: string | { data: string, mimeTy
   try {
     return JSON.parse(response.text || '{}') as ResumeScoreResponse;
   } catch (e) {
-    return { score: 0, refused: true, breakdown: { ats: 0, keywords: 0, formatting: 0 }, improvements: [], formattingRecommendations: "Audit Engine Refusal." };
+    return { score: 0, refused: true, breakdown: { ats: 0, keywords: 0, formatting: 0, impact: 0, readability: 0 }, improvements: [], formattingRecommendations: "Audit Engine Refusal." };
   }
 };
 
@@ -294,8 +305,18 @@ export const getMockInterviewSession = async (inputs: any): Promise<string> => {
   const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
   const response = await ai.models.generateContent({
     model: 'gemini-3-pro-preview',
-    contents: `Interview sim for ${inputs.role} at ${inputs.company}.`,
-    config: { systemInstruction: "You are the Krypto Interview Lab Director." }
+    contents: `Initialize high-fidelity interview simulation for:
+    Role: ${inputs.role}
+    Organization: ${inputs.company}
+    Location Context: ${inputs.location || 'Global Standard'}
+    Session Type: ${inputs.type}
+    Complexity Vector: ${inputs.difficulty}
+    Protocol Length: ${inputs.length}
+
+    TASK: Provide a set of high-impact interview questions tailored to these parameters. 
+    For each question, provide an 'Architect's Response' — a sample high-performance answer following executive standards.
+    Include insider tips for navigating this specific organization's culture.`,
+    config: { systemInstruction: "You are the Krypto Interview Lab Director. You are precise, demanding, and provide only elite-level preparation materials." }
   });
   return response.text || "";
 };
