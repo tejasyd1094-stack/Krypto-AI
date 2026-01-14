@@ -110,7 +110,6 @@ const Dashboard: React.FC<DashboardProps> = ({ priority, userCredits, onUse, onN
         isPromotion = true;
       }
 
-      // Only deduct credits if it's a successful processing, not a referral or refusal
       if (!isRefusal && !isPromotion) {
         onUse(2);
       }
@@ -122,6 +121,12 @@ const Dashboard: React.FC<DashboardProps> = ({ priority, userCredits, onUse, onN
       setLoading(false);
     }
   };
+
+  // Gauge constants
+  const radius = 45;
+  const circumference = 2 * Math.PI * radius;
+  const score = 65;
+  const offset = circumference - (score / 100) * circumference;
 
   return (
     <div className="max-w-6xl mx-auto py-12 px-6 space-y-32 pb-40">
@@ -141,7 +146,6 @@ const Dashboard: React.FC<DashboardProps> = ({ priority, userCredits, onUse, onN
           >
             <div className="absolute inset-0 bg-gradient-to-br from-yellow-500/5 to-transparent opacity-0 group-focus-within:opacity-100 transition-opacity pointer-events-none"></div>
             
-            {/* Attached File Preview */}
             {attachedFile && (
               <div className="px-6 pt-4 flex items-center gap-3 relative z-10">
                 <div className="flex items-center gap-2 bg-yellow-500/10 border border-yellow-500/20 rounded-xl px-3 py-1.5 animate-in slide-in-from-left-4">
@@ -197,7 +201,6 @@ const Dashboard: React.FC<DashboardProps> = ({ priority, userCredits, onUse, onN
             />
           </form>
 
-          {/* Hot Prompts / Neural Shortcuts */}
           {!advice && !loading && (
             <div className="mt-10 space-y-4 animate-in fade-in slide-in-from-top-4 duration-700 delay-300">
                <div className="flex items-center gap-4 justify-center">
@@ -249,22 +252,85 @@ const Dashboard: React.FC<DashboardProps> = ({ priority, userCredits, onUse, onN
             <div className="inline-block px-4 py-1 rounded-full bg-yellow-500/10 border border-yellow-500/20 text-yellow-500 text-[9px] font-black uppercase tracking-widest">Architecture Suite</div>
             <h4 className="text-4xl sm:text-6xl font-black tracking-tight uppercase leading-tight">ATS <span className="gold-text-gradient">Optimization Lab</span></h4>
             <p className="text-zinc-500 text-xl font-medium leading-relaxed">Turn your resume into a performance beast. We audit keywords, detect formatting discrepancies, and rebuild assets using the Google XYZ formula.</p>
-            <button onClick={() => setActiveTab?.('Resume Scorer')} className="px-10 py-5 bg-zinc-100 text-zinc-950 rounded-[24px] text-[11px] font-black uppercase tracking-widest hover:bg-yellow-500 active:scale-95 transition-all shadow-2xl border-b-4 border-zinc-300">Start Architecture Audit</button>
+            <div className="flex flex-col sm:flex-row gap-4 justify-center lg:justify-start items-center">
+               <button onClick={() => setActiveTab?.('Resume Scorer')} className="px-10 py-5 bg-zinc-100 text-zinc-950 rounded-[24px] text-[11px] font-black uppercase tracking-widest hover:bg-yellow-400 active:scale-95 transition-all shadow-2xl border-b-4 border-zinc-300">Start Architecture Audit</button>
+               <div className="flex items-center gap-2 px-4 py-2 border border-yellow-500/20 bg-yellow-500/5 rounded-2xl">
+                  <span className="w-2 h-2 rounded-full bg-green-500 animate-pulse"></span>
+                  <span className="text-[9px] font-black text-zinc-400 uppercase tracking-widest leading-none">Fully Optimized Export Included</span>
+               </div>
+            </div>
           </div>
-          <div className="flex-1 w-full max-w-xl bg-[#0c0c0e] border border-zinc-800 rounded-[56px] p-12 shadow-3xl rotate-2 hover:rotate-0 transition-all duration-700 relative group">
-             <div className="absolute -top-6 -right-6 w-24 h-24 bg-yellow-500/10 rounded-full blur-3xl group-hover:bg-yellow-500/20 transition-all"></div>
-             <div className="space-y-6 relative z-10">
-                <div className="flex justify-between items-end"><span className="text-[10px] font-black text-yellow-500 uppercase tracking-widest">Neural Score Analysis</span><span className="text-3xl font-black text-zinc-100 tracking-tighter">91%</span></div>
-                <div className="h-2.5 bg-zinc-950 rounded-full overflow-hidden border border-zinc-900"><div className="h-full w-[91%] bg-yellow-500 shadow-[0_0_15px_rgba(234,179,8,0.5)]"></div></div>
-                <div className="p-6 bg-zinc-950 rounded-[32px] border border-zinc-900 space-y-4">
-                   <div className="space-y-1">
-                      <p className="text-[9px] font-black text-red-500/50 uppercase tracking-widest">Detected Deficiency</p>
-                      <p className="text-xs text-zinc-500 italic line-through uppercase">"Helped team grow sales."</p>
+          
+          {/* High-Fidelity UI Simulation Card */}
+          <div className="flex-1 w-full max-w-xl bg-zinc-950 border border-zinc-900 rounded-[48px] p-10 shadow-3xl rotate-1 hover:rotate-0 transition-all duration-700 relative group overflow-hidden border-b-4 border-zinc-800">
+             {/* Professional Scanning Loader Overlay */}
+             <div className="absolute top-0 left-0 w-full h-[2px] bg-gradient-to-r from-transparent via-yellow-500 to-transparent shadow-[0_0_15px_#eab308] z-20 animate-[scan_3s_linear_infinite]"></div>
+             <style>{`
+               @keyframes scan {
+                 0% { transform: translateY(0); opacity: 0; }
+                 10% { opacity: 1; }
+                 90% { opacity: 1; }
+                 100% { transform: translateY(500px); opacity: 0; }
+               }
+             `}</style>
+
+             <div className="space-y-8 relative z-10">
+                {/* Score Section */}
+                <div className="flex items-center gap-10 bg-zinc-900/40 p-8 rounded-[40px] border border-zinc-800/50">
+                   <div className="relative w-32 h-32 flex items-center justify-center flex-shrink-0">
+                      {/* Corner Accents */}
+                      <div className="absolute -top-1 -left-1 w-4 h-4 border-t-4 border-l-4 border-yellow-500/50 rounded-tl-lg"></div>
+                      <div className="absolute -bottom-1 -right-1 w-4 h-4 border-b-4 border-r-4 border-yellow-500/50 rounded-br-lg"></div>
+                      
+                      <svg className="w-full h-full transform -rotate-90">
+                        <circle cx="50%" cy="50%" r={radius} className="stroke-zinc-900 fill-none" strokeWidth="8" />
+                        <circle cx="50%" cy="50%" r={radius} className="stroke-yellow-500 fill-none" strokeWidth="8" strokeDasharray={circumference} strokeDashoffset={offset} strokeLinecap="round" />
+                      </svg>
+                      <div className="absolute inset-0 flex flex-col items-center justify-center">
+                         <span className="text-4xl font-black text-zinc-100 tracking-tighter leading-none">65%</span>
+                         <span className="text-[9px] font-black text-zinc-500 uppercase tracking-[0.2em] mt-1">Baseline</span>
+                      </div>
                    </div>
-                   <div className="space-y-1">
-                      <p className="text-[9px] font-black text-green-500/50 uppercase tracking-widest">Architected Solution</p>
-                      <p className="text-xs text-zinc-100 font-black uppercase tracking-tight leading-relaxed">"Generated $2.4M in pipeline growth as measured by 18% MoM increase, by implementing lead scoring logic."</p>
+                   <div className="flex-1 space-y-4">
+                      <div className="space-y-1">
+                        <h5 className="text-[10px] font-black text-zinc-100 uppercase tracking-widest">Strategic Handshake: <span className="text-yellow-500">Low</span></h5>
+                        <div className="h-1.5 w-full bg-zinc-800 rounded-full overflow-hidden">
+                           <div className="h-full w-[65%] bg-yellow-500"></div>
+                        </div>
+                      </div>
+                      <div className="flex justify-between items-center">
+                         <span className="text-[9px] font-black text-zinc-600 uppercase tracking-widest">Keywords</span>
+                         <span className="text-[9px] font-black text-zinc-400">42/100</span>
+                      </div>
                    </div>
+                </div>
+
+                {/* Audit Section */}
+                <div className="space-y-6">
+                   <p className="text-[10px] font-black text-zinc-600 uppercase tracking-[0.4em] px-2">Discrepancy Audit</p>
+                   <div className="space-y-4">
+                      {/* Deficiency Item */}
+                      <div className="p-6 bg-zinc-900/40 rounded-[32px] border border-zinc-800/50 space-y-3">
+                         <div className="flex items-center gap-2">
+                            <span className="w-2 h-2 rounded-full bg-red-500 shadow-[0_0_8px_#ef4444]"></span>
+                            <p className="text-[9px] font-black text-red-500 uppercase tracking-widest">Deficiency Detected</p>
+                         </div>
+                         <p className="text-xs text-zinc-500 italic line-through uppercase tracking-tight leading-relaxed">"Led a small team to complete project on time."</p>
+                      </div>
+                      
+                      {/* Solution Item */}
+                      <div className="p-6 bg-zinc-900/40 rounded-[32px] border border-green-500/10 space-y-3">
+                         <div className="flex items-center gap-2">
+                            <span className="w-2 h-2 rounded-full bg-green-500 shadow-[0_0_8px_#22c55e]"></span>
+                            <p className="text-[9px] font-black text-green-500 uppercase tracking-widest">Krypto Architected (XYZ Formula)</p>
+                         </div>
+                         <p className="text-xs text-zinc-100 font-black uppercase tracking-tight leading-relaxed">"Managed 12 cross-functional engineers as measured by 100% on-time deployment across 4 sprint cycles, by implementing Agile-K Architecture."</p>
+                      </div>
+                   </div>
+                </div>
+
+                <div className="pt-2 text-center">
+                   <span className="text-[8px] font-black text-zinc-700 uppercase tracking-[0.5em]">Executive Blueprint V4.1 Engine</span>
                 </div>
              </div>
           </div>

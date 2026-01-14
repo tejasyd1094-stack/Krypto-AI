@@ -11,7 +11,7 @@ import Pricing from './components/Pricing';
 import UnitLedger from './components/UnitLedger';
 import Login from './components/Login';
 import { supabase } from './lib/supabase';
-import { TabType, UserStatus, PricingPlan, PlanId, FeatureAccess, HistoryItem } from './types';
+import { TabType, UserStatus, PricingPlan, PlanId, FeatureAccess, HistoryItem, ResumeScoreResponse } from './types';
 
 const App: React.FC = () => {
   const [session, setSession] = useState<any>(null);
@@ -19,7 +19,14 @@ const App: React.FC = () => {
   const [activeTab, setActiveTab] = useState<TabType>('Home');
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [isVerifyingLocation, setIsVerifyingLocation] = useState(false);
+  const [newHistoryCount, setNewHistoryCount] = useState(0);
   
+  // Persisted Resume Scorer State
+  const [resumeFile, setResumeFile] = useState<File | null>(null);
+  const [resumeResult, setResumeResult] = useState<ResumeScoreResponse | null>(null);
+  const [formattedResume, setFormattedResume] = useState<string | null>(null);
+  const [resumeData, setResumeData] = useState<{ data: string, mimeType: string } | string | null>(null);
+
   const [user, setUser] = useState<UserStatus>({
     isPro: false,
     planId: 'free',
@@ -36,6 +43,12 @@ const App: React.FC = () => {
     const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => setSession(session));
     return () => subscription.unsubscribe();
   }, []);
+
+  useEffect(() => {
+    if (activeTab === 'History') {
+      setNewHistoryCount(0);
+    }
+  }, [activeTab]);
 
   useEffect(() => {
     const detectLocale = async () => {
@@ -129,6 +142,9 @@ const App: React.FC = () => {
 
   const saveToHistory = (item: HistoryItem) => {
     setUser(prev => ({ ...prev, history: [item, ...prev.history] }));
+    if (activeTab !== 'History') {
+      setNewHistoryCount(prev => prev + 1);
+    }
   };
 
   const renderContent = () => {
@@ -141,6 +157,18 @@ const App: React.FC = () => {
           maxImprovements={10} 
           onNavigatePricing={() => setActiveTab('Pricing')} 
           onSaveHistory={saveToHistory}
+          persistedData={{
+            file: resumeFile,
+            result: resumeResult,
+            formattedResume: formattedResume,
+            resumeData: resumeData
+          }}
+          setPersistedData={{
+            setFile: setResumeFile,
+            setResult: setResumeResult,
+            setFormattedResume: setFormattedResume,
+            setResumeData: setResumeData
+          }}
         />
       );
       case 'Career Path': return (
@@ -178,6 +206,7 @@ const App: React.FC = () => {
         setIsOpen={setIsSidebarOpen} 
         user={user} 
         onLogout={handleLogout}
+        newHistoryCount={newHistoryCount}
       />
       <main className="flex-1 flex flex-col min-w-0">
         <header className="h-20 flex items-center justify-between px-6 border-b border-zinc-900 bg-zinc-950/80 backdrop-blur-md sticky top-0 z-30">

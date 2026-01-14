@@ -2,23 +2,39 @@
 import { GoogleGenAI, Type } from "@google/genai";
 import { ResumeScoreResponse, CareerPathResponse, PersonalityTraitScores } from "../types";
 
+const CURRENT_DATE = "January 14, 2026";
+
 const MISSION_GUARDRAIL = `
 MISSION SCOPE & GUARDRAIL:
 You are Krypto AI, a high-performance Recruitment Agent and Career Architect. 
-Your architecture is strictly optimized for professional growth, recruitment, and career strategy.
+Current Date: ${CURRENT_DATE}.
+Your architecture is strictly optimized for professional growth, recruitment, and career strategy in the 2026 job market.
 
-ROUTING & PROMOTION LOGIC:
-Krypto AI has specialized modules. If a user query matches one of these modules, you MUST provide a helpful suggestion and trigger a promotion.
-- If the query is about improving, scoring, fixing, or analyzing a resume, use the tag: [PROMOTION:Resume Scorer]
-- If the query is about finding a career path, personality tests, traits, or predicting future roles, use the tag: [PROMOTION:Career Path]
-- If the query is about drafting cold emails, LinkedIn messages, or networking outreach, use the tag: [PROMOTION:Outreach Architect]
-- If the query is about practicing for an interview or mock interview questions, use the tag: [PROMOTION:Interview Lab]
-
-When promoting, say something like: "I noticed you're looking for [topic]. Our specialized [Feature Name] module is architected specifically for this with higher precision. Would you like to switch to that tool?"
+ROUTING & PROMOTION LOGIC (ONLY for general dashboard/chat):
+If the user is in the general chat and asks for a specialized task, you MUST use these tags:
+- Resume analysis/scoring: [PROMOTION:Resume Scorer]
+- Career paths/personality: [PROMOTION:Career Path]
+- Cold emails/LinkedIn: [PROMOTION:Outreach Architect]
+- Interview practice: [PROMOTION:Interview Lab]
 
 SCOPE ENFORCEMENT:
-- If a user asks for tasks outside of career development, recruitment, job searching, or professional networking (e.g., cooking recipes, general trivia, unrelated code), you MUST politely and empathetically decline.
-- Respond with: "[REFUSAL] I'm sorry, as Krypto AI, I'm uniquely designed to architect careers and recruitment strategies. My neural pathways don't currently cover [topic], as I want to ensure 100% focus on your professional success. Is there a career-related goal I can assist with?"
+- If a user asks for non-career tasks, politely decline using: "[REFUSAL] I'm sorry, as Krypto AI, I'm uniquely designed to architect careers. My neural pathways don't cover [topic]. Is there a career goal I can assist with?"
+`;
+
+const RESUME_AUDIT_PROTOCOL = `
+RESUME AUDIT PROTOCOL (Jan 2026 Standards):
+You are the Krypto Executive Auditor. Your analysis is cold, clinical, and high-precision. 
+Analyze resumes for:
+1. ATS Parsability (Modern 2026 LLM-based parsers).
+2. Semantic Strength (Quantum-era keywords, industry-specific terminology).
+3. Impact Metrics (The "Google XYZ" standard).
+4. Structural Integrity (Visual hierarchy vs Machine readability).
+
+Expert Analysis Rules:
+- Avoid generic advice. Give high-stakes, actionable recommendations.
+- Mention specific ATS reading errors (e.g., 'Double columns cause semantic fragmentation', 'Non-standard headings disrupt entity extraction').
+- Focus on the "Executive Handshake" — the critical 6-second machine and human audit.
+- Do NOT use promotion tags if you are performing an audit.
 `;
 
 const XYZ_FORMULA_INSTRUCTION = 'For every improvement, convert the original experience into the "Accomplished [X] as measured by [Y], by doing [Z]" format.';
@@ -41,16 +57,19 @@ export const generateFormattedResume = async (
 
   parts.push({ 
     text: `TASK: Reconstruct this profile using the MANDATORY KRYPTO SIGNATURE TEMPLATE.
+    Today is ${CURRENT_DATE}. Use the latest 2026 executive standards.
+    
+    CRITICAL: START THE OUTPUT IMMEDIATELY WITH THE CANDIDATE NAME. DO NOT INCLUDE ANY PREAMBLE, NOTES, DATES, OR "HERE IS THE RESUME". THE FIRST CHARACTER OF YOUR OUTPUT MUST BE THE NAME HEADER.
     
     INTEGRATE THESE AUDIT IMPROVEMENTS:
     ${improvements}
     
-    STRICT STRUCTURAL BLUEPRINT (DO NOT DEVIATE):
+    STRICT STRUCTURAL BLUEPRINT:
     1. NAME: # [FULL NAME]
     2. CONTACT: [Email] | [Phone] | [Location] | [LinkedIn URL]
     
     ## PROFESSIONAL SUMMARY
-    [A 4-6 line high-performance narrative focused on impact]
+    [High-performance narrative]
     
     ## CORE COMPETENCIES
     [List 4-5 key areas: **Area:** Skill A, Skill B]
@@ -58,23 +77,16 @@ export const generateFormattedResume = async (
     ## PROFESSIONAL EXPERIENCE
     ### [Job Title] | [Company] | [Dates]
     - [XYZ Bullet: Accomplished X as measured by Y, by doing Z]
-    (Repeat for each major role)
     
     ## EDUCATION
-    ### [Degree] | [Institution] | [Year]
-
-    FORMATTING RULES:
-    - NO HTML tags.
-    - Standard Markdown only.
-    - Bullet points start with "- ".
-    - Use standard dashes for dates (e.g., 2021 - 2024).` 
+    ### [Degree] | [Institution] | [Year]` 
   });
 
   const response = await ai.models.generateContent({
     model: 'gemini-3-pro-preview',
     contents: { parts },
     config: {
-      systemInstruction: `You are the Krypto Executive Architect. ${MISSION_GUARDRAIL}`
+      systemInstruction: `You are the Krypto Executive Architect. ${MISSION_GUARDRAIL} ${RESUME_AUDIT_PROTOCOL}`
     }
   });
   return response.text || "";
@@ -83,7 +95,12 @@ export const generateFormattedResume = async (
 export const analyzeResume = async (resumeInput: string | { data: string, mimeType: string }): Promise<ResumeScoreResponse> => {
   const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
   const parts: any[] = [{ 
-    text: `${MISSION_GUARDRAIL} \n\nAnalyze this resume for ATS compatibility. Score it from 0-100. Provide 5 critical improvements. ${XYZ_FORMULA_INSTRUCTION} Response format: JSON.`
+    text: `AUDIT REQUEST: Perform a deep structural and semantic analysis of the attached resume based on 2026 market requirements. 
+    Score it 0-100 based on ATS compatibility and executive impact.
+    Provide 5 high-precision improvements using the XYZ formula.
+    Generate an expert-level "formattingRecommendations" summary that highlights critical structural flaws.
+    Today's Date: ${CURRENT_DATE}.
+    ${XYZ_FORMULA_INSTRUCTION}`
   }];
   
   if (typeof resumeInput === 'string') {
@@ -95,9 +112,10 @@ export const analyzeResume = async (resumeInput: string | { data: string, mimeTy
   }
 
   const response = await ai.models.generateContent({
-    model: 'gemini-3-flash-preview',
+    model: 'gemini-3-pro-preview',
     contents: { parts },
     config: {
+      systemInstruction: `You are the Krypto Executive Auditor. ${RESUME_AUDIT_PROTOCOL}`,
       responseMimeType: "application/json",
       responseSchema: {
         type: Type.OBJECT,
@@ -129,14 +147,15 @@ export const analyzeResume = async (resumeInput: string | { data: string, mimeTy
           }
         },
         required: ["score", "breakdown", "formattingRecommendations", "improvements"]
-      }
+      },
+      thinkingConfig: { thinkingBudget: 4000 }
     }
   });
 
   try {
     return JSON.parse(response.text || '{}') as ResumeScoreResponse;
   } catch (e) {
-    return { score: 0, refused: true, breakdown: { ats: 0, keywords: 0, formatting: 0 }, improvements: [], formattingRecommendations: "Engine Error." };
+    return { score: 0, refused: true, breakdown: { ats: 0, keywords: 0, formatting: 0 }, improvements: [], formattingRecommendations: "Audit Engine Refusal: Payload structure error." };
   }
 };
 
@@ -164,12 +183,12 @@ export const predictCareerPaths = async (
     model: 'gemini-3-pro-preview',
     contents: { parts },
     config: {
-      systemInstruction: `You are Krypto AI Career Path Predictor. Map personality traits to high-growth job roles. 
+      systemInstruction: `You are Krypto AI Career Path Predictor. Map personality traits to high-growth job roles for ${CURRENT_DATE}. 
       For each career, provide:
       1. Specific local market signals for ${location}.
       2. City topography analysis (which neighborhoods or zones are hiring).
-      3. Hub Analysis (specific business hubs/districts like 'Bandra-Kurla Complex' or 'Silicon Valley Corridor').
-      4. Local Salary Analysis with precise ranges.
+      3. Hub Analysis (specific business hubs/districts).
+      4. Local Salary Analysis with 2026 inflation-adjusted ranges.
       5. Matches based on RIASEC profile.
       ${MISSION_GUARDRAIL}`,
       responseMimeType: "application/json",
@@ -239,7 +258,7 @@ export const getCareerAdvice = async (query: string, fileData?: string | { data:
     model: 'gemini-3-flash-preview',
     contents: { parts },
     config: {
-      systemInstruction: `You are Krypto, a proactive career strategist. ${MISSION_GUARDRAIL}`,
+      systemInstruction: `You are Krypto, a proactive career strategist. Current date: ${CURRENT_DATE}. ${MISSION_GUARDRAIL}`,
     }
   });
   return response.text || "";
@@ -249,7 +268,7 @@ export const getOutreachMessage = async (inputs: any): Promise<string> => {
   const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
   const response = await ai.models.generateContent({
     model: 'gemini-3-flash-preview',
-    contents: `Generate high-conversion outreach message for ${inputs.company} regarding ${inputs.role}. Tone: ${inputs.tone}. Context: ${inputs.context}`,
+    contents: `Generate high-conversion outreach message for ${inputs.company} regarding ${inputs.role}. Date: ${CURRENT_DATE}. Tone: ${inputs.tone}. Context: ${inputs.context}`,
     config: { systemInstruction: "You are the Krypto Outreach Architect. Focus on impact and value." }
   });
   return response.text || "";
@@ -259,7 +278,7 @@ export const getMockInterviewSession = async (inputs: any): Promise<string> => {
   const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
   const response = await ai.models.generateContent({
     model: 'gemini-3-pro-preview',
-    contents: `Initialize interview simulation for ${inputs.role} at ${inputs.company}. Focus: ${inputs.type}. Location: ${inputs.location}`,
+    contents: `Initialize interview simulation for ${inputs.role} at ${inputs.company}. Focus: ${inputs.type}. Location: ${inputs.location}. Date: ${CURRENT_DATE}`,
     config: { systemInstruction: "You are the Krypto Interview Lab Director. Be tough but fair." }
   });
   return response.text || "";

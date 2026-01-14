@@ -11,9 +11,10 @@ interface SidebarProps {
   setIsOpen: (open: boolean) => void;
   user: UserStatus;
   onLogout: () => void;
+  newHistoryCount: number;
 }
 
-const Sidebar: React.FC<SidebarProps> = ({ activeTab, setActiveTab, isOpen, setIsOpen, user, onLogout }) => {
+const Sidebar: React.FC<SidebarProps> = ({ activeTab, setActiveTab, isOpen, setIsOpen, user, onLogout, newHistoryCount }) => {
   const navItems: { label: TabType; icon: React.ReactNode }[] = [
     { 
       label: 'Home', 
@@ -100,7 +101,7 @@ const Sidebar: React.FC<SidebarProps> = ({ activeTab, setActiveTab, isOpen, setI
               <button
                 key={item.label}
                 onClick={() => { setActiveTab(item.label); setIsOpen(false); }}
-                className={`w-full flex items-center gap-4 px-4 py-3.5 rounded-2xl text-[11px] font-black tracking-widest transition-all group uppercase whitespace-nowrap overflow-hidden ${
+                className={`w-full flex items-center gap-4 px-4 py-3.5 rounded-2xl text-[11px] font-black tracking-widest transition-all group uppercase whitespace-nowrap overflow-hidden relative ${
                   activeTab === item.label 
                     ? 'bg-yellow-500/10 text-yellow-500 border border-yellow-500/20' 
                     : 'text-zinc-500 hover:text-zinc-200 hover:bg-zinc-900 border border-transparent'
@@ -109,7 +110,12 @@ const Sidebar: React.FC<SidebarProps> = ({ activeTab, setActiveTab, isOpen, setI
                 <span className={`flex-shrink-0 transition-transform duration-300 group-hover:scale-110 ${activeTab === item.label ? 'text-yellow-500' : 'text-zinc-600'}`}>
                   {item.icon}
                 </span>
-                <span className="truncate">{item.label}</span>
+                <span className="truncate flex-1 text-left">{item.label}</span>
+                {item.label === 'History' && newHistoryCount > 0 && (
+                  <span className="flex items-center justify-center min-w-[18px] h-[18px] px-1 bg-yellow-500 text-zinc-950 text-[10px] font-black rounded-full animate-in zoom-in">
+                    {newHistoryCount}
+                  </span>
+                )}
               </button>
             ))}
           </nav>
