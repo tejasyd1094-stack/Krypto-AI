@@ -9,35 +9,72 @@ MISSION SCOPE & GUARDRAIL:
 You are Krypto AI, a high-performance Recruitment Agent and Career Architect. 
 Current Date: ${CURRENT_DATE}.
 Your architecture is strictly optimized for professional growth, recruitment, and career strategy in the 2026 job market.
-
-ROUTING & PROMOTION LOGIC (ONLY for general dashboard/chat):
-If the user is in the general chat and asks for a specialized task, you MUST use these tags:
-- Resume analysis/scoring: [PROMOTION:Resume Scorer]
-- Career paths/personality: [PROMOTION:Career Path]
-- Cold emails/LinkedIn: [PROMOTION:Outreach Architect]
-- Interview practice: [PROMOTION:Interview Lab]
-
-SCOPE ENFORCEMENT:
-- If a user asks for non-career tasks, politely decline using: "[REFUSAL] I'm sorry, as Krypto AI, I'm uniquely designed to architect careers. My neural pathways don't cover [topic]. Is there a career goal I can assist with?"
 `;
 
-const RESUME_AUDIT_PROTOCOL = `
-RESUME AUDIT PROTOCOL (Jan 2026 Standards):
-You are the Krypto Executive Auditor. Your analysis is cold, clinical, and high-precision. 
-Analyze resumes for:
-1. ATS Parsability (Modern 2026 LLM-based parsers).
-2. Semantic Strength (Quantum-era keywords, industry-specific terminology).
-3. Impact Metrics (The "Google XYZ" standard).
-4. Structural Integrity (Visual hierarchy vs Machine readability).
+export const generateCareerStrategy = async (
+  role: string,
+  inputs: { budget: string; months: string; hours: string },
+  resumeData?: string | { data: string; mimeType: string }
+): Promise<string> => {
+  const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
+  const parts: any[] = [
+    { text: `TASK: Generate a high-performance career pivot strategy for the role of ${role}.` },
+    { text: `CONSTRAINTS: Budget: ${inputs.budget}, Timeline: ${inputs.months} months, Daily Commitment: ${inputs.hours} hours.` }
+  ];
 
-Expert Analysis Rules:
-- Avoid generic advice. Give high-stakes, actionable recommendations.
-- Mention specific ATS reading errors (e.g., 'Double columns cause semantic fragmentation', 'Non-standard headings disrupt entity extraction').
-- Focus on the "Executive Handshake" — the critical 6-second machine and human audit.
-- Do NOT use promotion tags if you are performing an audit.
-`;
+  if (resumeData) {
+    if (typeof resumeData === 'string') parts.push({ text: `RESUME CONTEXT: ${resumeData}` });
+    else parts.push({ inlineData: { data: resumeData.data, mimeType: resumeData.mimeType } });
+  }
 
-const XYZ_FORMULA_INSTRUCTION = 'For every improvement, convert the original experience into the "Accomplished [X] as measured by [Y], by doing [Z]" format.';
+  const response = await ai.models.generateContent({
+    model: 'gemini-3-pro-preview',
+    contents: { parts },
+    config: {
+      systemInstruction: `You are the Krypto Strategy Architect. Create a tactical plan for targeting the role: ${role}.
+      Focus on: 
+      1. Priority technical and soft skills to sharpen for ${role}.
+      2. Specific high-ROI courses (mention platforms like Coursera, Udemy, etc.) matching the user's budget and timeline.
+      3. Precise resume modifications tailored specifically for ${role}.
+      4. A job application 'blitz' strategy to land this specific title. 
+      Use Markdown with concise headers. Keep it professional and high-impact.`,
+    }
+  });
+  return response.text || "Strategy generation failed.";
+};
+
+export const generateMarketIntelligence = async (
+  role: string,
+  location: string,
+  resumeData?: string | { data: string; mimeType: string }
+): Promise<string> => {
+  const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
+  const parts: any[] = [
+    { text: `RESEARCH TARGET: ${role} in ${location}.` }
+  ];
+
+  if (resumeData) {
+    if (typeof resumeData === 'string') parts.push({ text: `CANDIDATE PROFILE: ${resumeData}` });
+    else parts.push({ inlineData: { data: resumeData.data, mimeType: resumeData.mimeType } });
+  }
+
+  const response = await ai.models.generateContent({
+    model: 'gemini-3-pro-preview',
+    contents: { parts },
+    config: {
+      tools: [{ googleSearch: {} }],
+      systemInstruction: `You are the Krypto Market Intelligence Officer. 
+      Conduct a real-time audit of the hiring landscape specifically for ${role} in ${location}.
+      Identify:
+      1. Top 3-5 specific companies in or near ${location} currently hiring for ${role} or similar titles.
+      2. Detailed salary ranges for ${role} at these specific companies based on market data.
+      3. Cultural audit: Extract sentiment specifically for engineering/professional teams in these firms.
+      4. Geographical Hubs: Pinpoint specific zones or technology parks in ${location} where ${role} roles are concentrated.
+      Provide a highly professional summary with Markdown. List sources.`,
+    }
+  });
+  return response.text || "Intelligence audit failed.";
+};
 
 export const generateFormattedResume = async (
   resumeInput: string | { data: string, mimeType: string }, 
@@ -58,35 +95,21 @@ export const generateFormattedResume = async (
   parts.push({ 
     text: `TASK: Reconstruct this profile using the MANDATORY KRYPTO SIGNATURE TEMPLATE.
     Today is ${CURRENT_DATE}. Use the latest 2026 executive standards.
-    
-    CRITICAL: START THE OUTPUT IMMEDIATELY WITH THE CANDIDATE NAME. DO NOT INCLUDE ANY PREAMBLE, NOTES, DATES, OR "HERE IS THE RESUME". THE FIRST CHARACTER OF YOUR OUTPUT MUST BE THE NAME HEADER.
-    
-    INTEGRATE THESE AUDIT IMPROVEMENTS:
-    ${improvements}
-    
+    CRITICAL: START THE OUTPUT IMMEDIATELY WITH THE CANDIDATE NAME.
     STRICT STRUCTURAL BLUEPRINT:
     1. NAME: # [FULL NAME]
     2. CONTACT: [Email] | [Phone] | [Location] | [LinkedIn URL]
-    
     ## PROFESSIONAL SUMMARY
-    [High-performance narrative]
-    
     ## CORE COMPETENCIES
-    [List 4-5 key areas: **Area:** Skill A, Skill B]
-    
     ## PROFESSIONAL EXPERIENCE
-    ### [Job Title] | [Company] | [Dates]
-    - [XYZ Bullet: Accomplished X as measured by Y, by doing Z]
-    
-    ## EDUCATION
-    ### [Degree] | [Institution] | [Year]` 
+    ## EDUCATION` 
   });
 
   const response = await ai.models.generateContent({
     model: 'gemini-3-pro-preview',
     contents: { parts },
     config: {
-      systemInstruction: `You are the Krypto Executive Architect. ${MISSION_GUARDRAIL} ${RESUME_AUDIT_PROTOCOL}`
+      systemInstruction: `You are the Krypto Executive Architect. ${MISSION_GUARDRAIL}`
     }
   });
   return response.text || "";
@@ -96,11 +119,9 @@ export const analyzeResume = async (resumeInput: string | { data: string, mimeTy
   const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
   const parts: any[] = [{ 
     text: `AUDIT REQUEST: Perform a deep structural and semantic analysis of the attached resume based on 2026 market requirements. 
-    Score it 0-100 based on ATS compatibility and executive impact.
+    Score it 0-100.
     Provide 5 high-precision improvements using the XYZ formula.
-    Generate an expert-level "formattingRecommendations" summary that highlights critical structural flaws.
-    Today's Date: ${CURRENT_DATE}.
-    ${XYZ_FORMULA_INSTRUCTION}`
+    Generate an expert-level "formattingRecommendations".`
   }];
   
   if (typeof resumeInput === 'string') {
@@ -115,7 +136,7 @@ export const analyzeResume = async (resumeInput: string | { data: string, mimeTy
     model: 'gemini-3-pro-preview',
     contents: { parts },
     config: {
-      systemInstruction: `You are the Krypto Executive Auditor. ${RESUME_AUDIT_PROTOCOL}`,
+      systemInstruction: `You are the Krypto Executive Auditor.`,
       responseMimeType: "application/json",
       responseSchema: {
         type: Type.OBJECT,
@@ -155,7 +176,7 @@ export const analyzeResume = async (resumeInput: string | { data: string, mimeTy
   try {
     return JSON.parse(response.text || '{}') as ResumeScoreResponse;
   } catch (e) {
-    return { score: 0, refused: true, breakdown: { ats: 0, keywords: 0, formatting: 0 }, improvements: [], formattingRecommendations: "Audit Engine Refusal: Payload structure error." };
+    return { score: 0, refused: true, breakdown: { ats: 0, keywords: 0, formatting: 0 }, improvements: [], formattingRecommendations: "Audit Engine Refusal." };
   }
 };
 
@@ -164,33 +185,27 @@ export const predictCareerPaths = async (
   location: string,
   userType: 'experienced' | 'fresher',
   resumeData?: string | { data: string; mimeType: string },
-  fresherIntake?: any
 ): Promise<CareerPathResponse> => {
   const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
   const parts: any[] = [
-    { text: `CONTEXT:\nUser Type: ${userType}\nLocation: ${location}\nRIASEC/Personality Vector Scores: ${JSON.stringify(scores)}\nFresher Intake: ${JSON.stringify(fresherIntake)}` }
+    { text: `CONTEXT:\nUser Type: ${userType}\nLocation: ${location}\nRIASEC/Personality Vector Scores: ${JSON.stringify(scores)}` }
   ];
 
   if (resumeData) {
-    if (typeof resumeData === 'string') {
-      parts.push({ text: `RESUME TEXT: ${resumeData}` });
-    } else {
-      parts.push({ inlineData: { data: resumeData.data, mimeType: resumeData.mimeType } });
-    }
+    if (typeof resumeData === 'string') parts.push({ text: `RESUME TEXT: ${resumeData}` });
+    else parts.push({ inlineData: { data: resumeData.data, mimeType: resumeData.mimeType } });
   }
 
   const response = await ai.models.generateContent({
     model: 'gemini-3-pro-preview',
     contents: { parts },
     config: {
-      systemInstruction: `You are Krypto AI Career Path Predictor. Map personality traits and professional DNA to high-growth job roles for ${CURRENT_DATE}. 
-      
-      TASK REQUIREMENTS:
-      1. Interpret the provided scores as a "Personality DNA Code".
-      2. Provide 3 specific career recommendations optimized for ${location}.
-      3. For each career, list 3-4 top-tier certifications from internet platforms (e.g., Coursera, Udacity, AWS, Microsoft, Google, HubSpot, edX).
-      4. Include city topography analysis (hiring zones) and local salary parity.
-      ${MISSION_GUARDRAIL}`,
+      systemInstruction: `You are Krypto AI Career Path Predictor. Map traits to job roles for ${CURRENT_DATE}. 
+      1. Interpret scores as a DNA Code.
+      2. Provide 3 specific recommendations for ${location}.
+      3. For each career, list required skills and top certifications. 
+      4. For certifications, explicitly include the platform name (e.g. "AWS Certified Solutions Architect (Amazon)", "Google Data Analytics (Coursera)").
+      5. Include localized salary benchmarks.`,
       responseMimeType: "application/json",
       responseSchema: {
         type: Type.OBJECT,
@@ -209,20 +224,7 @@ export const predictCareerPaths = async (
                 localMarketInsights: { type: Type.STRING },
                 hubAnalysis: { type: Type.STRING },
                 requiredSkills: { type: Type.ARRAY, items: { type: Type.STRING } },
-                certifications: { type: Type.ARRAY, items: { type: Type.STRING } },
-                higherEducation: { type: Type.ARRAY, items: { type: Type.STRING } },
-                costEffectiveCourses: {
-                  type: Type.ARRAY,
-                  items: {
-                    type: Type.OBJECT,
-                    properties: {
-                      name: { type: Type.STRING },
-                      platform: { type: Type.STRING },
-                      impact: { type: Type.STRING }
-                    },
-                    required: ["name", "platform", "impact"]
-                  }
-                }
+                certifications: { type: Type.ARRAY, items: { type: Type.STRING } }
               },
               required: ["title", "reason", "matchPercentage", "salaryExpectation", "localSalaryAnalysis", "localMarketInsights", "hubAnalysis", "requiredSkills", "certifications"]
             }
@@ -243,23 +245,15 @@ export const predictCareerPaths = async (
 export const getCareerAdvice = async (query: string, fileData?: string | { data: string, mimeType: string }): Promise<string> => {
   const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
   const parts: any[] = [];
-  
   if (fileData) {
-    if (typeof fileData === 'string') {
-      parts.push({ text: `ATTACHED DOCUMENT CONTENT:\n${fileData}` });
-    } else {
-      parts.push({ inlineData: { data: fileData.data, mimeType: fileData.mimeType } });
-    }
+    if (typeof fileData === 'string') parts.push({ text: `FILE:\n${fileData}` });
+    else parts.push({ inlineData: { data: fileData.data, mimeType: fileData.mimeType } });
   }
-  
-  parts.push({ text: `USER QUERY: ${query}` });
-
+  parts.push({ text: `QUERY: ${query}` });
   const response = await ai.models.generateContent({
     model: 'gemini-3-flash-preview',
     contents: { parts },
-    config: {
-      systemInstruction: `You are Krypto, a proactive career strategist. Current date: ${CURRENT_DATE}. ${MISSION_GUARDRAIL}`,
-    }
+    config: { systemInstruction: `You are Krypto career strategist. ${MISSION_GUARDRAIL}` }
   });
   return response.text || "";
 };
@@ -268,8 +262,8 @@ export const getOutreachMessage = async (inputs: any): Promise<string> => {
   const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
   const response = await ai.models.generateContent({
     model: 'gemini-3-flash-preview',
-    contents: `Generate high-conversion outreach message for ${inputs.company} regarding ${inputs.role}. Date: ${CURRENT_DATE}. Tone: ${inputs.tone}. Context: ${inputs.context}`,
-    config: { systemInstruction: "You are the Krypto Outreach Architect. Focus on impact and value." }
+    contents: `Generate outreach for ${inputs.company} regarding ${inputs.role}. Tone: ${inputs.tone}.`,
+    config: { systemInstruction: "You are the Krypto Outreach Architect." }
   });
   return response.text || "";
 };
@@ -278,8 +272,8 @@ export const getMockInterviewSession = async (inputs: any): Promise<string> => {
   const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
   const response = await ai.models.generateContent({
     model: 'gemini-3-pro-preview',
-    contents: `Initialize interview simulation for ${inputs.role} at ${inputs.company}. Focus: ${inputs.type}. Location: ${inputs.location}. Date: ${CURRENT_DATE}`,
-    config: { systemInstruction: "You are the Krypto Interview Lab Director. Be tough but fair." }
+    contents: `Interview sim for ${inputs.role} at ${inputs.company}.`,
+    config: { systemInstruction: "You are the Krypto Interview Lab Director." }
   });
   return response.text || "";
 };

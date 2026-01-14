@@ -212,6 +212,7 @@ const App: React.FC = () => {
         <CareerPath 
           userCredits={user.credits} 
           userLocation={user.location} 
+          userSymbol={user.symbol}
           onUse={deductCredits} 
           onNavigatePricing={() => setActiveTab('Pricing')} 
           onSaveHistory={saveToHistory} 
