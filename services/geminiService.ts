@@ -168,7 +168,7 @@ export const predictCareerPaths = async (
 ): Promise<CareerPathResponse> => {
   const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
   const parts: any[] = [
-    { text: `CONTEXT:\nUser Type: ${userType}\nLocation: ${location}\nRIASEC Scores: ${JSON.stringify(scores)}\nFresher Intake: ${JSON.stringify(fresherIntake)}` }
+    { text: `CONTEXT:\nUser Type: ${userType}\nLocation: ${location}\nRIASEC/Personality Vector Scores: ${JSON.stringify(scores)}\nFresher Intake: ${JSON.stringify(fresherIntake)}` }
   ];
 
   if (resumeData) {
@@ -183,13 +183,13 @@ export const predictCareerPaths = async (
     model: 'gemini-3-pro-preview',
     contents: { parts },
     config: {
-      systemInstruction: `You are Krypto AI Career Path Predictor. Map personality traits to high-growth job roles for ${CURRENT_DATE}. 
-      For each career, provide:
-      1. Specific local market signals for ${location}.
-      2. City topography analysis (which neighborhoods or zones are hiring).
-      3. Hub Analysis (specific business hubs/districts).
-      4. Local Salary Analysis with 2026 inflation-adjusted ranges.
-      5. Matches based on RIASEC profile.
+      systemInstruction: `You are Krypto AI Career Path Predictor. Map personality traits and professional DNA to high-growth job roles for ${CURRENT_DATE}. 
+      
+      TASK REQUIREMENTS:
+      1. Interpret the provided scores as a "Personality DNA Code".
+      2. Provide 3 specific career recommendations optimized for ${location}.
+      3. For each career, list 3-4 top-tier certifications from internet platforms (e.g., Coursera, Udacity, AWS, Microsoft, Google, HubSpot, edX).
+      4. Include city topography analysis (hiring zones) and local salary parity.
       ${MISSION_GUARDRAIL}`,
       responseMimeType: "application/json",
       responseSchema: {
@@ -224,7 +224,7 @@ export const predictCareerPaths = async (
                   }
                 }
               },
-              required: ["title", "reason", "matchPercentage", "salaryExpectation", "localSalaryAnalysis", "localMarketInsights", "hubAnalysis", "requiredSkills"]
+              required: ["title", "reason", "matchPercentage", "salaryExpectation", "localSalaryAnalysis", "localMarketInsights", "hubAnalysis", "requiredSkills", "certifications"]
             }
           }
         },
