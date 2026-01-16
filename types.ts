@@ -4,11 +4,21 @@ export type PlanId = 'free' | 'starter' | 'pro' | 'ultra-pro';
 
 export interface HistoryItem {
   id: string;
-  type: 'strategy' | 'market-insight' | 'outreach' | 'interview-prep';
+  type: 'strategy' | 'market-insight' | 'outreach' | 'interview-prep' | 'resume-audit';
   title: string;
   date: string;
   inputs: Record<string, string>;
   result: string;
+  score?: number;
+  breakdown?: { 
+    ats: number; 
+    keywords: number; 
+    formatting: number; 
+    impact: number;       
+    readability: number;  
+  };
+  improvements?: ResumeImprovement[];
+  optimizedResult?: string;
 }
 
 export interface UserStatus {
@@ -55,7 +65,7 @@ export interface ResumeImprovement {
   suggestion: string;
   before: string;
   after: string;
-  why: string; // New: Explaining the rationale for the change
+  why: string; 
 }
 
 export interface ResumeScoreResponse {
@@ -64,8 +74,8 @@ export interface ResumeScoreResponse {
     ats: number; 
     keywords: number; 
     formatting: number; 
-    impact: number;       // New: Quantifiable impact scoring
-    readability: number;  // New: Visual hierarchy and scanning ease
+    impact: number;       
+    readability: number;  
   };
   improvements: ResumeImprovement[];
   formattingRecommendations: string;

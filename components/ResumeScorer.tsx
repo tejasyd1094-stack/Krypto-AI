@@ -16,6 +16,14 @@ const LOADING_STEPS = [
 
 const MAX_FILE_SIZE = 15 * 1024 * 1024;
 
+const EXTERNAL_TEMPLATES = [
+  { name: "Overleaf (LaTeX)", url: "https://www.overleaf.com/gallery/tagged/cv", desc: "Highest-fidelity formatting for technical roles." },
+  { name: "Canva Pro (Free)", url: "https://www.canva.com/resumes/templates/", desc: "Visually creative and highly customizable." },
+  { name: "Google Docs Resumes", url: "https://docs.google.com/document/u/0/?ftv=1", desc: "Clean, ATS-friendly baseline templates." },
+  { name: "FlowCV", url: "https://flowcv.com/", desc: "Modern, streamlined document constructor." },
+  { name: "Resume.io (Free Tier)", url: "https://resume.io/resume-templates", desc: "Recruiter-tested executive layouts." }
+];
+
 interface ResumeScorerProps {
   userCredits: number;
   onUse: (amount: number) => boolean;
@@ -55,6 +63,7 @@ const ResumeScorer: React.FC<ResumeScorerProps> = ({
   const [isDragging, setIsDragging] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [isSaving, setIsSaving] = useState(false);
+  const [isCopying, setIsCopying] = useState(false);
   const [isHoveringScore, setIsHoveringScore] = useState(false);
   
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -139,11 +148,14 @@ const ResumeScorer: React.FC<ResumeScorerProps> = ({
     setIsArchitecting(true);
     setLoadingProgress(0);
     try {
-      const improvementsText = result.improvements.map(i => `${i.category}: ${i.suggestion}`).join('\n');
-      const architected = await generateFormattedResume(resumeData, improvementsText);
+      const architected = await generateFormattedResume(resumeData);
       onUse(15);
       setLoadingProgress(100);
       setFormattedResume(architected);
+
+      const newScore = Math.min(99, Math.round(result.score + (100 - result.score) * 0.85));
+      setResult(prev => prev ? { ...prev, score: newScore } : null);
+
       setTimeout(() => architectRef.current?.scrollIntoView({ behavior: 'smooth' }), 100);
     } catch (err) {
       console.error(err);
@@ -153,15 +165,19 @@ const ResumeScorer: React.FC<ResumeScorerProps> = ({
   };
 
   const handleSaveToVault = () => {
-    if (!formattedResume) return;
+    if (!formattedResume || !result) return;
     setIsSaving(true);
     onSaveHistory({
       id: Math.random().toString(36).substr(2, 9),
-      type: 'strategy',
-      title: `Blueprint: ${file?.name || 'Resume'}`,
+      type: 'resume-audit',
+      title: `Full Optimization: ${file?.name || 'Resume'}`,
       date: new Date().toLocaleDateString(),
       inputs: { context: 'Executive Blueprint Reconstruction' },
-      result: formattedResume
+      result: result.formattingRecommendations,
+      score: result.score, 
+      breakdown: result.breakdown,
+      improvements: result.improvements,
+      optimizedResult: formattedResume
     });
     setTimeout(() => { 
       setIsSaving(false); 
@@ -169,28 +185,60 @@ const ResumeScorer: React.FC<ResumeScorerProps> = ({
     }, 600);
   };
 
+  const handleCopyToClipboard = async () => {
+    const el = document.getElementById('scorer-resume-preview');
+    if (!el) return;
+    
+    setIsCopying(true);
+    try {
+      // METHOD: Direct DOM Range Selection
+      // This is the most reliable way to preserve Bolding and Line Spacing for WPS/Word.
+      // It programmatically highlights the element exactly as a user would.
+      const range = document.createRange();
+      range.selectNode(el);
+      const selection = window.getSelection();
+      
+      if (selection) {
+        selection.removeAllRanges();
+        selection.addRange(range);
+        
+        // Use the native copy command which captures computed rich text styles
+        const successful = document.execCommand('copy');
+        selection.removeAllRanges();
+        
+        if (successful) {
+          alert("Executive Blueprint captured from preview. Spacing and bold formatting preserved.");
+        } else {
+          throw new Error("Copy command unsuccessful");
+        }
+      } else {
+        throw new Error("Selection API unavailable");
+      }
+    } catch (err) {
+      console.error("Copy Error:", err);
+      // Fallback for strict environments
+      await navigator.clipboard.writeText(el.innerText);
+      alert("Blueprint copied as plain text (Rich formatting failed in this environment).");
+    } finally {
+      setIsCopying(false);
+    }
+  };
+
   const handleSaveAuditToVault = () => {
     if (!result) return;
     setIsSaving(true);
     
-    const auditContent = `# Audit Report: ${file?.name || 'Resume'}\n\n` +
-      `**Overall Score: ${result.score}%**\n\n` +
-      `### Professional Summary\n${result.formattingRecommendations}\n\n` +
-      `### Score Breakdown\n` +
-      `- **Impact Quantization:** ${result.breakdown.impact}%\n` +
-      `- **Keyword Alignment:** ${result.breakdown.keywords}%\n` +
-      `- **Readability:** ${result.breakdown.readability}%\n` +
-      `- **ATS Parsability:** ${result.breakdown.ats}%\n\n` +
-      `### Critical Refinements\n` +
-      result.improvements.map(imp => `- **${imp.category}:** ${imp.suggestion}\n  - *Why:* ${imp.why}`).join('\n');
-
     onSaveHistory({
       id: Math.random().toString(36).substr(2, 9),
-      type: 'strategy',
+      type: 'resume-audit',
       title: `Audit: ${file?.name || 'Resume'}`,
       date: new Date().toLocaleDateString(),
       inputs: { role: 'Professional Audit' },
-      result: auditContent
+      result: result.formattingRecommendations,
+      score: result.score,
+      breakdown: result.breakdown,
+      improvements: result.improvements,
+      optimizedResult: formattedResume || undefined
     });
     
     setTimeout(() => {
@@ -277,7 +325,7 @@ const ResumeScorer: React.FC<ResumeScorerProps> = ({
           <div className="flex flex-col items-center justify-center py-20 text-center animate-in fade-in space-y-12">
             <div className="w-72 h-80 bg-zinc-950 rounded-[56px] border border-zinc-900 relative shadow-3xl overflow-hidden animate-pulse">
                <div className="absolute top-0 left-0 w-full h-[2px] bg-yellow-500 shadow-[0_0_20px_#eab308] animate-[scan_3s_linear_infinite]"></div>
-               <style>{`@keyframes scan { 0% { transform: translateY(0); opacity: 0; } 10% { opacity: 1; } 90% { opacity: 1; } 100% { transform: translateY(320px); opacity: 0; } }`}</style>
+               <style>{`@keyframes scan { 0% { transform: translateY(0); opacity: 0; } 10% { opacity: 1; } 90% { opacity: 1; } 100% { transform: translateY(500px); opacity: 0; } }`}</style>
                <div className="p-12 space-y-8 text-left">
                  <div className="h-4 bg-zinc-900 rounded w-1/2"></div>
                  <div className="space-y-2">
@@ -290,7 +338,7 @@ const ResumeScorer: React.FC<ResumeScorerProps> = ({
                </div>
             </div>
             
-            <div className="w-full max-w-md space-y-6">
+            <div className="w-full max-md max-w-md space-y-6">
               <div className="relative h-3 bg-zinc-900/50 rounded-full border border-zinc-800 overflow-hidden">
                 <div 
                   className="h-full bg-yellow-500 transition-all duration-300 shadow-[0_0_15px_#eab308]" 
@@ -316,7 +364,6 @@ const ResumeScorer: React.FC<ResumeScorerProps> = ({
           <div ref={resultRef} className="space-y-16 animate-in slide-in-from-bottom-12 duration-1000">
             <div className="flex flex-col items-center">
               <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 w-full max-w-6xl">
-                 {/* Interactive Recruitment Score Card */}
                  <div className="bg-[#0c0c0e] border border-zinc-800 rounded-[64px] p-10 flex flex-col items-center justify-center space-y-6 shadow-3xl relative overflow-hidden min-h-[500px]">
                     <div 
                       className="relative w-48 h-48 sm:w-56 sm:h-56 flex items-center justify-center cursor-help group/score"
@@ -337,7 +384,6 @@ const ResumeScorer: React.FC<ResumeScorerProps> = ({
                         />
                       </svg>
                       
-                      {/* Hover/Interactive Overlay Breakdown */}
                       <div className={`absolute inset-0 bg-zinc-950/90 rounded-full flex flex-col items-center justify-center p-6 text-center transition-all duration-300 ${isHoveringScore ? 'opacity-100 scale-100' : 'opacity-0 scale-90 pointer-events-none'}`}>
                         <p className="text-[10px] font-black uppercase text-yellow-500 mb-4 tracking-widest border-b border-yellow-500/20 pb-2">Contribution Matrix</p>
                         <div className="grid grid-cols-2 gap-x-6 gap-y-3 w-full max-w-[160px]">
@@ -357,7 +403,7 @@ const ResumeScorer: React.FC<ResumeScorerProps> = ({
                        <span className="text-[11px] sm:text-[12px] font-black text-zinc-500 uppercase tracking-[0.5em] whitespace-nowrap">Recruitment Index</span>
                     </div>
 
-                    <div className="w-full max-w-sm space-y-6 pt-6 border-t border-zinc-900">
+                    <div className="w-full max-sm space-y-6 pt-6 border-t border-zinc-900">
                        {[
                          { label: 'Impact Quantization', value: result.breakdown.impact, color: 'bg-green-500', desc: 'Metric-driven accomplishments and quantifiable performance indicators.' },
                          { label: 'Keyword Alignment', value: result.breakdown.keywords, color: 'bg-yellow-500', desc: 'Industry-specific terminology and skill-set semantic density.' },
@@ -378,7 +424,6 @@ const ResumeScorer: React.FC<ResumeScorerProps> = ({
                     </div>
                  </div>
 
-                 {/* Audit Findings Overview */}
                  <div className="bg-zinc-950 border border-zinc-900 rounded-[64px] p-10 flex flex-col shadow-3xl relative overflow-hidden group min-h-[500px]">
                     <div className="flex-1 flex flex-col justify-between">
                        <div className="space-y-10">
@@ -390,7 +435,6 @@ const ResumeScorer: React.FC<ResumeScorerProps> = ({
                              "{result.formattingRecommendations}"
                           </div>
                           
-                          {/* Optimization Promotion Text */}
                           <div className="space-y-6 pt-6">
                             <div className="bg-yellow-500/5 rounded-3xl p-8 border border-yellow-500/10 space-y-4 relative overflow-hidden">
                                <div className="absolute top-0 right-0 p-3">
@@ -399,7 +443,6 @@ const ResumeScorer: React.FC<ResumeScorerProps> = ({
                                <h4 className="text-xs font-black text-yellow-500 uppercase tracking-[0.3em]">Neural Rebuild Protocol</h4>
                                <p className="text-sm text-zinc-400 font-medium leading-relaxed">
                                   Our architected solution applies the <span className="text-zinc-100 font-bold">Google XYZ formula</span> across every bullet point, ensuring your resume resonates at the highest executive levels. 
-                                  View the critical refinements below and then execute the full optimization.
                                </p>
                                <div className="flex gap-4">
                                   <div className="flex items-center gap-1.5"><span className="w-1 h-1 rounded-full bg-green-500"></span><span className="text-[8px] font-black text-zinc-500 uppercase tracking-widest">Copy-Paste Ready</span></div>
@@ -417,7 +460,6 @@ const ResumeScorer: React.FC<ResumeScorerProps> = ({
               </div>
             </div>
 
-            {/* Detailed Improvements Section */}
             <div className="space-y-10 pt-16">
               <div className="text-center">
                 <span className="text-[10px] font-black uppercase tracking-[0.6em] text-zinc-700 mb-2 block">Deconstructive Intelligence</span>
@@ -452,7 +494,7 @@ const ResumeScorer: React.FC<ResumeScorerProps> = ({
                         <p className="text-zinc-200 text-sm font-black leading-relaxed uppercase tracking-tight group-hover:text-white transition-colors">{improvement.after}</p>
                         <div className="mt-4 p-4 bg-zinc-950/80 rounded-2xl border border-zinc-900 border-l-4 border-l-yellow-500/40">
                            <p className="text-[10px] text-zinc-400 font-bold uppercase tracking-widest mb-1 italic">Rationale / Why:</p>
-                           <p className="text-[11px] text-zinc-500 font-medium leading-relaxed">{improvement.why}</p>
+                           <p className="text-zinc-500 text-[11px] font-medium leading-relaxed">{improvement.why}</p>
                         </div>
                       </div>
                     </div>
@@ -460,7 +502,6 @@ const ResumeScorer: React.FC<ResumeScorerProps> = ({
                 ))}
               </div>
               
-              {/* Optimization & Save Controls at the end of refinements */}
               <div className="flex flex-col gap-6 max-w-4xl mx-auto pt-10">
                  <button 
                   onClick={handleArchitectResume} 
@@ -491,10 +532,6 @@ const ResumeScorer: React.FC<ResumeScorerProps> = ({
                  </div>
               </div>
             </div>
-            
-            <div className="text-center pt-20">
-               <p className="text-[10px] font-black text-zinc-700 uppercase tracking-[0.8em]">Secure Recruitment Intelligence Suite</p>
-            </div>
           </div>
         )}
 
@@ -506,21 +543,58 @@ const ResumeScorer: React.FC<ResumeScorerProps> = ({
             </div>
             <div className="flex flex-col items-center">
               <div className="bg-white text-zinc-900 p-12 sm:p-24 rounded-[80px] shadow-3xl border border-zinc-200 overflow-hidden relative w-full max-w-4xl min-h-[600px] animate-in zoom-in-95 duration-1000">
-                 <div className="prose prose-slate max-w-none prose-headings:text-zinc-950 prose-headings:font-black prose-p:font-medium prose-p:text-zinc-700">
+                 <div id="scorer-resume-preview" className="prose prose-slate max-w-none prose-headings:text-zinc-950 prose-headings:font-black prose-p:font-medium prose-p:text-zinc-700">
                     <ReactMarkdown>{formattedResume}</ReactMarkdown>
                  </div>
               </div>
+              <p className="mt-8 text-center text-[10px] font-black text-zinc-600 uppercase tracking-[0.3em]">
+                Tip: Copy the Clean Blueprint below and paste it into one of our researched premium templates.
+              </p>
             </div>
-            <div className="flex flex-wrap justify-center gap-8">
-               <button onClick={handleSaveToVault} disabled={isSaving} className="px-12 py-7 bg-zinc-950 text-zinc-400 border border-zinc-800 rounded-3xl text-[11px] font-black uppercase tracking-[0.3em] hover:bg-zinc-900 hover:text-white transition-all flex items-center gap-4 active:scale-95 disabled:opacity-50 shadow-2xl">
-                  {isSaving ? <div className="w-5 h-5 border-2 border-yellow-500 border-t-transparent rounded-full animate-spin"></div> : (
+            
+            <div className="flex flex-col sm:flex-row justify-center items-center gap-6">
+               <button onClick={handleCopyToClipboard} disabled={isCopying} className="px-12 py-6 bg-yellow-500 text-zinc-950 rounded-3xl text-[11px] font-black uppercase tracking-[0.3em] hover:bg-yellow-400 transition-all flex items-center gap-4 active:scale-95 disabled:opacity-50 shadow-2xl border-b-4 border-yellow-700">
+                  {isCopying ? <div className="w-4 h-4 border-2 border-zinc-950 border-t-transparent rounded-full animate-spin"></div> : (
                     <>
-                      <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 5H6a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2v-1M8 5a2 2 0 002 2h2a2 2 0 002-2M8 5a2 2 0 012-2h2a2 2 0 012 2m0 0h2a2 2 0 012 2v3m2 4H10m0 0l3-3m-3 3l3 3" /></svg>
-                      Secure Blueprint in Vault
+                      <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M8 5H6a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2v-1M8 5a2 2 0 002 2h2a2 2 0 002-2M8 5a2 2 0 012-2h2a2 2 0 012 2m0 0h2a2 2 0 012 2v3m2 4H10m0 0l3-3m-3 3l3 3" /></svg>
+                      Copy Clean Blueprint
                     </>
                   )}
                </button>
+               <button onClick={handleSaveToVault} disabled={isSaving} className="px-10 py-6 bg-zinc-900 text-zinc-500 border border-zinc-800 rounded-3xl text-[10px] font-black uppercase tracking-[0.3em] hover:text-zinc-300 transition-all flex items-center gap-3 active:scale-95 disabled:opacity-50">
+                  {isSaving ? <div className="w-4 h-4 border-2 border-yellow-500 border-t-transparent rounded-full animate-spin"></div> : "Secure in Vault"}
+               </button>
             </div>
+
+            <div className="max-w-4xl mx-auto pt-24 space-y-12">
+               <div className="text-center space-y-4">
+                  <span className="text-[10px] font-black text-zinc-600 uppercase tracking-[0.4em] block">Google Study Insights</span>
+                  <h4 className="text-3xl font-black uppercase tracking-tight text-zinc-100">Top Rated <span className="gold-text-gradient">Professional Templates</span></h4>
+                  <p className="text-zinc-500 text-sm font-medium">We've researched the web for the best free-tier templates compatible with your new Krypto Blueprint.</p>
+               </div>
+               
+               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                  {EXTERNAL_TEMPLATES.map((tpl, i) => (
+                    <a 
+                      key={i} 
+                      href={tpl.url} 
+                      target="_blank" 
+                      rel="noopener noreferrer" 
+                      className="group bg-[#0c0c0e] border border-zinc-800 p-8 rounded-[32px] hover:border-yellow-500/30 transition-all flex flex-col justify-between"
+                    >
+                       <div className="space-y-4">
+                          <div className="flex items-center justify-between">
+                             <h5 className="text-lg font-black text-zinc-100 uppercase tracking-tight group-hover:text-yellow-500 transition-colors">{tpl.name}</h5>
+                             <svg className="w-4 h-4 text-zinc-700 group-hover:text-yellow-500 transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" /></svg>
+                          </div>
+                          <p className="text-xs text-zinc-500 font-medium leading-relaxed">{tpl.desc}</p>
+                       </div>
+                       <div className="mt-6 pt-4 border-t border-zinc-900 text-[9px] font-black text-zinc-700 uppercase tracking-widest">Open in New Tab →</div>
+                    </a>
+                  ))}
+               </div>
+            </div>
+
             <div className="text-center pt-24">
                <button onClick={handleReset} className="px-10 py-5 bg-yellow-500 text-zinc-950 rounded-2xl text-[10px] font-black uppercase tracking-[0.4em] hover:bg-yellow-400 transition-all shadow-xl active:scale-95 border-b-4 border-yellow-700">New Audit Protocol</button>
             </div>

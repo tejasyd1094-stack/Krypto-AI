@@ -118,8 +118,7 @@ export const generateMarketIntelligence = async (
 };
 
 export const generateFormattedResume = async (
-  resumeInput: string | { data: string, mimeType: string }, 
-  improvements: string
+  resumeInput: string | { data: string, mimeType: string }
 ): Promise<string> => {
   try {
     const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
@@ -135,23 +134,116 @@ export const generateFormattedResume = async (
     }
 
     parts.push({ 
-      text: `TASK: Reconstruct this profile using the MANDATORY KRYPTO SIGNATURE TEMPLATE.
-      Today is ${CURRENT_DATE}. Use the latest 2026 executive standards.
-      CRITICAL: START THE OUTPUT IMMEDIATELY WITH THE CANDIDATE NAME.
+      text: `TASK: Reconstruct the provided resume into the KRYPTO EXECUTIVE BLUEPRINT v4.0.
+      This is a branded, professional, single-column, ATS-optimized resume. 
+
+      BOLDING RULES (STRICT):
+      1. Candidate's Name must be **Bold**.
+      2. Contact info (City, Phone, Email, LinkedIn) must be **Bold**.
+      3. Section titles (SUMMARY, KEY SKILLS, PROFESSIONAL EXPERIENCE, etc.) must be **BOLD**.
+      4. Company names must be **Bold**.
+      5. Locations (City, State) must be **Bold**.
+      6. Tenures (Dates) must be **Bold**.
+      7. Within bullet points, bold **High-Impact Words**, **Metrics**, or **Key Skills**.
+
+      WHITESPACE & SPACING RULES (CRITICAL FOR COPY-PASTE):
+      1. Add THREE (3) literal blank lines after the contact info block and before the SUMMARY section starts.
+      2. Add THREE (3) literal blank lines after every SECTION TITLE (e.g., SUMMARY, KEY SKILLS, PROFESSIONAL EXPERIENCE).
+      3. Add THREE (3) literal blank lines after every divider (---).
+      4. Add TWO (2) literal blank lines between each separate JOB ENTRY in the Professional Experience section.
+      5. Add ONE (1) literal blank line after the "Company Name | Location | Dates" line and BEFORE the first bullet point starts.
+      6. Ensure there is a blank line after the last bullet point of a job and the start of the next job title.
+      7. All text must be left-aligned.
+
       STRICT STRUCTURAL BLUEPRINT:
-      1. NAME: # [FULL NAME]
-      2. CONTACT: [Email] | [Phone] | [Location] | [LinkedIn URL]
-      ## PROFESSIONAL SUMMARY
-      ## CORE COMPETENCIES
-      ## PROFESSIONAL EXPERIENCE
-      ## EDUCATION` 
+
+# **[Full Name]**
+
+
+### **[Current Title or Target Role]**
+
+
+> **[City, State]** | **[Phone Number]** | **[Email Address]** | **[LinkedIn Profile URL]**
+
+
+---
+
+
+## **SUMMARY**
+
+
+*A concise, 3-4 sentence executive summary. Quantify impact where possible using bolded metrics like **40% increase** or **$2M saved**.*
+
+
+---
+
+
+## **KEY SKILLS**
+
+
+- **Technical:** **Skill**, Skill, **Skill**
+- **Strategic:** Skill, **Skill**, Skill
+- **Tools & Platforms:** **Tool**, Platform, **Language**
+
+
+---
+
+
+## **PROFESSIONAL EXPERIENCE**
+
+
+### **[Job Title]**
+
+
+**[Company Name]** | **[City, State]** | **[Start Date] – [End Date]**
+
+
+*   Accomplished **[X]** as measured by **[Y]**, by doing **[Z]**. (Bold key metrics and results).
+*   Led a team of **[Number]** to achieve **[Outcome]**. (Bold the outcome).
+
+
+
+### **[Job Title]**
+
+
+**[Company Name]** | **[City, State]** | **[Start Date] – [End Date]**
+
+
+*   Executed **[Task]** resulting in **[Benefit]**. (Always start with a CAPITAL letter).
+
+
+---
+
+
+## **EDUCATION**
+
+
+### **[Degree Name]**, **[Major]**
+
+
+**[University Name]** | **[City, State]** | **[Graduation Year]**
+
+
+---
+
+
+## **CERTIFICATIONS & AWARDS**
+
+
+*   **[Certification Name]** - **[Organization]**, **[Year]**
+
+
+---
+
+
+> *Optimized by Krypto AI - Your Career Architect*`
     });
 
     const response = await ai.models.generateContent({
       model: 'gemini-3-pro-preview',
       contents: { parts },
       config: {
-        systemInstruction: `You are the Krypto Executive Architect. ${MISSION_GUARDRAIL}`
+        systemInstruction: `You are the Krypto Executive Architect. ${MISSION_GUARDRAIL}. Your sole function is to generate a perfectly formatted, ATS-compliant resume based on the provided blueprint. Apply BOLD markers to names, contact info, headings, company names, locations, and tenures. Highlight important impact words within bullets. ENSURE ENORMOUS GAPS BETWEEN SECTIONS TO PREVENT MERGING.`
       }
     });
     return response.text || "";
