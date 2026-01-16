@@ -17,52 +17,52 @@ const ANALYSIS_STEPS = [
 const QUIZ_QUESTIONS: QuizQuestion[] = [
   {
     id: 1,
-    text: "In a high-pressure deadline scenario, what is your primary focus?",
+    text: "When starting a complex academic project or assignment, what is your first move?",
     options: [
-      { text: "Detailed audit of all data points and logic.", traits: { analytic: 10, investigative: 5 } },
-      { text: "Experimenting with creative, rapid-fire solutions.", traits: { creative: 10 } },
-      { text: "Strategic delegation and timeline management.", traits: { leadership: 10 } },
-      { text: "Maintaining team cohesion and emotional support.", traits: { social: 10 } }
+      { text: "Conduct a deep audit of all instructions and data sources.", traits: { analytic: 10, investigative: 5 } },
+      { text: "Brainstorm a unique, non-traditional approach or design.", traits: { creative: 10 } },
+      { text: "Organize the timeline and delegate tasks to group members.", traits: { leadership: 10 } },
+      { text: "Ensure everyone in the group feels comfortable and included.", traits: { social: 10 } }
     ]
   },
   {
     id: 2,
-    text: "Which environment allows you to reach a 'flow state' most easily?",
+    text: "Which learning environment allows you to reach a 'flow state' most easily?",
     options: [
-      { text: "A quiet, data-dense research environment.", traits: { investigative: 10, analytic: 5 } },
-      { text: "A studio filled with visual and conceptual tools.", traits: { creative: 10 } },
-      { text: "A collaborative hub where I can lead and influence.", traits: { leadership: 10, social: 5 } },
-      { text: "A workshop where I can build or fix physical things.", traits: { practical: 10 } }
+      { text: "A quiet library desk with complex puzzles or research papers.", traits: { investigative: 10, analytic: 5 } },
+      { text: "A creative studio where I can visualize concepts and ideas.", traits: { creative: 10 } },
+      { text: "Leading a student organization or coordinating an event.", traits: { leadership: 10, social: 5 } },
+      { text: "A lab or workshop where I can build physical prototypes.", traits: { practical: 10 } }
     ]
   },
   {
     id: 3,
-    text: "What motivates your long-term career ambition?",
+    text: "What drives your long-term ambition for your future career?",
     options: [
-      { text: "Achieving mastery in a complex technical domain.", traits: { analytic: 10, investigative: 10 } },
-      { text: "Disrupting a market with a brand new concept.", traits: { creative: 10, practical: 5 } },
-      { text: "Climbing the ladder to a C-suite or founder role.", traits: { leadership: 10 } },
-      { text: "Building a foundation that helps a community thrive.", traits: { social: 10 } }
+      { text: "Gaining mastery in a highly specialized technical field.", traits: { analytic: 10, investigative: 10 } },
+      { text: "Creating a brand or product that has never existed before.", traits: { creative: 10, practical: 5 } },
+      { text: "Rising to a position of authority or launching a company.", traits: { leadership: 10 } },
+      { text: "Doing work that directly benefits society or individuals.", traits: { social: 10 } }
     ]
   },
   {
     id: 4,
-    text: "How do you typically process complex, new information?",
+    text: "How do you typically process new, difficult information?",
     options: [
-      { text: "Create a mental or digital spreadsheet of facts.", traits: { analytic: 10, investigative: 5 } },
-      { text: "Sketch out a mind map of creative connections.", traits: { creative: 10, investigative: 5 } },
-      { text: "Decide immediately how this impacts my team's KPIs.", traits: { leadership: 10, practical: 10 } },
-      { text: "Talk it through with peers to gauge their perspective.", traits: { social: 10 } }
+      { text: "Create a logical summary or spreadsheet of key facts.", traits: { analytic: 10, investigative: 5 } },
+      { text: "Sketch mind-maps to see the creative connections.", traits: { creative: 10, investigative: 5 } },
+      { text: "Immediately try to apply the knowledge to a real-world task.", traits: { leadership: 10, practical: 10 } },
+      { text: "Explain the concept to friends to hear their perspectives.", traits: { social: 10 } }
     ]
   },
   {
     id: 5,
-    text: "What role do you play in a team setting?",
+    text: "In a group setting or club, what role do you naturally fall into?",
     options: [
-      { text: "The Architect: Designing the core system.", traits: { analytic: 10, practical: 10 } },
-      { text: "The Visionary: Dreaming of what's next.", traits: { creative: 10 } },
-      { text: "The Captain: Steering the ship forward.", traits: { leadership: 10 } },
-      { text: "The Connector: Ensuring everyone is heard.", traits: { social: 10, practical: 10 } }
+      { text: "The Researcher: Finding and organizing the core facts.", traits: { analytic: 10, practical: 10 } },
+      { text: "The Concept Designer: Crafting the visual or creative vision.", traits: { creative: 10 } },
+      { text: "The Lead: Setting the goal and keeping everyone on track.", traits: { leadership: 10 } },
+      { text: "The Mediator: Solving conflicts and building team spirit.", traits: { social: 10, practical: 10 } }
     ]
   }
 ];
@@ -84,18 +84,12 @@ const ExperiencedIllustration = () => (
 );
 
 const FresherIllustration = () => (
-  <div className="relative w-32 h-32 mx-auto mb-6 group-hover:scale-110 transition-transform duration-700">
-    <svg viewBox="0 0 100 100" className="w-full h-full">
-      <defs>
-        <linearGradient id="fresh-grad-prof" x1="0%" y1="0%" x2="100%" y2="100%">
-          <stop offset="0%" stopColor="#60a5fa" />
-          <stop offset="100%" stopColor="#2563eb" />
-        </linearGradient>
-      </defs>
-      <circle cx="50" cy="50" r="40" stroke="url(#fresh-grad-prof)" strokeWidth="2" strokeDasharray="8 4" fill="none" />
-      <path d="M50 20V80M20 50H80" stroke="url(#fresh-grad-prof)" strokeWidth="1" opacity="0.3" />
-      <path d="M50 15L60 45L90 55L60 65L50 95L40 65L10 55L40 45L50 15Z" fill="url(#fresh-grad-prof)" className="animate-pulse" />
-      <circle cx="50" cy="55" r="5" fill="#09090b" />
+  <div className="relative w-32 h-32 mx-auto mb-6 group-hover:scale-110 transition-transform duration-700 flex items-center justify-center">
+    <svg viewBox="0 0 100 100" className="w-full h-full" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <path d="M15 45L50 25L85 45L50 65L15 45Z" fill="#2563eb" stroke="#60a5fa" strokeWidth="2" />
+      <path d="M25 51V70C25 70 50 80 75 70V51" stroke="#60a5fa" strokeWidth="2" strokeLinecap="round" />
+      <path d="M85 45V65" stroke="#60a5fa" strokeWidth="2" strokeLinecap="round" />
+      <circle cx="85" cy="65" r="3" fill="#60a5fa" />
     </svg>
   </div>
 );
@@ -204,7 +198,6 @@ const CareerPath: React.FC<CareerPathProps> = ({
   useEffect(() => {
     let interval: any;
     if (loading) {
-      // Slower progress: Target ~18 seconds total
       interval = setInterval(() => {
         setLoadingProgress(prev => {
           const next = prev + (Math.random() * 0.6 + 0.3); 
@@ -430,7 +423,7 @@ const CareerPath: React.FC<CareerPathProps> = ({
                    <div className="absolute inset-0 bg-blue-500/[0.02] opacity-0 group-hover:opacity-100 transition-opacity"></div>
                    <FresherIllustration />
                    <h3 className="text-2xl font-black text-zinc-100 uppercase tracking-tighter mb-2">Fresher</h3>
-                   <p className="text-zinc-600 text-[9px] font-black uppercase tracking-[0.4em]">Baseline • Potential Analysis</p>
+                   <p className="text-zinc-600 text-[9px] font-black uppercase tracking-[0.4em]">Academic Analysis • Potential Mapping</p>
                    <div className="mt-8 px-6 py-2 bg-blue-500/10 border border-blue-500/20 rounded-full text-blue-500 text-[8px] font-black uppercase tracking-widest">
                       25 Credits
                    </div>
