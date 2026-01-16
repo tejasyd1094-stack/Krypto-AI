@@ -14,7 +14,7 @@ const ANALYSIS_STEPS = [
   "Finalizing Executive Blueprint..."
 ];
 
-const QUIZ_QUESTIONS: QuizQuestion[] = [
+const FRESHER_QUESTIONS: QuizQuestion[] = [
   {
     id: 1,
     text: "When starting a complex academic project or assignment, what is your first move?",
@@ -67,6 +67,59 @@ const QUIZ_QUESTIONS: QuizQuestion[] = [
   }
 ];
 
+const EXPERIENCED_QUESTIONS: QuizQuestion[] = [
+  {
+    id: 1,
+    text: "When taking over a high-stakes project with critical delivery timelines, what is your priority?",
+    options: [
+      { text: "Analyze historical performance data to identify structural bottlenecks.", traits: { analytic: 10, investigative: 5 } },
+      { text: "Pivot the strategy toward a radical, innovative methodology.", traits: { creative: 10 } },
+      { text: "Re-align the team hierarchy and optimize resource allocation.", traits: { leadership: 10, practical: 5 } },
+      { text: "Facilitate stakeholder workshops to ensure cultural alignment.", traits: { social: 10, leadership: 5 } }
+    ]
+  },
+  {
+    id: 2,
+    text: "How do you handle a team member who is underperforming on a technical task?",
+    options: [
+      { text: "Conduct a root-cause analysis of their workflow and technical debt.", traits: { investigative: 10, analytic: 10 } },
+      { text: "Encourage them to approach the task with a fresh, creative perspective.", traits: { creative: 10 } },
+      { text: "Set strict KPIs and drive them toward the execution goal.", traits: { leadership: 10, practical: 10 } },
+      { text: "Mentor them personally to rebuild their confidence and engagement.", traits: { social: 10, leadership: 5 } }
+    ]
+  },
+  {
+    id: 3,
+    text: "In a boardroom setting, what defines your executive 'flow state'?",
+    options: [
+      { text: "Connecting disparate data points to predict long-term market shifts.", traits: { analytic: 10, investigative: 10 } },
+      { text: "Visioning a disruptive product roadmap that breaks the status quo.", traits: { creative: 10, leadership: 5 } },
+      { text: "Commanding the room and driving a decisive strategic consensus.", traits: { leadership: 10 } },
+      { text: "Building a culture where every employee feels their impact.", traits: { social: 10, practical: 5 } }
+    ]
+  },
+  {
+    id: 4,
+    text: "Your department faces a 20% budget cut. How do you re-architect your operations?",
+    options: [
+      { text: "Develop an algorithmic model to minimize operational loss.", traits: { analytic: 10, investigative: 10 } },
+      { text: "Design a lean, creative workaround using open-source solutions.", traits: { creative: 10, practical: 10 } },
+      { text: "Consolidate leadership roles and streamline for high-velocity output.", traits: { leadership: 10, practical: 10 } },
+      { text: "Re-distribute workloads to prevent burnout and maintain morale.", traits: { social: 10, leadership: 5 } }
+    ]
+  },
+  {
+    id: 5,
+    text: "How do you approach long-term professional networking?",
+    options: [
+      { text: "Mapping the industry hierarchy to identify high-value knowledge hubs.", traits: { analytic: 10, investigative: 10 } },
+      { text: "Crafting a unique personal brand that stands out in digital spaces.", traits: { creative: 10 } },
+      { text: "Actively mentoring and building a legacy within your organization.", traits: { social: 10, leadership: 10 } },
+      { text: "Focusing on high-yield, tangible business partnerships.", traits: { practical: 10, leadership: 5 } }
+    ]
+  }
+];
+
 const ExperiencedIllustration = () => (
   <div className="relative w-32 h-32 mx-auto mb-6 group-hover:scale-110 transition-transform duration-700">
     <svg viewBox="0 0 100 100" className="w-full h-full">
@@ -96,10 +149,12 @@ const FresherIllustration = () => (
 
 const RadarChart = ({ scores }: { scores: PersonalityTraitScores }) => {
   const max = 50;
-  const size = 300;
+  const size = 500; 
   const center = size / 2;
-  const r = 100;
+  const r = 180; 
   const labels: (keyof PersonalityTraitScores)[] = ['analytic', 'creative', 'leadership', 'social', 'practical', 'investigative'];
+  
+  const [hoveredIdx, setHoveredIdx] = useState<number | null>(null);
 
   const getPoint = (i: number, factor: number) => {
     const angle = (Math.PI * 2 * i) / labels.length - Math.PI / 2;
@@ -114,37 +169,131 @@ const RadarChart = ({ scores }: { scores: PersonalityTraitScores }) => {
   const polygonPath = points.map(p => `${p.x},${p.y}`).join(' ');
 
   return (
-    <div className="relative flex items-center justify-center p-4">
-      <svg width={size} height={size} viewBox={`0 0 ${size} ${size}`} className="overflow-visible">
-        {labels.map((_, i) => {
-          const p = getPoint(i, max);
-          return <line key={i} x1={center} y1={center} x2={p.x} y2={p.y} className="stroke-zinc-800/40" strokeWidth="1" />;
-        })}
-        <polygon
-          points={polygonPath}
-          className="fill-yellow-500/10 stroke-yellow-500 animate-in fade-in zoom-in duration-1000"
-          strokeWidth="3"
-          strokeLinejoin="round"
-        />
-        {points.map((p, i) => (
-          <circle key={i} cx={p.x} cy={p.y} r="4" className="fill-yellow-500" />
+    <div className="relative w-full max-w-[500px] aspect-square mx-auto flex items-center justify-center select-none overflow-visible group/radar">
+      <svg width="100%" height="100%" viewBox={`0 0 ${size} ${size}`} className="overflow-visible">
+        <defs>
+          <filter id="sci-glow" x="-50%" y="-50%" width="200%" height="200%">
+            <feGaussianBlur stdDeviation="15" result="blur" />
+            <feComposite in="SourceGraphic" in2="blur" operator="over" />
+          </filter>
+
+          <linearGradient id="orbit-grad" x1="0%" y1="0%" x2="100%" y2="100%">
+            <stop offset="0%" stopColor="rgba(234,179,8,0.2)" />
+            <stop offset="100%" stopColor="rgba(234,179,8,0.02)" />
+          </linearGradient>
+
+          <radialGradient id="data-pulse-grad" cx="50%" cy="50%" r="50%">
+            <stop offset="0%" stopColor="rgba(234, 179, 8, 0.4)" />
+            <stop offset="100%" stopColor="transparent" />
+          </radialGradient>
+        </defs>
+
+        {/* Concentric Sci-Fi Rings */}
+        {[0.2, 0.4, 0.6, 0.8, 1].map((lvl, idx) => (
+          <circle 
+            key={idx} 
+            cx={center} 
+            cy={center} 
+            r={r * lvl} 
+            className={`fill-none transition-all duration-700 ${idx % 2 === 0 ? 'stroke-zinc-800/40' : 'stroke-zinc-800/20'}`}
+            strokeWidth={idx === 4 ? "1.5" : "0.5"}
+            strokeDasharray={idx === 2 ? "1 5" : idx === 3 ? "10 5" : "none"}
+          />
         ))}
-        {labels.map((label, i) => {
-          const p = getPoint(i, max + 22);
+
+        {/* Tactical Crosshair Extensions */}
+        {labels.map((_, i) => {
+          const p = getPoint(i, max + 10);
           return (
-            <text
+            <line 
               key={i}
-              x={p.x}
-              y={p.y}
-              className="text-[9px] font-black uppercase tracking-widest fill-zinc-600"
-              textAnchor="middle"
-              alignmentBaseline="middle"
-            >
-              {label}
-            </text>
+              x1={center} y1={center} x2={p.x} y2={p.y} 
+              className="stroke-zinc-800/30" 
+              strokeWidth="0.5" 
+            />
+          );
+        })}
+
+        {/* Quantum Sequence Polygon (Covered Area) */}
+        <g style={{ filter: hoveredIdx !== null ? 'url(#sci-glow)' : 'none' }}>
+          <polygon
+            points={polygonPath}
+            className="stroke-yellow-500 fill-yellow-500/5 transition-all duration-1000 ease-out"
+            style={{ 
+              strokeWidth: '6', 
+              strokeLinejoin: 'miter',
+              strokeMiterlimit: '10'
+            }}
+          />
+          <polygon
+            points={polygonPath}
+            className="fill-[url(#data-pulse-grad)] animate-pulse"
+          />
+        </g>
+
+        {/* Interaction Layer: Invisible Tactical Nodes */}
+        {labels.map((label, i) => {
+          const scorePoint = getPoint(i, scores[label]);
+          const labelPoint = getPoint(i, max + 35);
+          const isHovered = hoveredIdx === i;
+          
+          return (
+            <g key={i}>
+              {/* Interaction Hit Zone */}
+              <circle 
+                cx={scorePoint.x} cy={scorePoint.y} r="40" 
+                className="fill-transparent cursor-pointer"
+                onMouseEnter={() => setHoveredIdx(i)}
+                onMouseLeave={() => setHoveredIdx(null)}
+                onTouchStart={() => setHoveredIdx(i)}
+              />
+
+              {/* Tactical Label Text */}
+              <g className="transition-all duration-500">
+                <text
+                  x={labelPoint.x}
+                  y={labelPoint.y}
+                  className={`text-[12px] font-black uppercase tracking-[0.4em] transition-all duration-500 ${isHovered ? 'fill-yellow-400' : 'fill-zinc-500'}`}
+                  textAnchor="middle"
+                  alignmentBaseline="middle"
+                  style={{ 
+                    fontFamily: 'monospace',
+                    textShadow: isHovered ? '0 0 10px rgba(234, 179, 8, 0.6)' : 'none'
+                  }}
+                >
+                  {label}
+                </text>
+                
+                {/* HUD Data Probe (On Hover) */}
+                <g className={`transition-all duration-500 transform ${isHovered ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4 pointer-events-none'}`}>
+                  {/* Decorative Frame */}
+                  <rect 
+                    x={scorePoint.x - 30} y={scorePoint.y - 30} width="60" height="60" 
+                    className="fill-zinc-950/90 stroke-yellow-500" strokeWidth="1"
+                  />
+                  <line x1={scorePoint.x - 30} y1={scorePoint.y - 30} x2={scorePoint.x - 20} y2={scorePoint.y - 30} stroke="#eab308" strokeWidth="3" />
+                  <line x1={scorePoint.x - 30} y1={scorePoint.y - 30} x2={scorePoint.x - 30} y2={scorePoint.y - 20} stroke="#eab308" strokeWidth="3" />
+                  
+                  <text 
+                    x={scorePoint.x} y={scorePoint.y} 
+                    className="fill-yellow-500 font-black text-[14px]" 
+                    textAnchor="middle" 
+                    alignmentBaseline="middle"
+                    style={{ fontFamily: 'monospace' }}
+                  >
+                    {scores[label]}
+                  </text>
+                </g>
+              </g>
+            </g>
           );
         })}
       </svg>
+      
+      {/* HUD Ornaments (Peripheral Brackets) */}
+      <div className="absolute inset-0 pointer-events-none opacity-20 border-[1px] border-zinc-800 rounded-full scale-110"></div>
+      <div className="absolute -top-4 -left-4 w-8 h-8 border-t-2 border-l-2 border-yellow-500/30"></div>
+      <div className="absolute -bottom-4 -right-4 w-8 h-8 border-b-2 border-r-2 border-yellow-500/30"></div>
     </div>
   );
 };
@@ -342,6 +491,8 @@ const CareerPath: React.FC<CareerPathProps> = ({
     setScores({ analytic: 0, creative: 0, leadership: 0, social: 0, practical: 0, investigative: 0 });
   };
 
+  const questions = userType === 'experienced' ? EXPERIENCED_QUESTIONS : FRESHER_QUESTIONS;
+
   return (
     <div className="max-w-6xl mx-auto py-12 px-6 space-y-16 pb-40 text-[13px]">
       <div className="text-center space-y-6">
@@ -424,7 +575,7 @@ const CareerPath: React.FC<CareerPathProps> = ({
                    <FresherIllustration />
                    <h3 className="text-2xl font-black text-zinc-100 uppercase tracking-tighter mb-2">Fresher</h3>
                    <p className="text-zinc-600 text-[9px] font-black uppercase tracking-[0.4em]">Academic Analysis • Potential Mapping</p>
-                   <div className="mt-8 px-6 py-2 bg-blue-500/10 border border-blue-500/20 rounded-full text-blue-500 text-[8px] font-black uppercase tracking-widest">
+                   <div className="mt-8 px-6 py-2 bg-blue-500/10 border border-yellow-500/20 rounded-full text-blue-500 text-[8px] font-black uppercase tracking-widest">
                       25 Credits
                    </div>
                 </button>
@@ -458,9 +609,9 @@ const CareerPath: React.FC<CareerPathProps> = ({
                     ))}
                   </div>
                </div>
-               <h3 className="text-2xl font-black text-center text-zinc-100 uppercase leading-tight tracking-tight">{QUIZ_QUESTIONS[currentStep - 1].text}</h3>
+               <h3 className="text-2xl font-black text-center text-zinc-100 uppercase leading-tight tracking-tight">{questions[currentStep - 1].text}</h3>
                <div className="space-y-3">
-                 {QUIZ_QUESTIONS[currentStep - 1].options.map((opt, i) => (
+                 {questions[currentStep - 1].options.map((opt, i) => (
                    <button 
                      key={i} 
                      onClick={() => handleOptionSelect(opt.traits)} 
@@ -503,11 +654,11 @@ const CareerPath: React.FC<CareerPathProps> = ({
       {result && !loading && currentStep === 6 && (
         <div className="space-y-20 animate-in fade-in slide-in-from-bottom-8 duration-1000">
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-10 items-center">
-             <div className="bg-[#0c0c0e] border border-zinc-800 rounded-[48px] p-10 shadow-3xl flex flex-col items-center">
-                <h3 className="text-[9px] font-black text-zinc-600 uppercase tracking-[0.5em] mb-8">Neural Identity Sequence</h3>
+             <div className="bg-[#0c0c0e] border border-zinc-800 rounded-[48px] p-10 shadow-3xl flex flex-col items-center group">
+                <h3 className="text-[9px] font-black text-zinc-600 uppercase tracking-[0.5em] mb-12">Neural Identity Sequence</h3>
                 <RadarChart scores={scores} />
                 
-                <div className="mt-8 w-full flex flex-col items-center gap-4">
+                <div className="mt-20 w-full flex flex-col items-center gap-4">
                    <div className="px-4 py-2 bg-zinc-950 border border-zinc-800 rounded-xl text-center">
                       <p className="text-[7px] font-black text-zinc-700 uppercase tracking-widest mb-0.5">DNA Code</p>
                       <p className="text-xs font-black gold-text-gradient tracking-widest">{dnaCode}</p>
