@@ -64,6 +64,7 @@ const ResumeScorer: React.FC<ResumeScorerProps> = ({
   const [error, setError] = useState<string | null>(null);
   const [isSaving, setIsSaving] = useState(false);
   const [isCopying, setIsCopying] = useState(false);
+  const [isDownloading, setIsDownloading] = useState(false);
   const [isHoveringScore, setIsHoveringScore] = useState(false);
   
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -164,6 +165,51 @@ const ResumeScorer: React.FC<ResumeScorerProps> = ({
     }
   };
 
+  const handleDownloadDoc = () => {
+    if (!formattedResume) return;
+    setIsDownloading(true);
+    try {
+      const htmlContent = formattedResume
+        .replace(/^### (.*$)/gim, '<h3>$1</h3>')
+        .replace(/^## (.*$)/gim, '<h2>$1</h2>')
+        .replace(/^# (.*$)/gim, '<h1>$1</h1>')
+        .replace(/^\s*\*\s+(.*$)/gim, '<li>$1</li>')
+        .replace(/\*\*(.*?)\*\*/g, '<b>$1</b>')
+        .replace(/\n/gim, '<br />');
+
+      const fullHtml = `
+        <html xmlns:o='urn:schemas-microsoft-com:office:office' xmlns:w='urn:schemas-microsoft-com:office:word' xmlns='http://www.w3.org/TR/REC-html40'>
+        <head><meta charset='utf-8'><title>Executive Blueprint Export</title></head>
+        <body style="font-family: Arial, sans-serif; line-height: 1.5; color: #333;">
+          <div style="max-width: 800px; margin: 0 auto; padding: 20px;">
+            ${htmlContent}
+          </div>
+        </body>
+        </html>
+      `;
+
+      const blob = new Blob(['\ufeff', fullHtml], { type: 'application/msword' });
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = url;
+      const safeTitle = (file?.name || 'Resume').replace(/[^a-zA-Z0-9]/g, '_');
+      link.download = `KryptoAI_Blueprint_${safeTitle}.doc`;
+      
+      document.body.appendChild(link);
+      link.click();
+      
+      setTimeout(() => {
+        document.body.removeChild(link);
+        URL.revokeObjectURL(url);
+      }, 200);
+    } catch (err) {
+      console.error("Download Error:", err);
+      alert("Download failed.");
+    } finally {
+      setIsDownloading(false);
+    }
+  };
+
   const handleSaveToVault = () => {
     if (!formattedResume || !result) return;
     setIsSaving(true);
@@ -191,9 +237,6 @@ const ResumeScorer: React.FC<ResumeScorerProps> = ({
     
     setIsCopying(true);
     try {
-      // METHOD: Direct DOM Range Selection
-      // This is the most reliable way to preserve Bolding and Line Spacing for WPS/Word.
-      // It programmatically highlights the element exactly as a user would.
       const range = document.createRange();
       range.selectNode(el);
       const selection = window.getSelection();
@@ -202,7 +245,6 @@ const ResumeScorer: React.FC<ResumeScorerProps> = ({
         selection.removeAllRanges();
         selection.addRange(range);
         
-        // Use the native copy command which captures computed rich text styles
         const successful = document.execCommand('copy');
         selection.removeAllRanges();
         
@@ -216,8 +258,7 @@ const ResumeScorer: React.FC<ResumeScorerProps> = ({
       }
     } catch (err) {
       console.error("Copy Error:", err);
-      // Fallback for strict environments
-      await navigator.clipboard.writeText(el.innerText);
+      await navigator.clipboard.writeText(formattedResume || '');
       alert("Blueprint copied as plain text (Rich formatting failed in this environment).");
     } finally {
       setIsCopying(false);
@@ -548,7 +589,7 @@ const ResumeScorer: React.FC<ResumeScorerProps> = ({
                  </div>
               </div>
               <p className="mt-8 text-center text-[10px] font-black text-zinc-600 uppercase tracking-[0.3em]">
-                Tip: Copy the Clean Blueprint below and paste it into one of our researched premium templates.
+                Tip: Copy the Clean Blueprint below or export to .doc to finalize in your favorite editor.
               </p>
             </div>
             
@@ -558,6 +599,14 @@ const ResumeScorer: React.FC<ResumeScorerProps> = ({
                     <>
                       <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M8 5H6a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2v-1M8 5a2 2 0 002 2h2a2 2 0 002-2M8 5a2 2 0 012-2h2a2 2 0 012 2m0 0h2a2 2 0 012 2v3m2 4H10m0 0l3-3m-3 3l3 3" /></svg>
                       Copy Clean Blueprint
+                    </>
+                  )}
+               </button>
+               <button onClick={handleDownloadDoc} disabled={isDownloading} className="px-10 py-6 bg-zinc-100 text-zinc-950 rounded-3xl text-[11px] font-black uppercase tracking-[0.3em] hover:bg-yellow-500 transition-all flex items-center gap-4 active:scale-95 shadow-2xl border-b-4 border-zinc-300">
+                  {isDownloading ? <div className="w-4 h-4 border-2 border-zinc-950 border-t-transparent rounded-full animate-spin"></div> : (
+                    <>
+                      <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" /></svg>
+                      Export .doc
                     </>
                   )}
                </button>

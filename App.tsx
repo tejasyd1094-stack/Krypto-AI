@@ -1,5 +1,5 @@
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import Sidebar from './components/Sidebar';
 import Dashboard from './components/Dashboard';
 import ResumeScorer from './components/ResumeScorer';
@@ -21,6 +21,8 @@ const App: React.FC = () => {
   const [isVerifyingLocation, setIsVerifyingLocation] = useState(false);
   const [newHistoryCount, setNewHistoryCount] = useState(0);
   
+  const scrollRef = useRef<HTMLElement>(null);
+
   // Persisted Resume Scorer State
   const [resumeFile, setResumeFile] = useState<File | null>(null);
   const [resumeResult, setResumeResult] = useState<ResumeScoreResponse | null>(null);
@@ -37,7 +39,7 @@ const App: React.FC = () => {
   const [user, setUser] = useState<UserStatus>({
     isPro: false,
     planId: 'free',
-    credits: 50, // Initial credits increased to 50 for better user conversion
+    credits: 50,
     trialUsed: false,
     location: '', 
     currency: 'USD',
@@ -51,7 +53,11 @@ const App: React.FC = () => {
     return () => subscription.unsubscribe();
   }, []);
 
+  // Scroll to top on tab change
   useEffect(() => {
+    if (scrollRef.current) {
+      scrollRef.current.scrollTo({ top: 0, behavior: 'smooth' });
+    }
     if (activeTab === 'History') {
       setNewHistoryCount(0);
     }
@@ -171,7 +177,6 @@ const App: React.FC = () => {
     setSession(null);
     setActiveTab('Home');
     setIsSidebarOpen(false);
-    // Clear persisted data on logout
     setCareerResult(null);
     setResumeResult(null);
   };
@@ -290,7 +295,7 @@ const App: React.FC = () => {
             </div>
           </div>
         </header>
-        <section className="flex-1 overflow-y-auto pb-20">{renderContent()}</section>
+        <section ref={scrollRef} className="flex-1 overflow-y-auto pb-20">{renderContent()}</section>
       </main>
     </div>
   );

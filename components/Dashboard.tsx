@@ -34,6 +34,7 @@ const Dashboard: React.FC<DashboardProps> = ({ priority, userCredits, onUse, onN
   
   const fileInputRef = useRef<HTMLInputElement>(null);
   const adviceRef = useRef<HTMLDivElement>(null);
+  const loaderRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     const interval = setInterval(() => {
@@ -90,6 +91,11 @@ const Dashboard: React.FC<DashboardProps> = ({ priority, userCredits, onUse, onN
     setAdvice(null);
     setPromotionTarget(null);
 
+    // Scroll to loader
+    setTimeout(() => {
+      loaderRef.current?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    }, 100);
+
     try {
       const result = await getCareerAdvice(query, fileData);
       
@@ -121,11 +127,6 @@ const Dashboard: React.FC<DashboardProps> = ({ priority, userCredits, onUse, onN
       setLoading(false);
     }
   };
-
-  const radius = 45;
-  const circumference = 2 * Math.PI * radius;
-  const score = 65;
-  const offset = circumference - (score / 100) * circumference;
 
   return (
     <div className="max-w-6xl mx-auto py-12 px-6 space-y-32 pb-40">
@@ -224,6 +225,13 @@ const Dashboard: React.FC<DashboardProps> = ({ priority, userCredits, onUse, onN
         </div>
       </div>
 
+      {loading && (
+        <div ref={loaderRef} className="flex flex-col items-center justify-center py-20 animate-in fade-in">
+          <div className="w-16 h-16 border-4 border-yellow-500/20 border-t-yellow-500 rounded-full animate-spin mb-6"></div>
+          <p className="text-[10px] font-black text-yellow-500 uppercase tracking-[0.4em]">Synthesizing Strategy...</p>
+        </div>
+      )}
+
       {advice && (
         <div ref={adviceRef} className="max-w-4xl mx-auto p-12 bg-[#0c0c0e] border border-yellow-500/10 rounded-[56px] shadow-3xl animate-in fade-in slide-in-from-bottom-8 duration-700 space-y-8 relative overflow-hidden">
            <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-transparent via-yellow-500/30 to-transparent"></div>
@@ -258,51 +266,81 @@ const Dashboard: React.FC<DashboardProps> = ({ priority, userCredits, onUse, onN
             </div>
           </div>
           
-          <div className="flex-1 w-full max-w-xl bg-zinc-950 border border-zinc-900 rounded-[48px] p-10 shadow-3xl rotate-1 hover:rotate-0 transition-all duration-700 relative group overflow-hidden border-b-4 border-zinc-800">
-             <div className="absolute top-0 left-0 w-full h-[2px] bg-yellow-500 shadow-[0_0_15px_#eab308] z-20 animate-[scan_3s_linear_infinite]"></div>
-             <style>{`
-               @keyframes scan {
-                 0% { transform: translateY(0); opacity: 0; }
-                 10% { opacity: 1; }
-                 90% { opacity: 1; }
-                 100% { transform: translateY(500px); opacity: 0; }
-               }
-             `}</style>
-
-             <div className="space-y-8 relative z-10">
-                <div className="flex items-center gap-10 bg-zinc-900/40 p-8 rounded-[40px] border border-zinc-800/50">
-                   <div className="relative w-32 h-32 flex items-center justify-center flex-shrink-0">
-                      <svg className="w-full h-full transform -rotate-90">
-                        <circle cx="50%" cy="50%" r={radius} className="stroke-zinc-900 fill-none" strokeWidth="8" />
-                        <circle cx="50%" cy="50%" r={radius} className="stroke-yellow-500 fill-none" strokeWidth="8" strokeDasharray={circumference} strokeDashoffset={offset} strokeLinecap="round" />
-                      </svg>
-                      <div className="absolute inset-0 flex flex-col items-center justify-center">
-                         <span className="text-4xl font-black text-zinc-100 tracking-tighter leading-none">65%</span>
-                         <span className="text-[9px] font-black text-zinc-500 uppercase tracking-[0.2em] mt-1">Baseline</span>
-                      </div>
-                   </div>
-                   <div className="flex-1 space-y-4">
-                      <div className="space-y-1">
-                        <h5 className="text-[10px] font-black text-zinc-100 uppercase tracking-widest">Strategic Handshake: <span className="text-yellow-500">Low</span></h5>
-                        <div className="h-1.5 w-full bg-zinc-800 rounded-full overflow-hidden">
-                           <div className="h-full w-[65%] bg-yellow-500"></div>
-                        </div>
-                      </div>
-                      <div className="flex justify-between items-center">
-                         <span className="text-[9px] font-black text-zinc-600 uppercase tracking-widest">Keywords</span>
-                         <span className="text-[9px] font-black text-zinc-400">42/100</span>
-                      </div>
-                   </div>
+          {/* HIGH FIDELITY SCREENSHOT: Resume Audit View */}
+          <div className="flex-1 w-full max-w-2xl bg-zinc-950 border border-zinc-900 rounded-[48px] p-2 shadow-3xl rotate-1 hover:rotate-0 transition-all duration-700 relative group overflow-hidden border-b-8 border-zinc-900/50">
+             <div className="bg-zinc-900/50 rounded-[44px] overflow-hidden border border-zinc-800">
+                <div className="h-10 bg-zinc-950 flex items-center px-6 gap-2 border-b border-zinc-900">
+                  <div className="w-2.5 h-2.5 rounded-full bg-red-500/50"></div>
+                  <div className="w-2.5 h-2.5 rounded-full bg-yellow-500/50"></div>
+                  <div className="w-2.5 h-2.5 rounded-full bg-green-500/50"></div>
+                  <div className="mx-auto bg-zinc-900 px-4 py-1 rounded-full border border-zinc-800 text-[8px] font-black text-zinc-600 uppercase tracking-widest">EXECUTIVE_AUDIT_PROTOCOL_v4.1</div>
                 </div>
 
-                <div className="p-6 bg-zinc-900/40 rounded-[32px] border border-green-500/10 space-y-3">
-                   <div className="flex items-center gap-2">
-                      <span className="w-2 h-2 rounded-full bg-green-500 shadow-[0_0_8px_#22c55e]"></span>
-                      <p className="text-[9px] font-black text-green-500 uppercase tracking-widest">Krypto Architected (XYZ Formula)</p>
+                <div className="p-8 space-y-8 relative">
+                   <div className="absolute top-0 left-0 w-full h-[3px] bg-yellow-500 shadow-[0_0_20px_#eab308] z-20 animate-[scan_4s_linear_infinite]"></div>
+                   
+                   <div className="space-y-6">
+                        {/* Recruitment Score Header */}
+                        <div className="flex items-center gap-10 p-8 bg-zinc-950 border border-zinc-800 rounded-3xl shadow-inner">
+                           <div className="relative w-24 h-24 flex items-center justify-center">
+                              <svg className="w-full h-full transform -rotate-90">
+                                <circle cx="50%" cy="50%" r="42" className="stroke-zinc-900 fill-none" strokeWidth="8" />
+                                <circle cx="50%" cy="50%" r="42" className="stroke-yellow-500 fill-none" strokeWidth="8" strokeDasharray="264" strokeDashoffset="92" strokeLinecap="round" />
+                              </svg>
+                              <span className="absolute text-3xl font-black text-yellow-500 tracking-tighter">65%</span>
+                           </div>
+                           <div className="space-y-2">
+                              <p className="text-[12px] font-black text-zinc-100 uppercase tracking-[0.2em]">Recruitment Impact Score</p>
+                              <div className="flex gap-2">
+                                <span className="text-[8px] font-black text-red-500 bg-red-500/10 px-2 py-0.5 rounded border border-red-500/20 uppercase">Critical Deficiencies Detected</span>
+                              </div>
+                           </div>
+                        </div>
+
+                        {/* Red/Green/Why List Visual */}
+                        <div className="space-y-4">
+                           <h5 className="text-[10px] font-black text-zinc-500 uppercase tracking-[0.4em] mb-4">Structural Decomposition</h5>
+                           
+                           {/* Row 1 */}
+                           <div className="bg-zinc-950 border border-zinc-800 rounded-[32px] overflow-hidden">
+                              <div className="grid grid-cols-1 md:grid-cols-2">
+                                 <div className="p-6 bg-red-500/[0.03] border-r border-zinc-900 space-y-2">
+                                    <span className="text-[7px] font-black text-red-500 uppercase tracking-widest">Deficiency</span>
+                                    <p className="text-[10px] text-zinc-500 italic line-through decoration-red-500/30">Responsible for managing day-to-day software updates and team tasks.</p>
+                                 </div>
+                                 <div className="p-6 bg-green-500/[0.03] space-y-2 relative">
+                                    <div className="absolute top-2 right-4 text-[7px] font-black text-green-500 uppercase">Optimized</div>
+                                    <p className="text-[11px] text-zinc-200 font-bold uppercase tracking-tight">Accomplished **100% On-Time Deployment** as measured by **4 Successive Sprint Cycles**, by leading **12 Engineers**.</p>
+                                 </div>
+                              </div>
+                              <div className="p-4 bg-zinc-900/50 border-t border-zinc-800 flex items-center gap-3">
+                                 <span className="text-[8px] font-black text-yellow-500 uppercase tracking-widest">Logic:</span>
+                                 <p className="text-[9px] text-zinc-500 font-medium">Rebuilt using Google XYZ formula to quantify professional velocity.</p>
+                              </div>
+                           </div>
+
+                           {/* Row 2 */}
+                           <div className="bg-zinc-950 border border-zinc-800 rounded-[32px] overflow-hidden opacity-80">
+                              <div className="grid grid-cols-1 md:grid-cols-2">
+                                 <div className="p-6 bg-red-500/[0.03] border-r border-zinc-900 space-y-2">
+                                    <span className="text-[7px] font-black text-red-500 uppercase tracking-widest">Deficiency</span>
+                                    <p className="text-[10px] text-zinc-500 italic line-through decoration-red-500/30">Worked closely with sales to help close new business deals.</p>
+                                 </div>
+                                 <div className="p-6 bg-green-500/[0.03] space-y-2 relative">
+                                    <div className="absolute top-2 right-4 text-[7px] font-black text-green-500 uppercase">Optimized</div>
+                                    <p className="text-[11px] text-zinc-200 font-bold uppercase tracking-tight">Generated **$2.4M in Pipeline Revenue** as measured by **CRM Data**, by engineering **Strategic Solutions** for Sales.</p>
+                                 </div>
+                              </div>
+                              <div className="p-4 bg-zinc-900/50 border-t border-zinc-800 flex items-center gap-3">
+                                 <span className="text-[8px] font-black text-yellow-500 uppercase tracking-widest">Logic:</span>
+                                 <p className="text-[9px] text-zinc-500 font-medium">Mapped qualitative contribution to bottom-line financial impact.</p>
+                              </div>
+                           </div>
+                        </div>
                    </div>
-                   <p className="text-xs text-zinc-100 font-black uppercase tracking-tight leading-relaxed">"Managed 12 cross-functional engineers as measured by 100% on-time deployment across 4 sprint cycles, by implementing Agile-K Architecture."</p>
                 </div>
              </div>
+             <style>{`@keyframes scan { 0% { transform: translateY(0); opacity: 0; } 10% { opacity: 1; } 90% { opacity: 1; } 100% { transform: translateY(500px); opacity: 0; } }`}</style>
           </div>
         </div>
 
@@ -315,23 +353,86 @@ const Dashboard: React.FC<DashboardProps> = ({ priority, userCredits, onUse, onN
             <button onClick={() => setActiveTab?.('Career Path')} className="px-10 py-5 bg-zinc-100 text-zinc-950 rounded-[24px] text-[11px] font-black uppercase tracking-widest hover:bg-yellow-500 active:scale-95 transition-all shadow-2xl border-b-4 border-zinc-300">Discover Your Path</button>
           </div>
           
-          <div className="flex-1 w-full max-w-xl bg-[#0c0c0e] border border-zinc-800 rounded-[56px] p-12 shadow-3xl -rotate-2 hover:rotate-0 transition-all duration-700 relative overflow-hidden">
-             <div className="absolute inset-0 bg-blue-500/[0.02] opacity-20 pointer-events-none"></div>
-             <div className="space-y-8 text-center relative z-10">
-                <div className="w-44 h-44 bg-blue-500/5 rounded-full mx-auto border border-blue-500/10 flex items-center justify-center relative">
-                   <div className="absolute inset-0 bg-blue-500/5 blur-3xl animate-pulse"></div>
-                   <KryptoLogo size={80} />
+          {/* HIGH FIDELITY SCREENSHOT: DNA Visualization */}
+          <div className="flex-1 w-full max-w-2xl bg-zinc-950 border border-zinc-900 rounded-[56px] p-2 shadow-3xl -rotate-2 hover:rotate-0 transition-all duration-700 relative overflow-hidden">
+             <div className="bg-[#0c0c0e] rounded-[52px] border border-zinc-800 overflow-hidden">
+                <div className="h-12 bg-zinc-950 flex items-center px-6 justify-between border-b border-zinc-900">
+                   <div className="flex items-center gap-2">
+                     <span className="w-2 h-2 rounded-full bg-blue-500 shadow-[0_0_10px_#3b82f6]"></span>
+                     <span className="text-[10px] font-black text-zinc-300 uppercase tracking-[0.4em]">NEURAL_DNA_VECTOR_LOCKED</span>
+                   </div>
+                   <div className="bg-yellow-500/10 border border-yellow-500/20 px-3 py-1 rounded-lg">
+                      <span className="text-[10px] font-black text-yellow-500 uppercase tracking-widest italic">RIASEC: S-I-R</span>
+                   </div>
                 </div>
-                <div className="space-y-4">
-                   <p className="text-sm font-black text-zinc-100 uppercase tracking-[0.3em]">GEOGRAPHY: ANALYZING...</p>
-                   <div className="grid grid-cols-2 gap-4">
-                      <div className="p-4 bg-zinc-950 border border-zinc-900 rounded-2xl">
-                         <p className="text-[8px] font-black text-blue-400 uppercase tracking-widest">Dominant Hub</p>
-                         <p className="text-[10px] text-zinc-300 font-bold uppercase">Mapping Neural Paths</p>
+
+                <div className="p-10 flex flex-col items-center">
+                   <div className="relative w-72 h-72 mb-10 group/radar">
+                      {/* Radar Chart Visual with RIASEC Labels */}
+                      <svg viewBox="0 0 200 200" className="w-full h-full">
+                        <defs>
+                           <radialGradient id="dna-glow" cx="50%" cy="50%" r="50%">
+                              <stop offset="0%" stopColor="rgba(234, 179, 8, 0.3)" />
+                              <stop offset="100%" stopColor="transparent" />
+                           </radialGradient>
+                        </defs>
+                        <circle cx="100" cy="100" r="80" className="stroke-zinc-800/50 fill-none" strokeWidth="0.5" />
+                        <circle cx="100" cy="100" r="60" className="stroke-zinc-800/50 fill-none" strokeWidth="0.5" />
+                        <circle cx="100" cy="100" r="40" className="stroke-zinc-800/50 fill-none" strokeWidth="0.5" />
+                        <circle cx="100" cy="100" r="20" className="stroke-zinc-800/50 fill-none" strokeWidth="0.5" />
+                        
+                        {/* Axial Lines */}
+                        {[0, 60, 120, 180, 240, 300].map(deg => (
+                           <line key={deg} x1="100" y1="100" x2={100 + 80 * Math.cos(deg * Math.PI / 180)} y2={100 + 80 * Math.sin(deg * Math.PI / 180)} className="stroke-zinc-800" strokeWidth="0.5" />
+                        ))}
+
+                        {/* Personality Vector Polygon */}
+                        <polygon points="100,40 160,100 130,160 70,140 40,80" className="fill-yellow-500/10 stroke-yellow-500 animate-pulse" strokeWidth="2.5" />
+                        <circle cx="100" cy="40" r="4" fill="#eab308" className="shadow-lg" />
+                        <circle cx="160" cy="100" r="4" fill="#eab308" />
+                        <circle cx="130" cy="160" r="4" fill="#eab308" />
+                        <circle cx="70" cy="140" r="4" fill="#eab308" />
+                        <circle cx="40" cy="80" r="4" fill="#eab308" />
+
+                        {/* RIASEC Labels */}
+                        <text x="100" y="30" textAnchor="middle" className="text-[7px] font-black fill-zinc-500 uppercase tracking-widest">Realistic</text>
+                        <text x="175" y="100" textAnchor="middle" className="text-[7px] font-black fill-zinc-500 uppercase tracking-widest">Investigative</text>
+                        <text x="145" y="175" textAnchor="middle" className="text-[7px] font-black fill-zinc-500 uppercase tracking-widest">Artistic</text>
+                        <text x="55" y="175" textAnchor="middle" className="text-[7px] font-black fill-zinc-500 uppercase tracking-widest">Social</text>
+                        <text x="25" y="100" textAnchor="middle" className="text-[7px] font-black fill-zinc-500 uppercase tracking-widest">Enterprising</text>
+                        <text x="100" y="175" textAnchor="middle" className="text-[7px] font-black fill-zinc-500 uppercase tracking-widest">Conventional</text>
+                      </svg>
+                      <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
+                         <div className="w-32 h-32 bg-yellow-500/5 blur-[40px] animate-pulse"></div>
                       </div>
-                      <div className="p-4 bg-zinc-950 border border-zinc-900 rounded-2xl">
-                         <p className="text-[8px] font-black text-blue-400 uppercase tracking-widest">Market Signal</p>
-                         <p className="text-[10px] text-zinc-300 font-bold uppercase">High Affinity Detected</p>
+                   </div>
+
+                   <div className="w-full space-y-4">
+                      <div className="p-6 bg-zinc-950 border border-zinc-900 rounded-3xl flex items-center justify-between">
+                         <div className="space-y-1">
+                            <p className="text-[8px] font-black text-zinc-500 uppercase tracking-widest">Dominant Sequence</p>
+                            <p className="text-lg font-black text-zinc-100 uppercase tracking-tight">Social Architect</p>
+                         </div>
+                         <div className="text-right">
+                            <p className="text-[8px] font-black text-zinc-500 uppercase tracking-widest">Market Affinity</p>
+                            <p className="text-lg font-black text-blue-500 uppercase tracking-tight">PREMIUM</p>
+                         </div>
+                      </div>
+
+                      <div className="p-6 bg-blue-500/5 border border-blue-500/10 rounded-3xl flex flex-col gap-4">
+                         <div className="flex items-center gap-3">
+                            <div className="w-2 h-2 rounded-full bg-blue-500"></div>
+                            <p className="text-[10px] font-black text-blue-500 uppercase tracking-widest">Hub Intelligence Signal: Bengaluru</p>
+                         </div>
+                         <div className="flex justify-between items-end">
+                            <div className="space-y-1">
+                               <p className="text-[8px] font-black text-zinc-600 uppercase tracking-widest">Salary Range</p>
+                               <p className="text-xl font-black text-zinc-100">₹32L - ₹48L</p>
+                            </div>
+                            <div className="w-24 h-1.5 bg-zinc-900 rounded-full overflow-hidden">
+                               <div className="h-full w-3/4 bg-blue-500 shadow-[0_0_8px_rgba(59,130,246,0.5)]"></div>
+                            </div>
+                         </div>
                       </div>
                    </div>
                 </div>
@@ -348,35 +449,47 @@ const Dashboard: React.FC<DashboardProps> = ({ priority, userCredits, onUse, onN
             <button onClick={() => setActiveTab?.('Outreach Architect')} className="px-10 py-5 bg-zinc-100 text-zinc-950 rounded-[24px] text-[11px] font-black uppercase tracking-widest hover:bg-yellow-400 active:scale-95 transition-all shadow-2xl border-b-4 border-zinc-300">Initialize Outreach Protocol</button>
           </div>
           
-          <div className="flex-1 w-full max-w-xl bg-zinc-950 border border-zinc-900 rounded-[48px] p-12 shadow-3xl rotate-1 hover:rotate-0 transition-all duration-700 relative group overflow-hidden border-b-4 border-zinc-800">
-             <div className="space-y-8 relative z-10">
-                <div className="p-8 bg-zinc-900/40 rounded-[40px] border border-zinc-800/50 space-y-6">
-                   <div className="flex items-center justify-between">
-                      <span className="text-[9px] font-black text-yellow-500 uppercase tracking-widest">Personalization Intensity</span>
-                      <span className="text-[10px] font-black text-zinc-100">92%</span>
+          {/* HIGH FIDELITY SCREENSHOT: Outreach Protocol Generation */}
+          <div className="flex-1 w-full max-w-2xl bg-zinc-950 border border-zinc-900 rounded-[48px] p-2 shadow-3xl rotate-1 hover:rotate-0 transition-all duration-700 relative group overflow-hidden border-b-8 border-zinc-900/50">
+             <div className="bg-zinc-900/50 rounded-[44px] overflow-hidden border border-zinc-800">
+                <div className="h-10 bg-zinc-950 flex items-center px-6 justify-between border-b border-zinc-900">
+                   <div className="flex items-center gap-2">
+                     <span className="w-1.5 h-1.5 rounded-full bg-yellow-500"></span>
+                     <span className="text-[8px] font-black text-yellow-500 uppercase tracking-widest">Conversation_Forge_Protocol</span>
                    </div>
-                   <div className="h-2 w-full bg-zinc-950 rounded-full overflow-hidden">
-                      <div className="h-full w-[92%] bg-yellow-500 shadow-[0_0_10px_#eab308]"></div>
-                   </div>
-                   <div className="grid grid-cols-2 gap-4">
-                      <div className="p-4 bg-zinc-950 border border-zinc-800 rounded-2xl">
-                         <p className="text-[7px] font-black text-zinc-600 uppercase tracking-widest mb-1">Neural Hook</p>
-                         <p className="text-[10px] font-bold text-zinc-200">Trajectory Sync Active</p>
-                      </div>
-                      <div className="p-4 bg-zinc-950 border border-zinc-800 rounded-2xl">
-                         <p className="text-[7px] font-black text-zinc-600 uppercase tracking-widest mb-1">Engagement</p>
-                         <p className="text-[10px] font-bold text-zinc-200">High-Conversion Protocol</p>
-                      </div>
+                   <div className="flex gap-1.5">
+                     <div className="w-2 h-2 rounded-sm bg-zinc-800"></div>
+                     <div className="w-2 h-2 rounded-sm bg-zinc-800"></div>
                    </div>
                 </div>
-                <div className="p-6 bg-zinc-900/20 rounded-[32px] border border-zinc-800/40">
-                   <div className="flex items-center gap-2 mb-3">
-                      <span className="w-1.5 h-1.5 rounded-full bg-yellow-500 animate-pulse"></span>
-                      <p className="text-[8px] font-black text-zinc-500 uppercase tracking-widest">Generating Conversion Vector...</p>
+
+                <div className="p-8 space-y-6">
+                   <div className="flex items-start gap-4">
+                      <div className="w-10 h-10 rounded-2xl bg-zinc-950 border border-zinc-800 flex items-center justify-center flex-shrink-0">
+                         <KryptoLogo size={20} />
+                      </div>
+                      <div className="bg-zinc-950 border border-zinc-800 p-6 rounded-[32px] rounded-tl-none flex-1 space-y-4 shadow-xl">
+                         <div className="flex items-center justify-between mb-2">
+                           <span className="text-[8px] font-black text-yellow-500 uppercase tracking-[0.3em]">AI Outreach Protocol Generated</span>
+                           <span className="text-[7px] text-zinc-600 font-bold uppercase tracking-widest">Score: 94% Engagement Probability</span>
+                         </div>
+                         <div className="space-y-3">
+                           <p className="text-[11px] text-zinc-200 font-medium leading-relaxed italic">"Hi Jensen, I noticed NVIDIA's recent advancement in Blackwell architecture—it's a massive leap for real-time generative physics..."</p>
+                           <div className="p-3 bg-yellow-500/5 border border-yellow-500/10 rounded-2xl border-l-4 border-l-yellow-500">
+                              <p className="text-[8px] font-black text-yellow-500 uppercase tracking-widest mb-1">Strategic Hook Detection</p>
+                              <p className="text-[9px] text-zinc-400 font-bold uppercase tracking-tight">System identified current company milestone via real-time Google Search Study.</p>
+                           </div>
+                         </div>
+                      </div>
                    </div>
-                   <div className="space-y-2">
-                      <div className="h-2 bg-zinc-900 rounded w-full"></div>
-                      <div className="h-2 bg-zinc-900 rounded w-5/6"></div>
+
+                   <div className="flex justify-end gap-3 mt-8">
+                      <div className="px-5 py-3 bg-zinc-950 border border-zinc-800 rounded-2xl text-[9px] font-black text-zinc-500 uppercase tracking-widest cursor-default">
+                        Copy Template
+                      </div>
+                      <div className="px-5 py-3 bg-yellow-500 text-zinc-950 rounded-2xl text-[9px] font-black uppercase tracking-widest shadow-lg shadow-yellow-500/10 animate-pulse">
+                        Execute High-Conversion
+                      </div>
                    </div>
                 </div>
              </div>
@@ -392,34 +505,61 @@ const Dashboard: React.FC<DashboardProps> = ({ priority, userCredits, onUse, onN
             <button onClick={() => setActiveTab?.('Interview Lab')} className="px-10 py-5 bg-zinc-100 text-zinc-950 rounded-[24px] text-[11px] font-black uppercase tracking-widest hover:bg-yellow-500 active:scale-95 transition-all shadow-2xl border-b-4 border-zinc-300">Enter Simulation Lab</button>
           </div>
           
-          <div className="flex-1 w-full max-w-xl bg-zinc-950 border border-zinc-900 rounded-[48px] p-12 shadow-3xl -rotate-1 hover:rotate-0 transition-all duration-700 relative group overflow-hidden border-b-4 border-zinc-800">
-             <div className="space-y-8 relative z-10">
-                <div className="flex justify-center mb-8">
-                   <div className="relative w-48 h-48 flex items-center justify-center">
-                      <svg className="w-full h-full transform -rotate-90">
-                        <circle cx="50%" cy="50%" r="70" className="stroke-zinc-900 fill-none" strokeWidth="6" />
-                        <circle cx="50%" cy="50%" r="70" className="stroke-blue-500 fill-none" strokeWidth="8" strokeDasharray="440" strokeDashoffset="110" strokeLinecap="round" />
-                      </svg>
-                      <div className="absolute inset-0 flex flex-col items-center justify-center">
-                         <span className="text-3xl font-black text-zinc-100 tracking-tighter">75%</span>
-                         <span className="text-[8px] font-black text-zinc-500 uppercase tracking-widest mt-1">Ready</span>
-                      </div>
+          {/* HIGH FIDELITY SCREENSHOT: Interview Simulation Session */}
+          <div className="flex-1 w-full max-w-2xl bg-zinc-950 border border-zinc-900 rounded-[48px] p-2 shadow-3xl -rotate-1 hover:rotate-0 transition-all duration-700 relative group overflow-hidden border-b-8 border-zinc-900/50">
+             <div className="bg-[#0c0c0e] rounded-[44px] overflow-hidden border border-zinc-800">
+                <div className="h-10 bg-zinc-950 flex items-center px-6 justify-between border-b border-zinc-900">
+                   <div className="flex items-center gap-2">
+                     <span className="w-1.5 h-1.5 rounded-full bg-blue-500"></span>
+                     <span className="text-[8px] font-black text-blue-500 uppercase tracking-widest">Simulation_Lab_In_Session</span>
+                   </div>
+                   <div className="flex items-center gap-3">
+                     <span className="text-[7px] font-black text-zinc-700 uppercase tracking-[0.2em]">Session_Timer: 12:44</span>
                    </div>
                 </div>
-                <div className="space-y-4">
-                   <div className="flex justify-between items-center text-[10px] font-black uppercase tracking-widest text-zinc-500">
-                      <span>Behavioral Calibration</span>
-                      <span className="text-zinc-100">Executive Grade</span>
+
+                <div className="p-10 space-y-10">
+                   <div className="space-y-6">
+                      <div className="flex items-center gap-3">
+                        <span className="px-2 py-1 bg-blue-500/10 border border-blue-500/20 rounded-md text-blue-500 text-[7px] font-black uppercase tracking-widest">Question 3 / 10</span>
+                        <div className="h-px bg-zinc-900 flex-1"></div>
+                      </div>
+                      <h4 className="text-lg font-black text-zinc-100 uppercase tracking-tight leading-tight italic">"Describe a situation where you had to pivot a product strategy based on conflicting market signals."</h4>
                    </div>
-                   <div className="h-1.5 w-full bg-zinc-950 rounded-full overflow-hidden border border-zinc-900">
-                      <div className="h-full w-[85%] bg-blue-500"></div>
+
+                   <div className="grid grid-cols-2 gap-6">
+                      <div className="bg-zinc-950 border border-zinc-900 p-6 rounded-3xl space-y-4 text-center">
+                        <div className="relative w-24 h-24 mx-auto">
+                           <svg viewBox="0 0 100 100" className="w-full h-full transform -rotate-90">
+                              <circle cx="50" cy="50" r="40" className="stroke-zinc-900 fill-none" strokeWidth="8" />
+                              <circle cx="50" cy="50" r="40" className="stroke-blue-500 fill-none" strokeWidth="8" strokeDasharray="251" strokeDashoffset="50" strokeLinecap="round" />
+                           </svg>
+                           <div className="absolute inset-0 flex items-center justify-center">
+                              <span className="text-lg font-black text-zinc-100">80%</span>
+                           </div>
+                        </div>
+                        <p className="text-[9px] font-black text-zinc-500 uppercase tracking-widest">Tone Stability</p>
+                      </div>
+
+                      <div className="bg-zinc-950 border border-zinc-800 p-6 rounded-3xl space-y-4">
+                        <div className="flex items-center gap-2 mb-2">
+                          <span className="w-1.5 h-1.5 rounded-full bg-blue-500 animate-pulse"></span>
+                          <span className="text-[8px] font-black text-blue-500 uppercase tracking-widest">Hiring Bar Insights</span>
+                        </div>
+                        <div className="space-y-2">
+                           <div className="flex justify-between items-center text-[7px] font-black text-zinc-500 uppercase tracking-widest"><span>Clarity</span><span className="text-zinc-300">High</span></div>
+                           <div className="h-1 bg-zinc-900 rounded-full"><div className="h-full w-4/5 bg-blue-500"></div></div>
+                           <div className="flex justify-between items-center text-[7px] font-black text-zinc-500 uppercase tracking-widest"><span>Quantification</span><span className="text-zinc-300">Med</span></div>
+                           <div className="h-1 bg-zinc-900 rounded-full"><div className="h-full w-2/4 bg-blue-500"></div></div>
+                        </div>
+                      </div>
                    </div>
-                   <div className="flex justify-between items-center text-[10px] font-black uppercase tracking-widest text-zinc-500">
-                      <span>Stress Resilience</span>
-                      <span className="text-zinc-100">90% Affinity</span>
-                   </div>
-                   <div className="h-1.5 w-full bg-zinc-950 rounded-full overflow-hidden border border-zinc-900">
-                      <div className="h-full w-[90%] bg-blue-500"></div>
+
+                   <div className="pt-6 border-t border-zinc-900 flex items-center justify-between">
+                      <p className="text-[10px] font-black text-zinc-700 uppercase tracking-[0.4em]">Battle-Tested Protocol</p>
+                      <button className="px-6 py-3 bg-zinc-900 border border-zinc-800 rounded-xl text-[8px] font-black text-zinc-500 uppercase tracking-widest hover:text-blue-500 hover:border-blue-500/30 transition-all">
+                        Request Expert Answer
+                      </button>
                    </div>
                 </div>
              </div>
