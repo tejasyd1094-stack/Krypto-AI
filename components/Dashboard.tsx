@@ -122,7 +122,6 @@ const Dashboard: React.FC<DashboardProps> = ({ priority, userCredits, onUse, onN
     }
   };
 
-  // Gauge constants
   const radius = 45;
   const circumference = 2 * Math.PI * radius;
   const score = 65;
@@ -130,6 +129,7 @@ const Dashboard: React.FC<DashboardProps> = ({ priority, userCredits, onUse, onN
 
   return (
     <div className="max-w-6xl mx-auto py-12 px-6 space-y-32 pb-40">
+      {/* Hero Section */}
       <div className="text-center space-y-8 animate-in fade-in slide-in-from-top-4 duration-1000">
         <h2 className="text-5xl sm:text-8xl font-black tracking-tighter leading-none text-zinc-100 uppercase">
           Welcome, <br /><span className="gold-text-gradient">Career Architect!</span>
@@ -244,27 +244,22 @@ const Dashboard: React.FC<DashboardProps> = ({ priority, userCredits, onUse, onN
         </div>
       )}
 
-      {/* Feature Previews Section */}
+      {/* Feature Sections */}
       <div className="space-y-48">
-        {/* Resume Scorer Preview */}
+        {/* ATS Optimization Lab */}
         <div className="flex flex-col lg:flex-row items-center gap-24">
           <div className="flex-1 space-y-10 text-center lg:text-left animate-in slide-in-from-left-8 duration-1000">
             <div className="inline-block px-4 py-1 rounded-full bg-yellow-500/10 border border-yellow-500/20 text-yellow-500 text-[9px] font-black uppercase tracking-widest">Architecture Suite</div>
             <h4 className="text-4xl sm:text-6xl font-black tracking-tight uppercase leading-tight">ATS <span className="gold-text-gradient">Optimization Lab</span></h4>
             <p className="text-zinc-500 text-xl font-medium leading-relaxed">Turn your resume into a performance beast. We audit keywords, detect formatting discrepancies, and rebuild assets using the Google XYZ formula.</p>
+            
             <div className="flex flex-col sm:flex-row gap-4 justify-center lg:justify-start items-center">
                <button onClick={() => setActiveTab?.('Resume Scorer')} className="px-10 py-5 bg-zinc-100 text-zinc-950 rounded-[24px] text-[11px] font-black uppercase tracking-widest hover:bg-yellow-400 active:scale-95 transition-all shadow-2xl border-b-4 border-zinc-300">Start Architecture Audit</button>
-               <div className="flex items-center gap-2 px-4 py-2 border border-yellow-500/20 bg-yellow-500/5 rounded-2xl">
-                  <span className="w-2 h-2 rounded-full bg-green-500 animate-pulse"></span>
-                  <span className="text-[9px] font-black text-zinc-400 uppercase tracking-widest leading-none">Fully Optimized Export Included</span>
-               </div>
             </div>
           </div>
           
-          {/* High-Fidelity UI Simulation Card */}
           <div className="flex-1 w-full max-w-xl bg-zinc-950 border border-zinc-900 rounded-[48px] p-10 shadow-3xl rotate-1 hover:rotate-0 transition-all duration-700 relative group overflow-hidden border-b-4 border-zinc-800">
-             {/* Professional Scanning Loader Overlay */}
-             <div className="absolute top-0 left-0 w-full h-[2px] bg-gradient-to-r from-transparent via-yellow-500 to-transparent shadow-[0_0_15px_#eab308] z-20 animate-[scan_3s_linear_infinite]"></div>
+             <div className="absolute top-0 left-0 w-full h-[2px] bg-yellow-500 shadow-[0_0_15px_#eab308] z-20 animate-[scan_3s_linear_infinite]"></div>
              <style>{`
                @keyframes scan {
                  0% { transform: translateY(0); opacity: 0; }
@@ -275,13 +270,8 @@ const Dashboard: React.FC<DashboardProps> = ({ priority, userCredits, onUse, onN
              `}</style>
 
              <div className="space-y-8 relative z-10">
-                {/* Score Section */}
                 <div className="flex items-center gap-10 bg-zinc-900/40 p-8 rounded-[40px] border border-zinc-800/50">
                    <div className="relative w-32 h-32 flex items-center justify-center flex-shrink-0">
-                      {/* Corner Accents */}
-                      <div className="absolute -top-1 -left-1 w-4 h-4 border-t-4 border-l-4 border-yellow-500/50 rounded-tl-lg"></div>
-                      <div className="absolute -bottom-1 -right-1 w-4 h-4 border-b-4 border-r-4 border-yellow-500/50 rounded-br-lg"></div>
-                      
                       <svg className="w-full h-full transform -rotate-90">
                         <circle cx="50%" cy="50%" r={radius} className="stroke-zinc-900 fill-none" strokeWidth="8" />
                         <circle cx="50%" cy="50%" r={radius} className="stroke-yellow-500 fill-none" strokeWidth="8" strokeDasharray={circumference} strokeDashoffset={offset} strokeLinecap="round" />
@@ -305,38 +295,18 @@ const Dashboard: React.FC<DashboardProps> = ({ priority, userCredits, onUse, onN
                    </div>
                 </div>
 
-                {/* Audit Section */}
-                <div className="space-y-6">
-                   <p className="text-[10px] font-black text-zinc-600 uppercase tracking-[0.4em] px-2">Discrepancy Audit</p>
-                   <div className="space-y-4">
-                      {/* Deficiency Item */}
-                      <div className="p-6 bg-zinc-900/40 rounded-[32px] border border-zinc-800/50 space-y-3">
-                         <div className="flex items-center gap-2">
-                            <span className="w-2 h-2 rounded-full bg-red-500 shadow-[0_0_8px_#ef4444]"></span>
-                            <p className="text-[9px] font-black text-red-500 uppercase tracking-widest">Deficiency Detected</p>
-                         </div>
-                         <p className="text-xs text-zinc-500 italic line-through uppercase tracking-tight leading-relaxed">"Led a small team to complete project on time."</p>
-                      </div>
-                      
-                      {/* Solution Item */}
-                      <div className="p-6 bg-zinc-900/40 rounded-[32px] border border-green-500/10 space-y-3">
-                         <div className="flex items-center gap-2">
-                            <span className="w-2 h-2 rounded-full bg-green-500 shadow-[0_0_8px_#22c55e]"></span>
-                            <p className="text-[9px] font-black text-green-500 uppercase tracking-widest">Krypto Architected (XYZ Formula)</p>
-                         </div>
-                         <p className="text-xs text-zinc-100 font-black uppercase tracking-tight leading-relaxed">"Managed 12 cross-functional engineers as measured by 100% on-time deployment across 4 sprint cycles, by implementing Agile-K Architecture."</p>
-                      </div>
+                <div className="p-6 bg-zinc-900/40 rounded-[32px] border border-green-500/10 space-y-3">
+                   <div className="flex items-center gap-2">
+                      <span className="w-2 h-2 rounded-full bg-green-500 shadow-[0_0_8px_#22c55e]"></span>
+                      <p className="text-[9px] font-black text-green-500 uppercase tracking-widest">Krypto Architected (XYZ Formula)</p>
                    </div>
-                </div>
-
-                <div className="pt-2 text-center">
-                   <span className="text-[8px] font-black text-zinc-700 uppercase tracking-[0.5em]">Executive Blueprint V4.1 Engine</span>
+                   <p className="text-xs text-zinc-100 font-black uppercase tracking-tight leading-relaxed">"Managed 12 cross-functional engineers as measured by 100% on-time deployment across 4 sprint cycles, by implementing Agile-K Architecture."</p>
                 </div>
              </div>
           </div>
         </div>
 
-        {/* Career DNA Preview */}
+        {/* Career DNA Mapping */}
         <div className="flex flex-col lg:flex-row-reverse items-center gap-24">
           <div className="flex-1 space-y-10 text-center lg:text-left animate-in slide-in-from-right-8 duration-1000">
             <div className="inline-block px-4 py-1 rounded-full bg-blue-500/10 border border-blue-500/20 text-blue-500 text-[9px] font-black uppercase tracking-widest">Market Intelligence</div>
@@ -344,22 +314,24 @@ const Dashboard: React.FC<DashboardProps> = ({ priority, userCredits, onUse, onN
             <p className="text-zinc-500 text-xl font-medium leading-relaxed">Map personality vectors to global talent shifts. Get deep market signals, city topography, business hub analysis, and precise salary benchmarks.</p>
             <button onClick={() => setActiveTab?.('Career Path')} className="px-10 py-5 bg-zinc-100 text-zinc-950 rounded-[24px] text-[11px] font-black uppercase tracking-widest hover:bg-yellow-500 active:scale-95 transition-all shadow-2xl border-b-4 border-zinc-300">Discover Your Path</button>
           </div>
-          <div className="flex-1 w-full max-w-xl bg-[#0c0c0e] border border-zinc-800 rounded-[56px] p-12 shadow-3xl -rotate-2 hover:rotate-0 transition-all duration-700">
-             <div className="space-y-8 text-center">
+          
+          <div className="flex-1 w-full max-w-xl bg-[#0c0c0e] border border-zinc-800 rounded-[56px] p-12 shadow-3xl -rotate-2 hover:rotate-0 transition-all duration-700 relative overflow-hidden">
+             <div className="absolute inset-0 bg-blue-500/[0.02] opacity-20 pointer-events-none"></div>
+             <div className="space-y-8 text-center relative z-10">
                 <div className="w-44 h-44 bg-blue-500/5 rounded-full mx-auto border border-blue-500/10 flex items-center justify-center relative">
                    <div className="absolute inset-0 bg-blue-500/5 blur-3xl animate-pulse"></div>
                    <KryptoLogo size={80} />
                 </div>
                 <div className="space-y-4">
-                   <p className="text-sm font-black text-zinc-100 uppercase tracking-[0.3em]">GEOGRAPHY: MUMBAI, INDIA</p>
+                   <p className="text-sm font-black text-zinc-100 uppercase tracking-[0.3em]">GEOGRAPHY: ANALYZING...</p>
                    <div className="grid grid-cols-2 gap-4">
-                      <div className="p-3 bg-zinc-950 border border-zinc-900 rounded-2xl">
+                      <div className="p-4 bg-zinc-950 border border-zinc-900 rounded-2xl">
                          <p className="text-[8px] font-black text-blue-400 uppercase tracking-widest">Dominant Hub</p>
-                         <p className="text-[10px] text-zinc-300 font-bold uppercase">BKC (Financial Dist.)</p>
+                         <p className="text-[10px] text-zinc-300 font-bold uppercase">Mapping Neural Paths</p>
                       </div>
-                      <div className="p-3 bg-zinc-950 border border-zinc-900 rounded-2xl">
+                      <div className="p-4 bg-zinc-950 border border-zinc-900 rounded-2xl">
                          <p className="text-[8px] font-black text-blue-400 uppercase tracking-widest">Market Signal</p>
-                         <p className="text-[10px] text-zinc-300 font-bold uppercase">Strong Growth</p>
+                         <p className="text-[10px] text-zinc-300 font-bold uppercase">High Affinity Detected</p>
                       </div>
                    </div>
                 </div>
@@ -367,28 +339,95 @@ const Dashboard: React.FC<DashboardProps> = ({ priority, userCredits, onUse, onN
           </div>
         </div>
 
-        {/* Outreach & Interview Previews (Stacked) */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-12">
-           <div className="bg-zinc-900/40 border border-zinc-800 p-12 rounded-[56px] space-y-8 hover:border-yellow-500/30 transition-all group">
-              <div className="w-16 h-16 bg-yellow-500/10 rounded-2xl flex items-center justify-center border border-yellow-500/20 group-hover:scale-110 transition-transform">
-                 <svg className="w-8 h-8 text-yellow-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" /></svg>
-              </div>
-              <h5 className="text-3xl font-black uppercase tracking-tight text-zinc-100">Outreach <br />Architect</h5>
-              <p className="text-zinc-500 font-medium leading-relaxed">High-conversion protocols for cold networking. Stop being ignored and start being interviewed.</p>
-              <button onClick={() => setActiveTab?.('Outreach Architect')} className="text-[10px] font-black text-yellow-500 uppercase tracking-[0.4em] hover:text-yellow-400 transition-colors">Launch Protocol →</button>
-           </div>
-           <div className="bg-zinc-900/40 border border-zinc-800 p-12 rounded-[56px] space-y-8 hover:border-blue-500/30 transition-all group">
-              <div className="w-16 h-16 bg-blue-500/10 rounded-2xl flex items-center justify-center border border-blue-500/20 group-hover:scale-110 transition-transform">
-                 <svg className="w-8 h-8 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 11a7 7 0 01-7 7m0 0a7 7 0 01-7-7m7 7v4m0 0H8m4 0h4m-4-8a3 3 0 01-3-3V5a3 3 0 116 0v6a3 3 0 01-3 3z" /></svg>
-              </div>
-              <h5 className="text-3xl font-black uppercase tracking-tight text-zinc-100">Interview <br />Simulation Lab</h5>
-              <p className="text-zinc-500 font-medium leading-relaxed">Battle-test your responses in specific technical and behavioral environments. Neural feedback on your answers.</p>
-              <button onClick={() => setActiveTab?.('Interview Lab')} className="text-[10px] font-black text-blue-500 uppercase tracking-[0.4em] hover:text-blue-400 transition-colors">Enter Simulation →</button>
-           </div>
+        {/* Outreach Architect */}
+        <div className="flex flex-col lg:flex-row items-center gap-24">
+          <div className="flex-1 space-y-10 text-center lg:text-left animate-in slide-in-from-left-8 duration-1000">
+            <div className="inline-block px-4 py-1 rounded-full bg-yellow-500/10 border border-yellow-500/20 text-yellow-500 text-[9px] font-black uppercase tracking-widest">Outreach Suite</div>
+            <h4 className="text-4xl sm:text-6xl font-black tracking-tight uppercase leading-tight">Outreach <span className="gold-text-gradient">Architect</span></h4>
+            <p className="text-zinc-500 text-xl font-medium leading-relaxed">High-conversion protocols for cold networking. We research company trajectory in real-time to craft messages that guarantee engagement.</p>
+            <button onClick={() => setActiveTab?.('Outreach Architect')} className="px-10 py-5 bg-zinc-100 text-zinc-950 rounded-[24px] text-[11px] font-black uppercase tracking-widest hover:bg-yellow-400 active:scale-95 transition-all shadow-2xl border-b-4 border-zinc-300">Initialize Outreach Protocol</button>
+          </div>
+          
+          <div className="flex-1 w-full max-w-xl bg-zinc-950 border border-zinc-900 rounded-[48px] p-12 shadow-3xl rotate-1 hover:rotate-0 transition-all duration-700 relative group overflow-hidden border-b-4 border-zinc-800">
+             <div className="space-y-8 relative z-10">
+                <div className="p-8 bg-zinc-900/40 rounded-[40px] border border-zinc-800/50 space-y-6">
+                   <div className="flex items-center justify-between">
+                      <span className="text-[9px] font-black text-yellow-500 uppercase tracking-widest">Personalization Intensity</span>
+                      <span className="text-[10px] font-black text-zinc-100">92%</span>
+                   </div>
+                   <div className="h-2 w-full bg-zinc-950 rounded-full overflow-hidden">
+                      <div className="h-full w-[92%] bg-yellow-500 shadow-[0_0_10px_#eab308]"></div>
+                   </div>
+                   <div className="grid grid-cols-2 gap-4">
+                      <div className="p-4 bg-zinc-950 border border-zinc-800 rounded-2xl">
+                         <p className="text-[7px] font-black text-zinc-600 uppercase tracking-widest mb-1">Neural Hook</p>
+                         <p className="text-[10px] font-bold text-zinc-200">Trajectory Sync Active</p>
+                      </div>
+                      <div className="p-4 bg-zinc-950 border border-zinc-800 rounded-2xl">
+                         <p className="text-[7px] font-black text-zinc-600 uppercase tracking-widest mb-1">Engagement</p>
+                         <p className="text-[10px] font-bold text-zinc-200">High-Conversion Protocol</p>
+                      </div>
+                   </div>
+                </div>
+                <div className="p-6 bg-zinc-900/20 rounded-[32px] border border-zinc-800/40">
+                   <div className="flex items-center gap-2 mb-3">
+                      <span className="w-1.5 h-1.5 rounded-full bg-yellow-500 animate-pulse"></span>
+                      <p className="text-[8px] font-black text-zinc-500 uppercase tracking-widest">Generating Conversion Vector...</p>
+                   </div>
+                   <div className="space-y-2">
+                      <div className="h-2 bg-zinc-900 rounded w-full"></div>
+                      <div className="h-2 bg-zinc-900 rounded w-5/6"></div>
+                   </div>
+                </div>
+             </div>
+          </div>
+        </div>
+
+        {/* Interview Simulation Lab */}
+        <div className="flex flex-col lg:flex-row-reverse items-center gap-24">
+          <div className="flex-1 space-y-10 text-center lg:text-left animate-in slide-in-from-right-8 duration-1000">
+            <div className="inline-block px-4 py-1 rounded-full bg-blue-500/10 border border-blue-500/20 text-blue-500 text-[9px] font-black uppercase tracking-widest">Simulation Lab</div>
+            <h4 className="text-4xl sm:text-6xl font-black tracking-tight uppercase leading-tight">Interview <span className="gold-text-gradient">Simulation Lab</span></h4>
+            <p className="text-zinc-500 text-xl font-medium leading-relaxed">Battle-test your responses in specific technical and behavioral environments. Neural feedback on your hiring bar readiness.</p>
+            <button onClick={() => setActiveTab?.('Interview Lab')} className="px-10 py-5 bg-zinc-100 text-zinc-950 rounded-[24px] text-[11px] font-black uppercase tracking-widest hover:bg-yellow-500 active:scale-95 transition-all shadow-2xl border-b-4 border-zinc-300">Enter Simulation Lab</button>
+          </div>
+          
+          <div className="flex-1 w-full max-w-xl bg-zinc-950 border border-zinc-900 rounded-[48px] p-12 shadow-3xl -rotate-1 hover:rotate-0 transition-all duration-700 relative group overflow-hidden border-b-4 border-zinc-800">
+             <div className="space-y-8 relative z-10">
+                <div className="flex justify-center mb-8">
+                   <div className="relative w-48 h-48 flex items-center justify-center">
+                      <svg className="w-full h-full transform -rotate-90">
+                        <circle cx="50%" cy="50%" r="70" className="stroke-zinc-900 fill-none" strokeWidth="6" />
+                        <circle cx="50%" cy="50%" r="70" className="stroke-blue-500 fill-none" strokeWidth="8" strokeDasharray="440" strokeDashoffset="110" strokeLinecap="round" />
+                      </svg>
+                      <div className="absolute inset-0 flex flex-col items-center justify-center">
+                         <span className="text-3xl font-black text-zinc-100 tracking-tighter">75%</span>
+                         <span className="text-[8px] font-black text-zinc-500 uppercase tracking-widest mt-1">Ready</span>
+                      </div>
+                   </div>
+                </div>
+                <div className="space-y-4">
+                   <div className="flex justify-between items-center text-[10px] font-black uppercase tracking-widest text-zinc-500">
+                      <span>Behavioral Calibration</span>
+                      <span className="text-zinc-100">Executive Grade</span>
+                   </div>
+                   <div className="h-1.5 w-full bg-zinc-950 rounded-full overflow-hidden border border-zinc-900">
+                      <div className="h-full w-[85%] bg-blue-500"></div>
+                   </div>
+                   <div className="flex justify-between items-center text-[10px] font-black uppercase tracking-widest text-zinc-500">
+                      <span>Stress Resilience</span>
+                      <span className="text-zinc-100">90% Affinity</span>
+                   </div>
+                   <div className="h-1.5 w-full bg-zinc-950 rounded-full overflow-hidden border border-zinc-900">
+                      <div className="h-full w-[90%] bg-blue-500"></div>
+                   </div>
+                </div>
+             </div>
+          </div>
         </div>
       </div>
 
-      {/* Testimonials / Reviews Section */}
+      {/* Testimonials */}
       <div className="pt-32 border-t border-zinc-900">
         <div className="text-center mb-24">
           <span className="text-[10px] font-black uppercase tracking-[0.5em] text-zinc-600 block mb-4">Executive Testimonials</span>
@@ -413,14 +452,6 @@ const Dashboard: React.FC<DashboardProps> = ({ priority, userCredits, onUse, onN
              </div>
            ))}
         </div>
-      </div>
-      
-      {/* Final Call to Action */}
-      <div className="text-center pt-20">
-         <div className="inline-flex items-center gap-4 px-8 py-4 bg-zinc-900/50 border border-zinc-800 rounded-full animate-bounce">
-            <span className="w-2 h-2 rounded-full bg-yellow-500"></span>
-            <span className="text-[10px] font-black uppercase tracking-[0.5em] text-zinc-400">System Ready for Deployment</span>
-         </div>
       </div>
     </div>
   );

@@ -476,23 +476,52 @@ export const getOutreachMessage = async (inputs: any, screenshotData?: { data: s
   }
 };
 
-export const getMockInterviewSession = async (inputs: any): Promise<string> => {
+export const getMockInterviewSession = async (inputs: any, jdData?: string | { data: string, mimeType: string }): Promise<string> => {
   try {
     const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
-    const response = await ai.models.generateContent({
-      model: 'gemini-3-pro-preview',
-      contents: `Initialize high-fidelity interview simulation for:
+    const parts: any[] = [];
+
+    let contextText = `Initialize high-fidelity interview simulation for:
       Role: ${inputs.role}
       Organization: ${inputs.company}
+      Website: ${inputs.website || 'N/A'}
       Location Context: ${inputs.location || 'Global Standard'}
       Session Type: ${inputs.type}
       Complexity Vector: ${inputs.difficulty}
-      Protocol Length: ${inputs.length}
+      Protocol Length: ${inputs.length}`;
 
-      TASK: Provide a set of high-impact interview questions tailored to these parameters. 
-      For each question, provide an 'Architect's Response' — a sample high-performance answer following executive standards.
-      Include insider tips for navigating this specific organization's culture.`,
-      config: { systemInstruction: "You are the Krypto Interview Lab Director. You are precise, demanding, and provide only elite-level preparation materials." }
+    if (jdData) {
+      if (typeof jdData === 'string') {
+        contextText += `\n\nJOB DESCRIPTION (TEXT):\n${jdData}`;
+      } else {
+        parts.push({ inlineData: jdData });
+        contextText += `\n\nJOB DESCRIPTION (IMAGE ATTACHED ABOVE): Analyze the visual data for requirements and responsibilities.`;
+      }
+    }
+
+    parts.push({ text: contextText });
+
+    const response = await ai.models.generateContent({
+      model: 'gemini-3-pro-preview',
+      contents: { parts },
+      config: { 
+        tools: [{ googleSearch: {} }],
+        systemInstruction: `You are the Krypto Interview Lab Director. You are precise and provide only elite-level preparation.
+        
+        CRITICAL VALIDATION STEP:
+        If a Job Description (JD) was provided (either text or image), analyze it for "Responsibilities" or "Required Skills".
+        If the JD does NOT contain job-related duties (e.g. it is a blank page, a meme, or unrelated text), you MUST start your response with "[INVALID_JD]" followed by a professional request for the user to upload a valid document.
+
+        INTELLIGENCE GATHERING:
+        1. Use Google Search to find recent interview patterns, reviews (Glassdoor, Indeed, Reddit), and cultural insights for ${inputs.company}.
+        2. Analyze the Role and JD to tailor technical questions specifically to the responsibilities listed.
+
+        OUTPUT TASK:
+        - Provide high-impact interview questions tailored to the company's actual hiring bar.
+        - For each question, provide an 'Architect's Response' — a sample high-performance answer following executive standards.
+        - Include 'Insider Signal' tips for navigating this specific organization's culture based on your search results.
+        - If JD is valid, do NOT include the [INVALID_JD] tag.`
+      }
     });
     return response.text || "";
   } catch (e) {

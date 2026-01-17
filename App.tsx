@@ -37,7 +37,7 @@ const App: React.FC = () => {
   const [user, setUser] = useState<UserStatus>({
     isPro: false,
     planId: 'free',
-    credits: 20, 
+    credits: 50, // Initial credits increased to 50 for better user conversion
     trialUsed: false,
     location: '', 
     currency: 'USD',
