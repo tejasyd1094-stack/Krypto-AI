@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect, useRef } from 'react';
 import mammoth from 'mammoth';
 import { analyzeResume, generateFormattedResume } from '../services/geminiService';
@@ -67,9 +66,17 @@ const ResumeScorer: React.FC<ResumeScorerProps> = ({
   const [isDownloading, setIsDownloading] = useState(false);
   const [isHoveringScore, setIsHoveringScore] = useState(false);
   
+  const [isOverseasVisible, setIsOverseasVisible] = useState(false);
+  const [isOverseasActivated, setIsOverseasActivated] = useState(false);
+  const [targetCompany, setTargetCompany] = useState('');
+  const [targetCountry, setTargetCountry] = useState('');
+  const [visaStatus, setVisaStatus] = useState<'working' | 'sponsorship' | 'tourist' | ''>('');
+  const [visaValidTill, setVisaValidTill] = useState('');
+  
   const fileInputRef = useRef<HTMLInputElement>(null);
   const resultRef = useRef<HTMLDivElement>(null);
   const architectRef = useRef<HTMLDivElement>(null);
+  const loaderRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     let interval: any;
@@ -89,10 +96,10 @@ const ResumeScorer: React.FC<ResumeScorerProps> = ({
   }, [loading, isArchitecting, loadingProgress]);
 
   useEffect(() => {
-    if (result && resultRef.current) {
-      resultRef.current.scrollIntoView({ behavior: 'smooth' });
+    if (result && !loading && resultRef.current) {
+      resultRef.current.scrollIntoView({ behavior: 'smooth', block: 'start' });
     }
-  }, [result]);
+  }, [result, loading]);
 
   const validateAndSetFile = async (selectedFile: File) => {
     setError(null);
@@ -131,6 +138,7 @@ const ResumeScorer: React.FC<ResumeScorerProps> = ({
     if (userCredits < 10) { onNavigatePricing(); return; }
     setLoading(true);
     setResult(null);
+    setTimeout(() => loaderRef.current?.scrollIntoView({ behavior: 'smooth', block: 'center' }), 100);
     try {
       const analysis = await analyzeResume(resumeData);
       if (!analysis.refused) onUse(10);
@@ -145,19 +153,37 @@ const ResumeScorer: React.FC<ResumeScorerProps> = ({
 
   const handleArchitectResume = async () => {
     if (!result || !resumeData) return;
-    if (userCredits < 15) { onNavigatePricing(); return; }
+    
+    const cost = 15 + (isOverseasActivated ? 10 : 0);
+
+    if (userCredits < cost) {
+        onNavigatePricing();
+        return;
+    }
+
     setIsArchitecting(true);
     setLoadingProgress(0);
+    setTimeout(() => loaderRef.current?.scrollIntoView({ behavior: 'smooth', block: 'center' }), 100);
+
     try {
-      const architected = await generateFormattedResume(resumeData);
-      onUse(15);
+      const architected = await generateFormattedResume(
+        resumeData,
+        result.improvements,
+        result.formattingRecommendations,
+        isOverseasActivated ? targetCompany : undefined,
+        isOverseasActivated ? targetCountry : undefined,
+        isOverseasActivated ? visaStatus : undefined,
+        isOverseasActivated ? visaValidTill : undefined
+      );
+      
+      onUse(cost);
       setLoadingProgress(100);
       setFormattedResume(architected);
 
       const newScore = Math.min(99, Math.round(result.score + (100 - result.score) * 0.85));
       setResult(prev => prev ? { ...prev, score: newScore } : null);
 
-      setTimeout(() => architectRef.current?.scrollIntoView({ behavior: 'smooth' }), 100);
+      setTimeout(() => architectRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' }), 100);
     } catch (err) {
       console.error(err);
     } finally {
@@ -305,6 +331,8 @@ const ResumeScorer: React.FC<ResumeScorerProps> = ({
     return { stroke: 'stroke-green-500', text: 'text-green-500', bg: 'bg-green-500' };
   };
 
+  const optimizationCostText = isOverseasActivated ? '15 + 10' : '15';
+
   return (
     <div className="max-w-6xl mx-auto py-12 px-6 pb-40">
       <div className="text-center mb-16 space-y-4">
@@ -363,7 +391,7 @@ const ResumeScorer: React.FC<ResumeScorerProps> = ({
         )}
 
         {(loading || isArchitecting) && (
-          <div className="flex flex-col items-center justify-center py-20 text-center animate-in fade-in space-y-12">
+          <div ref={loaderRef} className="flex flex-col items-center justify-center py-20 text-center animate-in fade-in space-y-12">
             <div className="w-72 h-80 bg-zinc-950 rounded-[56px] border border-zinc-900 relative shadow-3xl overflow-hidden animate-pulse">
                <div className="absolute top-0 left-0 w-full h-[2px] bg-yellow-500 shadow-[0_0_20px_#eab308] animate-[scan_3s_linear_infinite]"></div>
                <style>{`@keyframes scan { 0% { transform: translateY(0); opacity: 0; } 10% { opacity: 1; } 90% { opacity: 1; } 100% { transform: translateY(500px); opacity: 0; } }`}</style>
@@ -402,7 +430,7 @@ const ResumeScorer: React.FC<ResumeScorerProps> = ({
         )}
 
         {result && !loading && !formattedResume && (
-          <div ref={resultRef} className="space-y-16 animate-in slide-in-from-bottom-12 duration-1000">
+          <div ref={resultRef} className="space-y-16 animate-in slide-in-from-bottom-12 duration-1000 scroll-mt-24">
             <div className="flex flex-col items-center">
               <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 w-full max-w-6xl">
                  <div className="bg-[#0c0c0e] border border-zinc-800 rounded-[64px] p-10 flex flex-col items-center justify-center space-y-6 shadow-3xl relative overflow-hidden min-h-[500px]">
@@ -544,6 +572,64 @@ const ResumeScorer: React.FC<ResumeScorerProps> = ({
               </div>
               
               <div className="flex flex-col gap-6 max-w-4xl mx-auto pt-10">
+                 <div className="space-y-6 bg-[#0c0c0e] border border-zinc-800 rounded-[40px] p-8 shadow-inner">
+                    {!isOverseasVisible ? (
+                        <button type="button" onClick={() => setIsOverseasVisible(true)} className="w-full text-center group py-4">
+                            <h4 className="text-sm font-black text-yellow-500 uppercase tracking-[0.3em] group-hover:text-yellow-400 transition-colors">Applying Overseas?</h4>
+                        </button>
+                    ) : (
+                        <div className="animate-in fade-in space-y-6">
+                            <div className="flex justify-between items-center">
+                                <h4 className="text-sm font-black text-yellow-500 uppercase tracking-[0.3em]">Advanced Targeting Protocol</h4>
+                                <button type="button" onClick={() => { setIsOverseasVisible(false); setIsOverseasActivated(false); }} className="text-xs text-zinc-500 hover:text-zinc-300 font-bold uppercase">Hide</button>
+                            </div>
+                            
+                            <div className="flex items-center justify-between p-4 bg-zinc-950 rounded-2xl border border-zinc-900">
+                                <p className="text-sm text-zinc-400 font-medium">
+                                    Regional & Company-Specific Tuning
+                                </p>
+                                <button 
+                                    type="button" 
+                                    onClick={() => setIsOverseasActivated(!isOverseasActivated)}
+                                    className={`px-4 py-2 rounded-lg text-[9px] font-black uppercase tracking-widest border transition-all ${isOverseasActivated ? 'bg-red-500/10 text-red-400 border-red-500/20 hover:bg-red-500/20' : 'bg-yellow-500/10 text-yellow-500 border-yellow-500/20 hover:bg-yellow-500/20'}`}
+                                >
+                                    {isOverseasActivated ? 'Deactivate' : 'Activate (+10 Credits)'}
+                                </button>
+                            </div>
+
+                            <fieldset disabled={!isOverseasActivated} className="space-y-6 disabled:opacity-40 transition-opacity">
+                                <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+                                  <div className="space-y-2">
+                                    <label className="text-[9px] font-black text-zinc-500 uppercase tracking-widest px-1">Target Company</label>
+                                    <input value={targetCompany} onChange={e => setTargetCompany(e.target.value)} className="w-full bg-zinc-950 border border-zinc-900 rounded-2xl px-6 py-4 text-sm focus:border-yellow-500/50 outline-none uppercase font-bold text-zinc-100 placeholder:text-zinc-700 disabled:bg-zinc-900/50" placeholder="e.g. Google" />
+                                  </div>
+                                  <div className="space-y-2">
+                                    <label className="text-[9px] font-black text-zinc-500 uppercase tracking-widest px-1">Target Country</label>
+                                    <input value={targetCountry} onChange={e => setTargetCountry(e.target.value)} className="w-full bg-zinc-950 border border-zinc-900 rounded-2xl px-6 py-4 text-sm focus:border-yellow-500/50 outline-none uppercase font-bold text-zinc-100 disabled:bg-zinc-900/50" placeholder="e.g. Germany" />
+                                  </div>
+                                </div>
+
+                                <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+                                  <div className="space-y-2">
+                                      <label className="text-[9px] font-black text-zinc-500 uppercase tracking-widest px-1">Visa Status</label>
+                                      <select value={visaStatus} onChange={e => setVisaStatus(e.target.value as any)} className="w-full bg-zinc-950 border border-zinc-900 rounded-2xl px-6 py-4 text-sm focus:border-yellow-500/50 outline-none uppercase font-bold text-zinc-100 disabled:bg-zinc-900/50">
+                                        <option value="">Select Status...</option>
+                                        <option value="working">Working Visa</option>
+                                        <option value="sponsorship">Open for Visa Sponsorship</option>
+                                        <option value="tourist">Tourist Visa</option>
+                                      </select>
+                                  </div>
+                                  {visaStatus === 'working' && (
+                                      <div className="space-y-2 animate-in slide-in-from-top-2">
+                                          <label className="text-[9px] font-black text-zinc-500 uppercase tracking-widest px-1">Valid Till</label>
+                                          <input type="date" value={visaValidTill} onChange={e => setVisaValidTill(e.target.value)} className="w-full bg-zinc-950 border border-zinc-900 rounded-2xl px-6 py-4 text-sm focus:border-yellow-500/50 outline-none uppercase font-bold text-zinc-100 disabled:bg-zinc-900/50" />
+                                      </div>
+                                  )}
+                                </div>
+                            </fieldset>
+                        </div>
+                    )}
+                </div>
                  <button 
                   onClick={handleArchitectResume} 
                   className="w-full py-7 px-4 bg-yellow-500 text-zinc-950 rounded-[28px] hover:bg-yellow-400 active:scale-95 transition-all shadow-2xl border-b-4 border-yellow-700 flex flex-col items-center justify-center group"
@@ -551,7 +637,7 @@ const ResumeScorer: React.FC<ResumeScorerProps> = ({
                    <span className="text-[11px] font-black uppercase tracking-[0.2em] leading-tight text-center">
                      Execute High-Fidelity Optimization
                    </span>
-                   <span className="text-[8px] font-black uppercase tracking-widest opacity-60 mt-1">Transform Blueprint • 15 Credits</span>
+                   <span className="text-[8px] font-black uppercase tracking-widest opacity-60 mt-1">Transform Blueprint • {optimizationCostText} Credits</span>
                  </button>
                  
                  <div className="flex flex-col sm:flex-row gap-4">

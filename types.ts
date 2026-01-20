@@ -1,10 +1,9 @@
-
 export type TabType = 'Home' | 'Resume Scorer' | 'Career Path' | 'Outreach Architect' | 'Interview Lab' | 'History' | 'Pricing' | 'Credit System';
 export type PlanId = 'free' | 'starter' | 'pro' | 'ultra-pro';
 
 export interface HistoryItem {
   id: string;
-  type: 'strategy' | 'market-insight' | 'outreach' | 'interview-prep' | 'resume-audit';
+  type: 'strategy' | 'market-insight' | 'outreach' | 'interview-prep' | 'resume-audit' | 'worthiness-review';
   title: string;
   date: string;
   inputs: Record<string, string>;
@@ -115,4 +114,23 @@ export interface QuizQuestion {
   id: number;
   text: string;
   options: { text: string; traits: Partial<PersonalityTraitScores>; }[];
+}
+
+export interface WorthinessQuestion {
+  id: number;
+  text: string;
+  options: string[];
+}
+
+export interface WorthinessQuestionnaireResponse {
+  questions: WorthinessQuestion[];
+  painPoints: string;
+  refused?: boolean;
+  refusalReason?: string;
+}
+
+export interface WorthinessReviewResponse {
+  worthinessScore: number;
+  reviewDetails: string;
+  refused?: boolean;
 }
