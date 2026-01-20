@@ -616,7 +616,7 @@ export const getWorthinessQuestionnaire = async (inputs: any, jdData?: string | 
             - An option focused on **Innovation & Disruption** (challenging the status quo, trying a new method, speed over perfection).
             - An option focused on **Collaboration & Harmony** (seeking consensus, prioritizing team morale, stakeholder management).
             - An option focused on **Pragmatism & Individual Action** (taking ownership, delivering a solution quickly, even if it's not perfect).
-            The goal is to subtly map the user's core attitude, not test their knowledge of professional etiquette.
+            The goal is to subtly map the user's core attitude, not test their knowledge of professional etiquette. The final 'options' array must contain only the plain text for each choice, without any archetype labels (e.g., 'Process & Stability') or markdown formatting like asterisks.
         6. Return a JSON object with 'painPoints' and 'questions'.`,
         responseMimeType: "application/json",
         responseSchema: {

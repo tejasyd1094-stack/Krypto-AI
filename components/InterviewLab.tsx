@@ -229,19 +229,20 @@ const InterviewLab: React.FC<InterviewLabProps> = ({ userCredits, userLocation, 
           reviewDetails: response.refusalReason || 'Failed to generate initial scan.'
         });
         setReviewStage('result');
+        setLoading(false);
       } else {
         onUse(10);
-        setLoadingProgress(100);
         setTimeout(() => {
+          setLoadingProgress(100);
           setDiscoveredPainPoints(response.painPoints);
           setWorthinessQuestions(response.questions);
           setReviewStage('questions');
+          setLoading(false);
         }, 800);
       }
     } catch (err) {
       console.error(err);
-    } finally {
-      if (!worthinessQuestions) setTimeout(() => setLoading(false), 800);
+      setLoading(false);
     }
   };
 
@@ -256,12 +257,13 @@ const InterviewLab: React.FC<InterviewLabProps> = ({ userCredits, userLocation, 
     setRunningProcess('review');
     try {
         const response = await generatePersonalizedWorthinessReview(inputs, discoveredPainPoints, userAnswers);
+        setReviewStage('result');
 
         if (response.refused) {
             setWorthinessResult(response);
+            setLoading(false);
         } else {
             onUse(10);
-            setLoadingProgress(100);
             setWorthinessResult(response);
             onSaveHistory({
                 id: Math.random().toString(36).substr(2, 9),
@@ -271,12 +273,15 @@ const InterviewLab: React.FC<InterviewLabProps> = ({ userCredits, userLocation, 
                 inputs: { ...inputs, hasJD: jdFile ? 'Yes' : 'No' } as any,
                 result: `Personalized Score: ${response.worthinessScore}\n\n${response.reviewDetails}`
             });
+            setTimeout(() => {
+                setLoadingProgress(100);
+                setLoading(false);
+            }, 800);
         }
     } catch (err) {
         console.error(err);
-    } finally {
         setReviewStage('result');
-        setTimeout(() => setLoading(false), 800);
+        setLoading(false);
     }
   };
 
