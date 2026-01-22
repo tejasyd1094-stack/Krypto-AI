@@ -462,26 +462,6 @@ export const predictCareerPaths = async (
   }
 };
 
-export const getCareerAdvice = async (query: string, fileData?: string | { data: string, mimeType: string }): Promise<string> => {
-  try {
-    const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
-    const parts: any[] = [];
-    if (fileData) {
-      if (typeof fileData === 'string') parts.push({ text: `FILE:\n${fileData}` });
-      else parts.push({ inlineData: { data: fileData.data, mimeType: fileData.mimeType } });
-    }
-    parts.push({ text: `QUERY: ${query}` });
-    const response = await ai.models.generateContent({
-      model: 'gemini-3-flash-preview',
-      contents: { parts },
-      config: { systemInstruction: `You are Krypto career strategist. ${MISSION_GUARDRAIL}` }
-    });
-    return response.text || "";
-  } catch (e) {
-    return handleGenAIError(e, 'getCareerAdvice');
-  }
-};
-
 export const getOutreachMessage = async (inputs: any, screenshotData?: { data: string, mimeType: string }): Promise<{ text: string, grounding?: any[] }> => {
   try {
     const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });

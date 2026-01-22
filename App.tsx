@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect, useRef } from 'react';
 import Sidebar from './components/Sidebar';
 import Dashboard from './components/Dashboard';
@@ -11,7 +10,7 @@ import Pricing from './components/Pricing';
 import UnitLedger from './components/UnitLedger';
 import Login from './components/Login';
 import { supabase } from './lib/supabase';
-import { TabType, UserStatus, PricingPlan, PlanId, FeatureAccess, HistoryItem, ResumeScoreResponse, CareerPathResponse, PersonalityTraitScores } from './types';
+import { TabType, UserStatus, PricingPlan, PlanId, FeatureAccess, HistoryItem, ResumeScoreResponse, CareerPathResponse, PersonalityTraitScores, Message, ChatHistoryItem } from './types';
 
 const App: React.FC = () => {
   const [session, setSession] = useState<any>(null);
@@ -36,6 +35,9 @@ const App: React.FC = () => {
   const [careerUserType, setCareerUserType] = useState<'experienced' | 'fresher' | null>(null);
   const [careerResumeData, setCareerResumeData] = useState<{ data: string, mimeType: string } | string | null>(null);
 
+  const [chatHistory, setChatHistory] = useState<ChatHistoryItem[]>([]);
+  const [chatMessages, setChatMessages] = useState<Message[]>([]);
+
   const [user, setUser] = useState<UserStatus>({
     isPro: false,
     planId: 'free',
@@ -51,6 +53,16 @@ const App: React.FC = () => {
     supabase.auth.getSession().then(({ data: { session } }) => setSession(session));
     const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => setSession(session));
     return () => subscription.unsubscribe();
+  }, []);
+
+  // Initialize chat messages once on mount
+  useEffect(() => {
+    if (chatMessages.length === 0) {
+      setChatMessages([{
+        role: 'model',
+        content: "Welcome, Career Architect! I'm your personal AI Career Coach. How can I assist your mission today? Feel free to ask a question or attach a document for analysis."
+      }]);
+    }
   }, []);
 
   // Scroll to top on tab change
@@ -194,9 +206,33 @@ const App: React.FC = () => {
     }
   };
 
+  const saveChatHistory = (messages: Message[]) => {
+    const userMessages = messages.filter(m => m.role === 'user');
+    if (userMessages.length === 0) return;
+
+    const title = userMessages[0].content.substring(0, 40) + (userMessages[0].content.length > 40 ? '...' : '');
+    const newChatItem: ChatHistoryItem = {
+      id: `chat-${Date.now()}-${Math.random()}`,
+      title: title || 'Untitled Chat',
+      date: new Date().toLocaleDateString(),
+      messages,
+    };
+    setChatHistory(prev => [newChatItem, ...prev]);
+  };
+  
+  const handleNewChat = () => {
+    if (chatMessages.length > 1) {
+        saveChatHistory(chatMessages);
+    }
+    setChatMessages([{
+        role: 'model',
+        content: "Welcome, Career Architect! I'm your personal AI Career Coach. How can I assist your mission today? Feel free to ask a question or attach a document for analysis."
+    }]);
+  };
+
   const renderContent = () => {
     switch (activeTab) {
-      case 'Home': return <Dashboard onUse={deductCredits} onNavigatePricing={() => setActiveTab('Pricing')} setActiveTab={setActiveTab} userCredits={user.credits} />;
+      case 'Home': return <Dashboard onUse={deductCredits} onNavigatePricing={() => setActiveTab('Pricing')} setActiveTab={setActiveTab} userCredits={user.credits} messages={chatMessages} setMessages={setChatMessages} onNewChat={handleNewChat} />;
       case 'Resume Scorer': return (
         <ResumeScorer 
           userCredits={user.credits} 
@@ -248,10 +284,10 @@ const App: React.FC = () => {
       );
       case 'Outreach Architect': return < OutreachArchitect userCredits={user.credits} onUse={deductCredits} onSaveHistory={saveToHistory} onNavigatePricing={() => setActiveTab('Pricing')} />;
       case 'Interview Lab': return <InterviewLab userCredits={user.credits} userLocation={user.location} onUse={deductCredits} onSaveHistory={saveToHistory} onNavigatePricing={() => setActiveTab('Pricing')} />;
-      case 'History': return <History history={user.history} />;
+      case 'History': return <History history={user.history} chatHistory={chatHistory} />;
       case 'Pricing': return <Pricing user={user} onUpgrade={(p) => setUser(prev => ({...prev, planId: p.id, credits: prev.credits + (p.credits as number)}))} />;
       case 'Credit System': return <UnitLedger />;
-      default: return <Dashboard onUse={deductCredits} onNavigatePricing={() => setActiveTab('Pricing')} userCredits={user.credits} />;
+      default: return <Dashboard onUse={deductCredits} onNavigatePricing={() => setActiveTab('Pricing')} userCredits={user.credits} messages={chatMessages} setMessages={setChatMessages} onNewChat={handleNewChat} />;
     }
   };
 

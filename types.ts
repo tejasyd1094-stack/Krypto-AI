@@ -134,3 +134,23 @@ export interface WorthinessReviewResponse {
   reviewDetails: string;
   refused?: boolean;
 }
+
+// Moved from Dashboard.tsx to be shared
+export interface Message {
+  role: 'user' | 'model';
+  content: string;
+  file?: { name: string };
+  action?: {
+    tab: TabType;
+    label: string;
+  };
+  suggestions?: string[];
+}
+
+// New type for storing chat sessions
+export interface ChatHistoryItem {
+  id: string;
+  title: string;
+  date: string;
+  messages: Message[];
+}

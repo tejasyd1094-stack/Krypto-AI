@@ -168,7 +168,7 @@ const ResumeScorer: React.FC<ResumeScorerProps> = ({
     try {
       const architected = await generateFormattedResume(
         resumeData,
-        result.improvements,
+        result.improvements.slice(0, maxImprovements),
         result.formattingRecommendations,
         isOverseasActivated ? targetCompany : undefined,
         isOverseasActivated ? targetCountry : undefined,
@@ -186,6 +186,7 @@ const ResumeScorer: React.FC<ResumeScorerProps> = ({
       setTimeout(() => architectRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' }), 100);
     } catch (err) {
       console.error(err);
+      setError("Architect Engine failure. Please try again.");
     } finally {
       setTimeout(() => setIsArchitecting(false), 800);
     }
@@ -387,6 +388,7 @@ const ResumeScorer: React.FC<ResumeScorerProps> = ({
               )}
               <input type="file" ref={fileInputRef} onChange={(e) => e.target.files?.[0] && validateAndSetFile(e.target.files[0])} className="hidden" accept=".pdf,.docx,image/*" />
             </div>
+            {error && <p className="mt-4 text-center text-red-500 text-xs font-black uppercase tracking-widest">{error}</p>}
           </div>
         )}
 
@@ -612,7 +614,7 @@ const ResumeScorer: React.FC<ResumeScorerProps> = ({
                                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
                                   <div className="space-y-2">
                                       <label className="text-[9px] font-black text-zinc-500 uppercase tracking-widest px-1">Visa Status</label>
-                                      <select value={visaStatus} onChange={e => setVisaStatus(e.target.value as any)} className="w-full bg-zinc-950 border border-zinc-900 rounded-2xl px-6 py-4 text-sm focus:border-yellow-500/50 outline-none uppercase font-bold text-zinc-100 disabled:bg-zinc-900/50">
+                                      <select value={visaStatus} onChange={e => setVisaStatus(e.target.value as any)} className="w-full bg-zinc-950 border border-zinc-800 rounded-2xl px-6 py-4 text-sm focus:border-yellow-500/50 outline-none uppercase font-bold text-zinc-100 disabled:bg-zinc-900/50">
                                         <option value="">Select Status...</option>
                                         <option value="working">Working Visa</option>
                                         <option value="sponsorship">Open for Visa Sponsorship</option>
