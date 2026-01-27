@@ -595,7 +595,7 @@ const Dashboard: React.FC<DashboardProps> = ({ setActiveTab, messages, setMessag
           
           {openSubFeatures === 'ats' && (
             <div className="w-full max-w-4xl space-y-20 animate-in fade-in slide-in-from-bottom-8 duration-500">
-              <BrandedScreenshot title="Recruitment Index" intro="Get an instant, data-driven audit of your resume's performance against thousands of ATS algorithms and recruiter patterns.">
+              <BrandedScreenshot title="Recruitment Index" intro="Leverage a multi-dimensional algorithmic audit that quantifies your marketability. Our engine simulates the decision-making patterns of thousands of ATS systems and elite recruiters to verify your asset's competitive standing.">
                 <div className="flex flex-col items-center gap-10">
                   <div className="relative w-48 h-48 sm:w-56 sm:h-56">
                     <svg className="w-full h-full transform -rotate-90">
@@ -637,13 +637,13 @@ const Dashboard: React.FC<DashboardProps> = ({ setActiveTab, messages, setMessag
                 </div>
               </BrandedScreenshot>
 
-              <BrandedScreenshot title="Executive Audit Findings" intro="Receive brutally honest, line-by-line feedback. Our AI identifies structural weaknesses that signal amateurism to executive recruiters.">
+              <BrandedScreenshot title="Executive Audit Findings" intro="Identify critical structural vulnerabilities that trigger rejection filters. Our diagnostic engine performs a granular sweep of your document's logic, tone, and hierarchy to meet the high bar of executive-level hiring teams.">
                 <p className="text-zinc-300 font-medium leading-relaxed italic text-lg border-l-4 border-yellow-500 pl-6">
                   "Remove the dual phone number listing; one mobile number is sufficient and cleaner. Eliminate the 'Microsoft Office tools' from the Skills section immediately—it signals technological illiteracy for a Programmer II role. Consider switching to a single-column layout to ensure 100% parsing accuracy across older ATS systems, as the current split layout can sometimes confuse reading order. Remove 'Sample preparation' unless it refers to specific data sampling techniques, then specify the technology. Your summary lacks quantifiable impact; it must be re-engineered to lead with metrics."
                 </p>
               </BrandedScreenshot>
 
-              <BrandedScreenshot title="Impact Quantization Engine" intro="Transform your responsibilities into quantified achievements. We rebuild your experience using the Google XYZ formula to prove undeniable ROI to employers.">
+              <BrandedScreenshot title="Impact Quantization Engine" intro="Convert passive task descriptions into measurable outcomes that demonstrate immediate ROI. By applying the Google XYZ architectural logic, we ensure every bullet point proves your technical value through data-driven performance indicators.">
                   <div className="space-y-4">
                     <p className="text-xl font-black text-zinc-100 uppercase tracking-tight">Rewrite the DHI Mortgage bullet to quantify the efficiency gain rather than just stating the volume of actions.</p>
                     <div className="px-4 py-2 bg-yellow-500/10 border border-yellow-500/20 rounded-full inline-flex items-center gap-2"><span className="w-1.5 h-1.5 rounded-full bg-yellow-500"></span><span className="text-xs font-black text-yellow-500 uppercase">Logic Tier 1</span></div>
@@ -664,7 +664,7 @@ const Dashboard: React.FC<DashboardProps> = ({ setActiveTab, messages, setMessag
                   </div>
               </BrandedScreenshot>
 
-              <BrandedScreenshot title="Krypto Executive Blueprint" intro="Our final blueprint isn't just a template; it's an engineered asset. We automatically handle dozens of variables: single-column ATS parsability, keyword semantic density, concurrency logic for overlapping roles, standardized date formatting, and strategic whitespace for recruiter readability—so you don't have to.">
+              <BrandedScreenshot title="Krypto Executive Blueprint" intro="Deploy a master-tier career asset engineered for maximum parsability and psychological impact. Our blueprint optimizes whitespace, semantic density, and typographic hierarchy to capture a recruiter's attention in the critical 6-second window.">
                 <div className="bg-white text-slate-800 p-8 rounded-2xl shadow-inner-lg max-w-full overflow-x-auto">
                     <div className="prose prose-slate">
                         <h1><b>JANE DOE</b></h1>
@@ -695,7 +695,7 @@ const Dashboard: React.FC<DashboardProps> = ({ setActiveTab, messages, setMessag
                 </div>
               </BrandedScreenshot>
               
-              <BrandedScreenshot title="Overseas Optimization Protocol" intro="Deploying for an international role? Activate the Overseas Protocol. We re-architect your resume to meet regional formatting standards and visa requirements, using real-time market data.">
+              <BrandedScreenshot title="Overseas Optimization Protocol" intro="Optimize your professional identity for international mobility. This protocol re-architects your asset's structural DNA to align with regional legal requirements, visa compliance markers, and the cultural expectations of global business hubs.">
                   <div className="space-y-6">
                       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                           <div>
@@ -762,7 +762,7 @@ const Dashboard: React.FC<DashboardProps> = ({ setActiveTab, messages, setMessag
           </div>
           {openSubFeatures === 'career' && (
              <div className="w-full max-w-4xl space-y-20 animate-in fade-in slide-in-from-bottom-8 duration-500">
-                <BrandedScreenshot title="Career DNA: Market Topography" intro="Pinpoint your next opportunity. Our system analyzes local salary parity, business hubs, and market demand to guide your job search geographically.">
+                <BrandedScreenshot title="Career DNA: Market Topography" intro="Architect your career around high-yield economic corridors. We analyze the intersection of regional salary parity, emerging business hubs, and sector-specific demand to identify the precise locations where your skills command the highest premium.">
                     <div className="space-y-4 text-center max-w-sm mx-auto">
                         <p className="text-xs font-bold uppercase tracking-widest text-zinc-500">Detecting Local Salary Parity and Business Hubs.</p>
                         <button className="w-full py-4 bg-white text-black rounded-full font-bold">DETECT CITY</button>
@@ -771,7 +771,7 @@ const Dashboard: React.FC<DashboardProps> = ({ setActiveTab, messages, setMessag
                     </div>
                 </BrandedScreenshot>
 
-                 <BrandedScreenshot title="Career DNA: Protocol Selection" intro="Choose your path. Whether you're a seasoned professional executing a strategic pivot or a fresher mapping your potential, our analysis adapts to your career stage.">
+                 <BrandedScreenshot title="Career DNA: Protocol Selection" intro="Calibrate the AI's logic engine based on your specific career trajectory. Protocol selection ensures that our neural simulations apply the appropriate depth of analysis for leadership pivots or initial market entry.">
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
                       <div className="p-6 bg-zinc-900 rounded-3xl text-center border border-zinc-800">
                         <div className="w-20 h-20 mx-auto mb-4 flex items-center justify-center">
@@ -799,7 +799,7 @@ const Dashboard: React.FC<DashboardProps> = ({ setActiveTab, messages, setMessag
                     </div>
                 </BrandedScreenshot>
 
-                <BrandedScreenshot title="Neural Identity Sequence" intro="Decode your professional DNA. Our psychometric quiz maps your core traits onto a unique neural sequence, revealing your natural professional architecture.">
+                <BrandedScreenshot title="Neural Identity Sequence" intro="Capture your professional essence through a proprietary psychometric vector. This sequence acts as a digital fingerprint of your natural aptitude, mapping analytic, creative, and leadership traits into a visualize strategic baseline.">
                     <RadarChart scores={sampleScores} />
                      <div className="text-center mt-8 space-y-4">
                         <div className="px-4 py-2 bg-zinc-800 rounded-full inline-block text-sm font-mono text-yellow-500 tracking-widest">{dnaCode}</div>
@@ -807,11 +807,11 @@ const Dashboard: React.FC<DashboardProps> = ({ setActiveTab, messages, setMessag
                     </div>
                 </BrandedScreenshot>
 
-                <BrandedScreenshot title="Archetype Decoding" intro="Understand your archetype. We translate your DNA code into a clear narrative, defining your core strengths and strategic value in the marketplace.">
+                <BrandedScreenshot title="Archetype Decoding" intro="Synthesize complex personality data into a high-impact narrative. This process identifies your professional archetype, defining your unique value proposition in a way that resonates with organizational leadership and recruitment teams.">
                    <p className="text-lg font-bold text-zinc-200 leading-relaxed">"DNA Code: S15-A10-C10-L10-P0 (The Social Catalyst). Your profile exhibits a distinct 'Human-Bridge' configuration. With a dominant Social score (15) balanced by equal Analytic, Creative, and Leadership traits (10), you excel at translating complex value propositions into human narratives. The critical zero score in Practicality indicates a strong aversion to manual, repetitive operations or purely mechanical implementation; you belong in the layer of strategy and relationship."</p>
                 </BrandedScreenshot>
 
-                <BrandedScreenshot title="Ideal Role Alignment" intro="Discover your ideal role. We match your unique archetype to high-growth, emerging careers, providing a clear match percentage and localized salary benchmarks.">
+                <BrandedScreenshot title="Ideal Role Alignment" intro="Achieve perfect market-skill alignment through data-driven role selection. Our engine matches your unique DNA to high-velocity career tracks, providing a precision match index that reduces search friction and maximizes earnings potential.">
                   <div className="space-y-4">
                     <p className="text-xs font-bold text-yellow-500 uppercase">Rank #1</p>
                     <h4 className="text-3xl font-black text-white">DECENTRALIZED COMMUNITY ARCHITECT (WEB3)</h4>
@@ -825,7 +825,7 @@ const Dashboard: React.FC<DashboardProps> = ({ setActiveTab, messages, setMessag
                   </div>
                 </BrandedScreenshot>
 
-                <BrandedScreenshot title="Skill Blueprint" intro="Build your arsenal. Get a curated list of baseline skills and premium, industry-verified certifications to bridge the gap between your current profile and your target role.">
+                <BrandedScreenshot title="Skill Blueprint" intro="Bridge the gap between your current profile and market dominance. Our blueprint provides a curated roadmap of technical hard skills and top-tier certifications that serve as the necessary architectural components to secure your target role.">
                   <div className="space-y-8">
                       <div>
                         <p className="text-xs font-bold text-zinc-500 uppercase mb-4">Baseline Skills</p>
@@ -853,7 +853,7 @@ const Dashboard: React.FC<DashboardProps> = ({ setActiveTab, messages, setMessag
                   <p className="text-zinc-500">Actionable roadmaps to secure your target role.</p>
                 </div>
 
-                <BrandedScreenshot title="Strategy: Simulation Parameters" intro="Design your personal career roadmap. Input your budget, timeline, and daily commitment to generate a custom, step-by-step strategy for your next career move.">
+                <BrandedScreenshot title="Strategy: Simulation Parameters" intro="Execute a precision-timed career offensive. By simulating resource allocation across budget and time constraints, we generate a high-ROI strategy that eliminates trial and error, ensuring every hour spent moves you closer to your offer.">
                    <div className="space-y-6">
                       <button className="w-full py-4 bg-white text-black rounded-full font-bold text-sm">UNLOCK STRATEGY (10 CR)</button>
                       <div className="p-6 bg-zinc-800 rounded-3xl space-y-4">
@@ -868,7 +868,7 @@ const Dashboard: React.FC<DashboardProps> = ({ setActiveTab, messages, setMessag
                    </div>
                 </BrandedScreenshot>
 
-                 <BrandedScreenshot title="Strategy: I. Executive Skill Matrix" intro="To secure a role as a Creative Technologist, you must bridge the gap between 'Art Director' and 'Machine Learning Engineer.' You are not building models from scratch; you are orchestrating them to solve creative problems.">
+                 <BrandedScreenshot title="Strategy: I. Executive Skill Matrix" intro="Identify the technical multipliers that will double your market value. Our skill matrix identifies high-leverage abilities required to pivot into emerging sectors, focusing on competencies that define industry leaders.">
                     <div className="text-left space-y-4 prose prose-krypto">
                       <h3>Priority Technical Hard Skills</h3>
                       <ul>
@@ -878,7 +878,7 @@ const Dashboard: React.FC<DashboardProps> = ({ setActiveTab, messages, setMessag
                     </div>
                  </BrandedScreenshot>
 
-                 <BrandedScreenshot title="Strategy: II. Tactical Learning Track" intro="A 6-month roadmap of specific, high-ROI courses with estimated costs and focus areas to build your skill matrix efficiently.">
+                 <BrandedScreenshot title="Strategy: II. Tactical Learning Track" intro="Maximize your learning efficiency through a curated, time-bound education protocol. We identify the most cost-effective learning paths with the highest recognized credentials, ensuring an elite skill set without financial drainage.">
                     <div className="text-left space-y-4 prose prose-krypto">
                       <p>Total Estimated Cost: $345 (Leaving $155 buffer for API credits)</p>
                       <h3>Month 1: The Foundation (Python & Prompting)</h3>
@@ -899,7 +899,7 @@ const Dashboard: React.FC<DashboardProps> = ({ setActiveTab, messages, setMessag
                     </div>
                  </BrandedScreenshot>
 
-                <BrandedScreenshot title="Strategy: III. Resume Engineering" intro="Traditional creative resumes will not work. You must present yourself as a 'Technical Multiplier,' blending creative vision with technical execution.">
+                <BrandedScreenshot title="Strategy: III. Resume Engineering" intro="Re-engineer your professional narrative for specific sector dominance. This attribute focuses on high-impact headline strategy and bullet point optimization that forces recruiters to recognize your ROI immediately.">
                     <div className="text-left space-y-4 prose prose-krypto">
                         <h3>Headline Strategy</h3>
                         <ul>
@@ -916,7 +916,7 @@ const Dashboard: React.FC<DashboardProps> = ({ setActiveTab, messages, setMessag
                     </div>
                 </BrandedScreenshot>
 
-                <BrandedScreenshot title="Strategy: IV. The Job Blitz" intro="Do not rely on 'Easy Apply.' This role is too new; you must demonstrate competence, not just claim it.">
+                <BrandedScreenshot title="Strategy: IV. The Job Blitz" intro="Deploy a high-conversion application protocol that bypasses traditional bottlenecks. We architect 'Trojan Horse' portfolio strategies and targeted outreach methods that prove competence through tangible technical demonstration.">
                      <div className="text-left space-y-4 prose prose-krypto">
                         <h3>The 'Trojan Horse' Portfolio</h3>
                         <ul>
@@ -940,7 +940,7 @@ const Dashboard: React.FC<DashboardProps> = ({ setActiveTab, messages, setMessag
                   <p className="text-zinc-500">Real-time intelligence on your target market.</p>
                 </div>
 
-                <BrandedScreenshot title="Market Insights: Executive Summary" intro="A real-time audit of the hiring landscape for the 'Generative AI Creative Technologist' role, providing a high-level summary of market status, key players, and emerging opportunities.">
+                <BrandedScreenshot title="Market Insights: Executive Summary" intro="Stay ahead of market volatility with real-time sector intelligence. This summary provides a macro view of hiring trends, industry bifurcations, and emerging opportunity corridors to position you at the forefront of talent shifts.">
                     <div className="text-left space-y-4 prose prose-krypto">
                         <p><strong>Date:</strong> January 21, 2026</p>
                         <p><strong>Status:</strong> Active & Expanding</p>
@@ -950,7 +950,7 @@ const Dashboard: React.FC<DashboardProps> = ({ setActiveTab, messages, setMessag
                     </div>
                 </BrandedScreenshot>
                 
-                <BrandedScreenshot title="Market Insights: Top Active Employers" intro="Identify the top companies actively hiring, their strategic fit for your profile, and crucial intel on their culture and key projects.">
+                <BrandedScreenshot title="Market Insights: Top Active Employers" intro="Target the organizations with the strongest strategic alignment to your archetype. We identify highest-velocity employers, auditing their pipelines to ensure your next move is both stable and high-impact.">
                     <div className="text-left space-y-4 prose prose-krypto">
                         <h3>1. Google Creative Lab</h3>
                         <ul>
@@ -963,7 +963,7 @@ const Dashboard: React.FC<DashboardProps> = ({ setActiveTab, messages, setMessag
                     </div>
                 </BrandedScreenshot>
 
-                <BrandedScreenshot title="Market Insights: Salary Analysis" intro="Get salary ranges adjusted for 'Local Parity'—the buying power and standard market rate for top-tier talent in specific global hubs.">
+                <BrandedScreenshot title="Market Insights: Salary Analysis" intro="Negotiate from a position of data-backed authority. Our analysis provides precision salary tiers adjusted for local purchasing power and market parity, ensuring you capture your full worth in any global hub.">
                     <div className="text-left space-y-4 prose prose-krypto">
                         <p>Note: Salaries reflect \"Local Parity\"—the buying power and standard market rate for top-tier talent in that specific hub.</p>
                         <h3>Tier 1: United States (SF / NYC / LA)</h3>
@@ -977,7 +977,7 @@ const Dashboard: React.FC<DashboardProps> = ({ setActiveTab, messages, setMessag
                     </div>
                 </BrandedScreenshot>
 
-                <BrandedScreenshot title="Market Insights: Cultural Audit" intro="Understand the cultural shifts in engineering and creative teams, and the key differences between agency, product, and lab environments.">
+                <BrandedScreenshot title="Market Insights: Cultural Audit" intro="Decode the invisible hiring criteria of elite organizations. Our cultural audit reveals the specific mindset shifts and values currently prioritized by leadership teams, allowing you to align your interview persona with their internal vision.">
                     <div className="text-left space-y-4 prose prose-krypto">
                         <h3>The \"Vibe Coder\" Shift</h3>
                         <p>Teams are moving away from pure syntax proficiency (writing C++ from scratch) to \"Vibe Coding\"—using AI cursors and LLMs to architect solutions. The value is now on system architecture and creative taste rather than rote coding.</p>
@@ -989,7 +989,7 @@ const Dashboard: React.FC<DashboardProps> = ({ setActiveTab, messages, setMessag
                     </div>
                 </BrandedScreenshot>
 
-                <BrandedScreenshot title="Market Insights: Geographical Hubs" intro="Identify the key global cities for your target role and understand their specific function in the industry ecosystem.">
+                <BrandedScreenshot title="Market Insights: Geographical Hubs" intro="Visualize the global ecosystem of your profession. By mapping the primary development and studio hubs of your industry, you can strategically choose your home base to maximize networking and long-term growth.">
                     <div className="text-left space-y-4 prose prose-krypto">
                         <ul>
                             <li><strong>San Francisco / Silicon Valley:</strong> The \"Brain\" of the operation. Proximity to OpenAI and Google DeepMind makes this the hub for those building the tools and models.</li>
@@ -1030,7 +1030,7 @@ const Dashboard: React.FC<DashboardProps> = ({ setActiveTab, messages, setMessag
           </div>
            {openSubFeatures === 'outreach' && (
               <div className="w-full max-w-4xl animate-in fade-in slide-in-from-bottom-8 duration-500">
-                <BrandedScreenshot title="Conversation Forge Protocol" intro="Generate hyper-personalized messages that decision-makers cannot ignore. Our engine conducts a real-time 'Google Search Study' to find high-impact advancements and crafts a narrative that ensures a reply.">
+                <BrandedScreenshot title="Conversation Forge Protocol" intro="Break through the noise of standard networking with hyper-personalized engagement logic. Our engine identifies recent company milestones to craft high-status narratives that virtually guarantee a reply from decision-makers.">
                   <div className="space-y-6">
                       <div className="flex items-start gap-4">
                           <div className="w-10 h-10 rounded-2xl bg-zinc-900 border border-zinc-800 flex items-center justify-center flex-shrink-0"><KryptoLogo size={20} /></div>
@@ -1077,7 +1077,7 @@ const Dashboard: React.FC<DashboardProps> = ({ setActiveTab, messages, setMessag
           </div>
             {openSubFeatures === 'interview' && (
               <div className="w-full max-w-4xl space-y-20 animate-in fade-in slide-in-from-bottom-8 duration-500">
-                <BrandedScreenshot title="Interview Simulation Protocol" intro="Select your session type and complexity vector for a tailored mock interview experience. Our system generates questions based on real-world intel for your target company and role.">
+                <BrandedScreenshot title="Interview Simulation Protocol" intro="Battle-test your composure in a simulated high-stakes environment. Calibrating the session protocol and complexity vector ensures you eliminate anxiety and perfect your responses through exposure to elite-level technical inquiries.">
                   <div className="p-6 bg-zinc-800 rounded-3xl space-y-6">
                     <div className="space-y-3">
                         <p className="text-xs font-bold text-zinc-500 uppercase">Session Protocol</p>
@@ -1091,8 +1091,8 @@ const Dashboard: React.FC<DashboardProps> = ({ setActiveTab, messages, setMessag
                   </div>
                 </BrandedScreenshot>
 
-                <BrandedScreenshot title="Personalized Worthiness Score" intro="Go beyond standard prep. Our AI analyzes your cultural fit against a company's known pain points, generating a personalized 'Go/No-Go' Worthiness Score.">
-                  <div className="grid grid-cols-1 lg:grid-cols-3 gap-12 items-center">
+                <BrandedScreenshot title="Personalized Worthiness Score" intro="Quantify your cultural compatibility through attitudinal mapping. This score predicts your resilience within a specific organizational structure, providing a definitive signal on whether a company is a high-potential environment for your archetype.">
+                  <div className="grid grid-cols-1 lg:grid-cols-3 gap-12 items-center mb-12">
                     <div className="lg:col-span-1 flex flex-col items-center text-center">
                       <div className="relative w-40 h-40">
                         <svg className="w-full h-full transform -rotate-90">
