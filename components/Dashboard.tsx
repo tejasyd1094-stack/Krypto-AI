@@ -27,6 +27,52 @@ const PLACEHOLDERS = [
 
 const SYSTEM_INSTRUCTION = "You are Krypto AI, a friendly and encouraging Career Coach. Your goal is to provide concise, helpful, and professional career advice. Keep your responses brief and easy to understand. Be supportive and motivating. Do not use markdown unless necessary for clarity (like lists). After your main response, you MUST use the exact separator '%%%Suggestions:' followed by 2-3 short, actionable, and contextually relevant suggestions. These should not be simple, meaningless questions. Instead, they should guide the user toward a logical next step, a deeper exploration of the topic, or a related area of interest. For example, if the user asks about salary negotiation, good suggestions would be 'Draft a negotiation script for me' or 'What are common negotiation mistakes?' or 'How do I research salary benchmarks?'. Bad suggestions would be 'Do you want to know more?' or 'Was that helpful?'. The suggestions must be separated by a pipe '|'. Example: 'This is my answer.%%%Suggestions:Suggestion 1|Suggestion 2|Suggestion 3'. Do not deviate from this format.";
 
+const POLICY_CONTENT = {
+  privacy: `
+# Privacy Intelligence Protocol
+**Operational Level: Grade-A Secure**
+
+At Krypto AI, your professional DNA and career metadata are treated with absolute architectural integrity. Our infrastructure is built on the principle of "Data Zero," ensuring that your personal identifiers are never commoditized.
+
+- **Data Encapsulation**: All uploaded resumes and personality metrics are encrypted in transit via TLS 1.3 and at rest using AES-256 protocols.
+- **Neural Isolation**: We operate a strict firewall between user data and model training. Your unique professional history is used exclusively to power your individual Career Architecture simulations and is never used to train third-party LLMs.
+- **Identity Obfuscation**: Any visual data, including headshots or PII (Personally Identifiable Information) detected in document scans, is processed in volatile memory and purged immediately after the simulation concludes.
+- **Vault Sovereignty**: You retain 100% legal ownership of your career vault. At any moment, you may trigger a "Hard Purge," which executes a recursive deletion of all session logs and optimized assets from our nodes.
+  `,
+  terms: `
+# Terms of Usage & Engagement
+**Architectural Agreement v5.0**
+
+By initializing a session with Krypto AI, you agree to the following rigorous operational parameters. Any violation of these terms may result in immediate terminal suspension.
+
+- **Non-Malicious Optimization**: Krypto AI is designed for professional enhancement. Users are strictly prohibited from using the platform to generate fraudulent credentials, misrepresent identities, or maliciously attempt to disrupt automated recruitment systems through "prompt injection" techniques in resumes.
+- **Neural Protection**: Users agree not to scrape, reverse-engineer, or attempt "model extraction" on our proprietary Career Path Logic or the Krypto Intelligence Layer.
+- **Credit Allocation & Ledger**: Usage of high-performance neural compute is subject to the Krypto Unit Ledger. Credits are consumed upon successful inference and are non-transferable.
+- **Professional Liability**: While our simulations use 2026 market signals and RIASEC psychometrics to provide elite-level guidance, these results are strategic projections and do not constitute a guarantee of legal employment or salary contracts.
+  `,
+  cookies: `
+# Cookie & Session Protocol
+**Persistence & Verification Layers**
+
+Krypto AI utilizes essential persistence identifiers to ensure your career trajectory remains synchronized across the global network.
+
+- **Vault Synchronization**: Small-footprint identifiers are used to maintain your session state across secure labs (Resume Scorer to Interview Lab).
+- **Security Tokens**: Necessary for identity verification and protecting your Ledger credits from unauthorized access.
+- **Global Load Balancing**: Anonymous metadata is used to route your request to the nearest compute node, ensuring low-latency neural responses.
+- **Zero Third-Party Tracking**: We do not allow external trackers or marketing cookies within the Career Vault environment. Your professional journey remains private and focused.
+  `,
+  compliance: `
+# Global Compliance & Intellectual Property
+**Legal Sovereignty Node 2026**
+
+Krypto AI adheres to the leading global standards in AI ethics and data protection sovereignty.
+
+- **IP Protection**: All brand assets, including the "KryptonPath" identity, "Krypto AI" neural engine, and "Executive Blueprint" templates, are the exclusive intellectual property of KryptonPath. Unauthorized reproduction or commercial resale of our platform's logic is strictly prohibited.
+- **AI Ethics Framework**: Our models are audited monthly for socioeconomic bias to ensure that our "Recruitment Index" provides meritocratic assessments regardless of geography or background.
+- **Regulatory Alignment**: Fully aligned with GDPR (EU), CCPA (USA), and emerging global AI safety frameworks.
+- **Attribution**: "Crafted by KryptonPath" represents our commitment to architectural excellence in career technology. All AI-generated outputs for users are licensed for personal professional development.
+  `
+};
 
 // In-component type definition as per user constraints
 interface PersonalityTraitScores {
@@ -151,6 +197,7 @@ const Dashboard: React.FC<DashboardProps> = ({ setActiveTab, messages, setMessag
   const [attachedFile, setAttachedFile] = useState<File | null>(null);
   const [fileData, setFileData] = useState<any>(null);
   const [openSubFeatures, setOpenSubFeatures] = useState<string | null>(null);
+  const [activePolicy, setActivePolicy] = useState<keyof typeof POLICY_CONTENT | null>(null);
   
   const fileInputRef = useRef<HTMLInputElement>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
@@ -160,7 +207,7 @@ const Dashboard: React.FC<DashboardProps> = ({ setActiveTab, messages, setMessag
       try {
         const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
         const session = ai.chats.create({
-          model: 'gemini-flash-lite-latest',
+          model: 'gemini-3-flash-preview',
           config: {
             systemInstruction: SYSTEM_INSTRUCTION
           }
@@ -226,7 +273,7 @@ const Dashboard: React.FC<DashboardProps> = ({ setActiveTab, messages, setMessag
     // Re-initialize chat session for the new chat
     const initChatSession = async () => {
         const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
-        const session = ai.chats.create({ model: 'gemini-flash-lite-latest', config: { systemInstruction: SYSTEM_INSTRUCTION }});
+        const session = ai.chats.create({ model: 'gemini-3-flash-preview', config: { systemInstruction: SYSTEM_INSTRUCTION }});
         setChatSession(session);
     };
     initChatSession();
@@ -295,7 +342,7 @@ const Dashboard: React.FC<DashboardProps> = ({ setActiveTab, messages, setMessag
     setLoading(true);
   
     try {
-      const response = await chatSession.sendMessage({ message: [ { text: suggestion } ] });
+      const response = await chatSession.sendMessage({ message: suggestion });
       let responseText = response.text || "Sorry, I couldn't generate a response.";
       let suggestions: string[] = [];
   
@@ -348,7 +395,7 @@ const Dashboard: React.FC<DashboardProps> = ({ setActiveTab, messages, setMessag
       }
       contents.push({ text: currentInput });
       
-      const response = await chatSession.sendMessage({ message: contents });
+      const response = await chatSession.sendMessage({ message: currentInput });
       let responseText = response.text || "Sorry, I couldn't generate a response.";
       let suggestions: string[] = [];
 
@@ -899,7 +946,7 @@ const Dashboard: React.FC<DashboardProps> = ({ setActiveTab, messages, setMessag
                         <p><strong>Status:</strong> Active & Expanding</p>
                         <p><strong>Currency:</strong> USD ($)</p>
                         <h3>Executive Summary</h3>
-                        <p>The "Creative Technologist" role has evolved rapidly into a Generative AI-first discipline. The hiring landscape for early 2026 shows a clear bifurcation: <strong>Big Tech (Google)</strong> is hiring for high-fidelity prototyping and "magic" making, while <strong>Global Agencies (Media.Monks, WPP)</strong> are industrializing GenAI for content supply chains. A new corridor of opportunity has opened between <strong>San Francisco, London, and Bangalore</strong>.</p>
+                        <p>The "Creative Technologist" role has evolved rapidly into a Generative AI-first discipline. The hiring landscape for early 2026 shows a clear bifurcation: <strong>Big Tech (Google)</strong> is hiring for high-fidelity prototyping and \"magic\" making, while <strong>Global Agencies (Media.Monks, WPP)</strong> are industrializing GenAI for content supply chains. A new corridor of opportunity has opened between <strong>San Francisco, London, and Bangalore</strong>.</p>
                     </div>
                 </BrandedScreenshot>
                 
@@ -908,8 +955,8 @@ const Dashboard: React.FC<DashboardProps> = ({ setActiveTab, messages, setMessag
                         <h3>1. Google Creative Lab</h3>
                         <ul>
                             <li><strong>Hiring Zone:</strong> New York, NY / Mountain View, CA (USA)</li>
-                            <li><strong>Strategic Fit:</strong> The pinnacle of "Blue Sky" creative tech. They are currently seeking technologists to "make Google's magic more magical," moving beyond simple prompting to building bespoke GenAI prototypes that define future product interactions.</li>
-                            <li><strong>Key Projects/Culture:</strong> Culture is described as a "start-up inside a giant." Expect to work on unreleased LLM tools, high-fidelity storytelling, and "Vibe Coding" (using AI to code).</li>
+                            <li><strong>Strategic Fit:</strong> The pinnacle of \"Blue Sky\" creative tech. They are currently seeking technologists to \"make Google's magic more magical,\" moving beyond simple prompting to building bespoke GenAI prototypes that define future product interactions.</li>
+                            <li><strong>Key Projects/Culture:</strong> Culture is described as a \"start-up inside a giant.\" Expect to work on unreleased LLM tools, high-fidelity storytelling, and \"Vibe Coding\" (using AI to code).</li>
                         </ul>
                         <h3>2. Media.Monks</h3>
                         <p>...</p>
@@ -918,12 +965,12 @@ const Dashboard: React.FC<DashboardProps> = ({ setActiveTab, messages, setMessag
 
                 <BrandedScreenshot title="Market Insights: Salary Analysis" intro="Get salary ranges adjusted for 'Local Parity'—the buying power and standard market rate for top-tier talent in specific global hubs.">
                     <div className="text-left space-y-4 prose prose-krypto">
-                        <p>Note: Salaries reflect "Local Parity"—the buying power and standard market rate for top-tier talent in that specific hub.</p>
+                        <p>Note: Salaries reflect \"Local Parity\"—the buying power and standard market rate for top-tier talent in that specific hub.</p>
                         <h3>Tier 1: United States (SF / NYC / LA)</h3>
                         <ul>
                             <li><strong>Junior / Mid-Level:</strong> $105,000 - $145,000</li>
                             <li><strong>Senior / Staff:</strong> $175,000 - $265,000+ (Google offers equity packages pushing this significantly higher)</li>
-                            <li><strong>Insight:</strong> US salaries remain the global ceiling. The premium is paid for "Hybrid Talent"—engineers who have art school backgrounds.</li>
+                            <li><strong>Insight:</strong> US salaries remain the global ceiling. The premium is paid for \"Hybrid Talent\"—engineers who have art school backgrounds.</li>
                         </ul>
                         <h3>Tier 2: United Kingdom / Europe (London / Lisbon)</h3>
                         <p>...</p>
@@ -932,12 +979,12 @@ const Dashboard: React.FC<DashboardProps> = ({ setActiveTab, messages, setMessag
 
                 <BrandedScreenshot title="Market Insights: Cultural Audit" intro="Understand the cultural shifts in engineering and creative teams, and the key differences between agency, product, and lab environments.">
                     <div className="text-left space-y-4 prose prose-krypto">
-                        <h3>The "Vibe Coder" Shift</h3>
-                        <p>Teams are moving away from pure syntax proficiency (writing C++ from scratch) to "Vibe Coding"—using AI cursors and LLMs to architect solutions. The value is now on system architecture and creative taste rather than rote coding.</p>
+                        <h3>The \"Vibe Coder\" Shift</h3>
+                        <p>Teams are moving away from pure syntax proficiency (writing C++ from scratch) to \"Vibe Coding\"—using AI cursors and LLMs to architect solutions. The value is now on system architecture and creative taste rather than rote coding.</p>
                         <h3>Agency vs. Product</h3>
                         <ul>
-                            <li><strong>Agencies (WPP, Monks):</strong> Values speed, visual impact, and "never-been-done-before" buzz. High burnout risk but incredible portfolio building.</li>
-                            <li><strong>Product/Lab (Google, frog):</strong> Values depth, usability, and human interaction. Slower pace, deeper focus on "why" we are building this.</li>
+                            <li><strong>Agencies (WPP, Monks):</strong> Values speed, visual impact, and \"never-been-done-before\" buzz. High burnout risk but incredible portfolio building.</li>
+                            <li><strong>Product/Lab (Google, frog):</strong> Values depth, usability, and human interaction. Slower pace, deeper focus on \"why\" we are building this.</li>
                         </ul>
                     </div>
                 </BrandedScreenshot>
@@ -945,10 +992,10 @@ const Dashboard: React.FC<DashboardProps> = ({ setActiveTab, messages, setMessag
                 <BrandedScreenshot title="Market Insights: Geographical Hubs" intro="Identify the key global cities for your target role and understand their specific function in the industry ecosystem.">
                     <div className="text-left space-y-4 prose prose-krypto">
                         <ul>
-                            <li><strong>San Francisco / Silicon Valley:</strong> The "Brain" of the operation. Proximity to OpenAI and Google DeepMind makes this the hub for those building the tools and models.</li>
-                            <li><strong>New York City / London:</strong> The "Showroom." Where the tech is applied to culture, advertising, and media.</li>
-                            <li><strong>Bangalore:</strong> The "Engine Room." Rapidly shifting from back-end maintenance to high-fidelity prototyping and creative engineering.</li>
-                            <li><strong>Los Angeles:</strong> The "Studio." The central hub for Generative Video, AI filmmaking, and synthetic media.</li>
+                            <li><strong>San Francisco / Silicon Valley:</strong> The \"Brain\" of the operation. Proximity to OpenAI and Google DeepMind makes this the hub for those building the tools and models.</li>
+                            <li><strong>New York City / London:</strong> The \"Showroom.\" Where the tech is applied to culture, advertising, and media.</li>
+                            <li><strong>Bangalore:</strong> The \"Engine Room.\" Rapidly shifting from back-end maintenance to high-fidelity prototyping and creative engineering.</li>
+                            <li><strong>Los Angeles:</strong> The \"Studio.\" The central hub for Generative Video, AI filmmaking, and synthetic media.</li>
                         </ul>
                         <h3>SOURCES</h3>
                         <p>...</p>
@@ -989,7 +1036,7 @@ const Dashboard: React.FC<DashboardProps> = ({ setActiveTab, messages, setMessag
                           <div className="w-10 h-10 rounded-2xl bg-zinc-900 border border-zinc-800 flex items-center justify-center flex-shrink-0"><KryptoLogo size={20} /></div>
                           <div className="bg-zinc-900 border border-zinc-800 p-6 rounded-[24px] rounded-tl-none flex-1 space-y-4 shadow-lg">
                               <p className="text-xs font-black text-yellow-500 uppercase tracking-widest">AI Outreach Protocol Generated (94% Engagement Probability)</p>
-                              <p className="text-zinc-300 leading-relaxed italic">"Hi Jensen, I noticed NVIDIA's recent advancement in Blackwell architecture—it's a massive leap for real-time generative physics..."</p>
+                              <p className="text-zinc-300 leading-relaxed italic">\"Hi Jensen, I noticed NVIDIA's recent advancement in Blackwell architecture—it's a massive leap for real-time generative physics...\"</p>
                               <div className="p-3 bg-yellow-500/5 border-l-4 border-yellow-500 rounded-r-lg">
                                   <p className="text-xs font-black text-yellow-500 uppercase">Strategic Hook Detection</p>
                                   <p className="text-xs text-zinc-400">System identified current company milestone via real-time Google Search Study.</p>
@@ -1034,13 +1081,13 @@ const Dashboard: React.FC<DashboardProps> = ({ setActiveTab, messages, setMessag
                   <div className="p-6 bg-zinc-800 rounded-3xl space-y-6">
                     <div className="space-y-3">
                         <p className="text-xs font-bold text-zinc-500 uppercase">Session Protocol</p>
-                        <div className="p-4 bg-zinc-700 rounded-xl font-bold text-white flex justify-between items-center">BEHAVIORAL <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="3" d="M19 9l-7 7-7-7"/></svg></div>
+                        <div className="p-4 bg-zinc-700 rounded-xl font-bold text-white flex justify-between items-center">BEHAVIORAL <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M19 9l-7 7-7-7"/></svg></div>
                     </div>
                      <div className="space-y-3">
                         <p className="text-xs font-bold text-zinc-500 uppercase">Complexity Vector</p>
-                        <div className="p-4 bg-zinc-700 rounded-xl font-bold text-white flex justify-between items-center">STANDARD <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="3" d="M19 9l-7 7-7-7"/></svg></div>
+                        <div className="p-4 bg-zinc-700 rounded-xl font-bold text-white flex justify-between items-center">STANDARD <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M19 9l-7 7-7-7"/></svg></div>
                     </div>
-                    <button className="w-full py-4 bg-yellow-500 text-black rounded-full font-bold text-sm">INITIALIZE SIMULATION (15 CREDITS)</button>
+                    <button onClick={() => setActiveTab?.('Interview Lab')} className="w-full py-4 bg-yellow-500 text-black rounded-full font-bold text-sm">INITIALIZE SIMULATION (15 CREDITS)</button>
                   </div>
                 </BrandedScreenshot>
 
@@ -1122,6 +1169,148 @@ Your profile shows a high probability of success and longevity within this speci
            ))}
         </div>
       </div>
+
+      {/* Award Winning Sleek Footer */}
+      <footer className="pt-48 pb-24 border-t border-zinc-900/50 relative overflow-hidden bg-gradient-to-b from-transparent to-zinc-950/80">
+        <div className="max-w-7xl mx-auto px-6 relative z-10">
+          <div className="grid grid-cols-1 md:grid-cols-12 gap-16 md:gap-8 items-start">
+            
+            {/* Branding Column */}
+            <div className="md:col-span-5 space-y-10">
+              <div className="group cursor-default inline-flex items-center gap-6">
+                <div className="relative">
+                  <div className="absolute -inset-2 bg-yellow-500/20 rounded-full blur-xl opacity-0 group-hover:opacity-100 transition-opacity duration-700"></div>
+                  <div className="w-24 h-24 rounded-full p-1 bg-gradient-to-tr from-yellow-500/40 to-transparent shadow-[0_0_30px_rgba(234,179,8,0.1)]">
+                    <img 
+                      src="https://i.postimg.cc/7YdGjhgV/IMG-1149.jpg" 
+                      alt="KryptonPath Logo" 
+                      className="w-full h-full rounded-full object-cover border-2 border-zinc-950"
+                    />
+                  </div>
+                </div>
+                <div>
+                  <h4 className="text-2xl font-black tracking-tighter gold-text-gradient uppercase leading-none">KryptonPath</h4>
+                  <p className="text-zinc-500 text-[10px] font-black uppercase tracking-[0.4em] mt-2">Architecture • Intelligence • Career</p>
+                </div>
+              </div>
+              <p className="text-zinc-500 text-sm font-medium leading-relaxed max-w-sm">
+                Engineering the next generation of professional identity through high-precision recruitment protocols. Crafted with absolute technical rigor by <span className="text-zinc-300">KryptonPath</span>.
+              </p>
+              <div className="flex gap-4">
+                <a href="https://www.facebook.com/share/1AeBLY3qN2/?mibextid=wwXIfr" target="_blank" rel="noopener noreferrer" className="w-10 h-10 rounded-xl bg-zinc-900 border border-zinc-800 flex items-center justify-center text-zinc-600 hover:text-yellow-500 hover:border-yellow-500/30 transition-all cursor-pointer group">
+                  <svg className="w-5 h-5 fill-current opacity-60 group-hover:opacity-100" viewBox="0 0 24 24"><path d="M22.675 0h-21.35C.597 0 0 .597 0 1.325v21.351C0 23.403.597 24 1.325 24H12.82v-9.294H9.692v-3.622h3.128V8.413c0-3.1 1.893-4.788 4.659-4.788 1.325 0 2.463.099 2.795.143v3.24l-1.918.001c-1.504 0-1.795.715-1.795 1.763v2.313h3.587l-.467 3.622h-3.12V24h6.116c.73 0 1.323-.597 1.323-1.325V1.325C24 .597 23.403 0 22.675 0z"/></svg>
+                </a>
+                <a href="https://www.instagram.com/kryptonpath?igsh=MTdtem9jMXd5amluNw%3D%3D&utm_source=qr" target="_blank" rel="noopener noreferrer" className="w-10 h-10 rounded-xl bg-zinc-900 border border-zinc-800 flex items-center justify-center text-zinc-600 hover:text-yellow-500 hover:border-yellow-500/30 transition-all cursor-pointer group">
+                  <svg className="w-5 h-5 fill-current opacity-60 group-hover:opacity-100" viewBox="0 0 24 24"><path d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zm0-2.163c-3.259 0-3.667.014-4.947.072-4.358.2-6.78 2.618-6.98 6.98-.059 1.281-.073 1.689-.073 4.948 0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98 1.281.058 1.689.072 4.948.072 3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98-1.281-.059-1.69-.073-4.949-.073zm0 5.838c-3.403 0-6.162 2.759-6.162 6.162s2.759 6.163 6.162 6.163 6.162-2.759 6.162-6.163c0-3.403-2.759-6.162-6.162-6.162zm0 10.162c-2.209 0-4-1.79-4-4 0-2.209 1.791-4 4-4s4 1.791 4 4c0 2.21-1.791 4-4 4zm6.406-11.845c-.796 0-1.441.645-1.441 1.44s.645 1.44 1.441 1.44c.795 0 1.439-.645 1.439-1.44s-.644-1.44-1.439-1.44z"/></svg>
+                </a>
+                <a href="https://www.linkedin.com/company/kryptonpath/" target="_blank" rel="noopener noreferrer" className="w-10 h-10 rounded-xl bg-zinc-900 border border-zinc-800 flex items-center justify-center text-zinc-600 hover:text-yellow-500 hover:border-yellow-500/30 transition-all cursor-pointer group">
+                  <svg className="w-5 h-5 fill-current opacity-60 group-hover:opacity-100" viewBox="0 0 24 24"><path d="M19 0h-14c-2.761 0-5 2.239-5 5v14c0 2.761 2.239 5 5 5h14c2.762 0 5-2.239 5-5v-14c0-2.761-2.238-5-5-5zm-11 19h-3v-11h3v11zm-1.5-12.268c-.966 0-1.75-.79-1.75-1.764s.784-1.764 1.75-1.764 1.75.79 1.75 1.764-.783 1.764-1.75 1.764zm13.5 12.268h-3v-5.604c0-3.368-4-3.113-4 0v5.604h-3v-11h3v1.765c1.396-2.586 7-2.777 7 2.476v6.759z"/></svg>
+                </a>
+              </div>
+            </div>
+
+            {/* Navigation Columns */}
+            <div className="md:col-span-7 grid grid-cols-2 sm:grid-cols-2 gap-12">
+              <div className="space-y-6">
+                <h5 className="text-[10px] font-black text-zinc-100 uppercase tracking-[0.3em] border-b border-zinc-800 pb-3">Products</h5>
+                <nav className="flex flex-col gap-4">
+                  {(['Home', 'Resume Scorer', 'Career Path', 'Outreach Architect', 'Interview Lab'] as TabType[]).map(item => (
+                    <button 
+                      key={item} 
+                      onClick={() => setActiveTab?.(item)}
+                      className="text-left text-xs font-bold text-zinc-500 hover:text-yellow-500 transition-colors uppercase tracking-widest"
+                    >
+                      {item}
+                    </button>
+                  ))}
+                </nav>
+              </div>
+
+              <div className="space-y-6">
+                <h5 className="text-[10px] font-black text-zinc-100 uppercase tracking-[0.3em] border-b border-zinc-800 pb-3">Legal</h5>
+                <nav className="flex flex-col gap-4">
+                  {(['privacy', 'terms', 'cookies', 'compliance'] as const).map((slug) => (
+                    <button 
+                      key={slug}
+                      onClick={() => setActivePolicy(slug)}
+                      className="text-left text-xs font-bold text-zinc-500 hover:text-yellow-500 transition-colors uppercase tracking-widest"
+                    >
+                      {slug === 'cookies' ? 'Cookies' : slug.charAt(0).toUpperCase() + slug.slice(1)}
+                    </button>
+                  ))}
+                </nav>
+              </div>
+            </div>
+          </div>
+
+          <div className="mt-32 pt-12 border-t border-zinc-900/80 flex flex-col sm:flex-row justify-between items-center gap-8">
+            <div className="flex items-center gap-6">
+              <p className="text-[9px] font-black text-zinc-600 uppercase tracking-[0.6em]">
+                © 2026 Krypto AI • All Rights Reserved
+              </p>
+            </div>
+            
+            <div className="flex items-center gap-4">
+               <div className="h-px w-12 bg-zinc-900"></div>
+               <div className="flex gap-2">
+                 <span className="w-1.5 h-1.5 rounded-full bg-zinc-800"></span>
+                 <span className="w-1.5 h-1.5 rounded-full bg-yellow-500/40 animate-pulse"></span>
+                 <span className="w-1.5 h-1.5 rounded-full bg-zinc-800"></span>
+               </div>
+               <div className="h-px w-12 bg-zinc-900"></div>
+            </div>
+
+            <div className="w-20 lg:block hidden"></div>
+          </div>
+        </div>
+      </footer>
+
+      {/* Policy Intelligence Overlay */}
+      {activePolicy && (
+        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 sm:p-10 animate-in fade-in duration-400">
+           <div className="absolute inset-0 bg-black/95 backdrop-blur-3xl" onClick={() => setActivePolicy(null)}></div>
+           <div className="relative w-full max-w-4xl max-h-[85vh] bg-zinc-950 border border-zinc-800 rounded-[64px] shadow-[0_0_100px_rgba(0,0,0,1)] overflow-hidden flex flex-col animate-in zoom-in-95 duration-500 border-t-yellow-500/20">
+              
+              {/* Overlay Header */}
+              <div className="h-24 flex items-center justify-between px-12 border-b border-zinc-900 bg-zinc-900/30">
+                 <div className="flex items-center gap-4">
+                    <div className="w-3 h-3 rounded-full bg-yellow-500 shadow-[0_0_10px_#eab308]"></div>
+                    <span className="text-[11px] font-black text-zinc-100 uppercase tracking-[0.5em]">Intel Protocol: {activePolicy}</span>
+                 </div>
+                 <button 
+                  onClick={() => setActivePolicy(null)} 
+                  className="w-12 h-12 flex items-center justify-center rounded-2xl bg-zinc-900 border border-zinc-800 text-zinc-500 hover:text-white hover:border-yellow-500/40 transition-all group"
+                 >
+                    <svg className="w-6 h-6 transition-transform group-hover:rotate-90" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M6 18L18 6M6 6l12 12" /></svg>
+                 </button>
+              </div>
+
+              {/* Overlay Content */}
+              <div className="flex-1 overflow-y-auto p-12 sm:p-20 custom-scrollbar">
+                 <div className="prose prose-invert prose-krypto max-w-none">
+                    <ReactMarkdown>{POLICY_CONTENT[activePolicy]}</ReactMarkdown>
+                 </div>
+              </div>
+
+              {/* Overlay Footer */}
+              <div className="h-20 flex items-center justify-between px-12 border-t border-zinc-900 bg-zinc-900/20">
+                 <p className="text-[9px] font-black text-zinc-600 uppercase tracking-[0.4em]">Verified Compliance Node • 2026 Architectural Sync</p>
+                 <button 
+                  onClick={() => setActivePolicy(null)}
+                  className="px-6 py-2 bg-zinc-900 border border-zinc-800 text-zinc-400 rounded-full text-[8px] font-black uppercase tracking-widest hover:text-white hover:bg-zinc-800 transition-all"
+                 >
+                   Acknowledge Protocol
+                 </button>
+              </div>
+           </div>
+        </div>
+      )}
+      
+      <style>{`
+        .custom-scrollbar::-webkit-scrollbar { width: 4px; }
+        .custom-scrollbar::-webkit-scrollbar-track { background: transparent; }
+        .custom-scrollbar::-webkit-scrollbar-thumb { background: rgba(234, 179, 8, 0.2); border-radius: 10px; }
+      `}</style>
     </div>
   );
 };

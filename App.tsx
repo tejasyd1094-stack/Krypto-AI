@@ -206,6 +206,14 @@ const App: React.FC = () => {
     }
   };
 
+  const deleteHistoryItem = (id: string) => {
+    setUser(prev => ({ ...prev, history: prev.history.filter(item => item.id !== id) }));
+  };
+
+  const deleteChatHistoryItem = (id: string) => {
+    setChatHistory(prev => prev.filter(chat => chat.id !== id));
+  };
+
   const saveChatHistory = (messages: Message[]) => {
     const userMessages = messages.filter(m => m.role === 'user');
     if (userMessages.length === 0) return;
@@ -284,7 +292,7 @@ const App: React.FC = () => {
       );
       case 'Outreach Architect': return < OutreachArchitect userCredits={user.credits} onUse={deductCredits} onSaveHistory={saveToHistory} onNavigatePricing={() => setActiveTab('Pricing')} />;
       case 'Interview Lab': return <InterviewLab userCredits={user.credits} userLocation={user.location} onUse={deductCredits} onSaveHistory={saveToHistory} onNavigatePricing={() => setActiveTab('Pricing')} />;
-      case 'History': return <History history={user.history} chatHistory={chatHistory} />;
+      case 'History': return <History history={user.history} chatHistory={chatHistory} onDeleteHistory={deleteHistoryItem} onDeleteChat={deleteChatHistoryItem} />;
       case 'Pricing': return <Pricing user={user} onUpgrade={(p) => setUser(prev => ({...prev, planId: p.id, credits: prev.credits + (p.credits as number)}))} />;
       case 'Credit System': return <UnitLedger />;
       default: return <Dashboard onUse={deductCredits} onNavigatePricing={() => setActiveTab('Pricing')} userCredits={user.credits} messages={chatMessages} setMessages={setChatMessages} onNewChat={handleNewChat} />;
@@ -296,7 +304,7 @@ const App: React.FC = () => {
   if (!currentSession) return <Login onGuestLogin={() => setGuestUser({ user: { email: 'architect@krypto.ai' } })} />;
 
   return (
-    <div className="flex min-h-screen bg-zinc-950 text-zinc-100">
+    <div className="flex min-h-screen bg-transparent text-zinc-100">
       <Sidebar 
         activeTab={activeTab} 
         setActiveTab={setActiveTab} 
@@ -306,8 +314,8 @@ const App: React.FC = () => {
         onLogout={handleLogout}
         newHistoryCount={newHistoryCount}
       />
-      <main className="flex-1 flex flex-col min-w-0">
-        <header className="h-20 flex items-center justify-between px-6 border-b border-zinc-900 bg-zinc-950/80 backdrop-blur-md sticky top-0 z-30">
+      <main className="flex-1 flex flex-col min-w-0 bg-transparent">
+        <header className="h-20 flex items-center justify-between px-6 border-b border-zinc-900 bg-zinc-950/40 backdrop-blur-md sticky top-0 z-30">
           <button onClick={() => setIsSidebarOpen(true)} className="p-2 lg:hidden rounded-lg bg-zinc-900 border border-zinc-800 text-zinc-400">
             <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16m-7 6h7" /></svg>
           </button>
@@ -331,7 +339,7 @@ const App: React.FC = () => {
             </div>
           </div>
         </header>
-        <section ref={scrollRef} className="flex-1 overflow-y-auto pb-20">{renderContent()}</section>
+        <section ref={scrollRef} className="flex-1 overflow-y-auto pb-20 bg-transparent">{renderContent()}</section>
       </main>
     </div>
   );

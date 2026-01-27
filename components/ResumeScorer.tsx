@@ -13,7 +13,7 @@ const LOADING_STEPS = [
   "Rendering Professional Blueprint..."
 ];
 
-const MAX_FILE_SIZE = 15 * 1024 * 1024;
+const MAX_FILE_SIZE = 15 * 1024 * 1024; // 15MB
 
 const EXTERNAL_TEMPLATES = [
   { name: "Overleaf (LaTeX)", url: "https://www.overleaf.com/gallery/tagged/cv", desc: "Highest-fidelity formatting for technical roles." },
@@ -109,7 +109,7 @@ const ResumeScorer: React.FC<ResumeScorerProps> = ({
       return;
     }
     if (selectedFile.size > MAX_FILE_SIZE) {
-      setError("Document Rejected: File exceeds 15MB.");
+      setError("Document Rejected: File exceeds 15MB limit.");
       return;
     }
     try {
@@ -382,7 +382,8 @@ const ResumeScorer: React.FC<ResumeScorerProps> = ({
                   <div className="w-24 h-24 bg-zinc-900/50 rounded-[40px] flex items-center justify-center mx-auto mb-10 border border-zinc-800 group-hover:bg-zinc-800 group-hover:border-yellow-500/30 transition-all duration-500">
                     <svg className="w-10 h-10 text-zinc-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" /></svg>
                   </div>
-                  <h4 className="text-zinc-100 text-2xl font-black mb-4 uppercase tracking-tight">Deploy Resume Portfolio</h4>
+                  <h4 className="text-zinc-100 text-2xl font-black mb-2 uppercase tracking-tight">Upload Resume Portfolio</h4>
+                  <p className="text-[10px] font-black text-zinc-600 uppercase tracking-[0.3em] mb-8">MAX SIZE: 15MB • PDF, DOCX, IMG</p>
                   <button onClick={() => fileInputRef.current?.click()} className="px-10 py-5 bg-zinc-900 border border-zinc-800 text-zinc-300 rounded-2xl text-[10px] font-black uppercase tracking-widest hover:bg-zinc-800 hover:text-white transition-all shadow-xl">Select Local Asset</button>
                 </div>
               )}

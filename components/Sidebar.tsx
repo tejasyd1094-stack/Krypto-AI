@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { TabType, UserStatus, PlanId } from '../types';
 import { supabase } from '../lib/supabase';
@@ -116,6 +115,7 @@ const Sidebar: React.FC<SidebarProps> = ({ activeTab, setActiveTab, isOpen, setI
                     {newHistoryCount}
                   </span>
                 )}
+                <span className="ml-2 opacity-0 transition-all duration-300 group-hover:opacity-100 group-hover:translate-x-1">→</span>
               </button>
             ))}
           </nav>

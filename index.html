@@ -1,9 +1,8 @@
-
 <!DOCTYPE html>
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
     <title>Krypto AI</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script>
@@ -12,6 +11,10 @@
           extend: {
             listStyleType: {
               square: 'square',
+            },
+            colors: {
+              royalGold: '#D4AF37',
+              deepIndigo: '#0F172A',
             }
           }
         }
@@ -21,178 +24,196 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
     <style>
-      body {
+      :root {
+        --bg-color: #050505;
+        --royal-gold: #D4AF37;
+        --deep-gold: #AA8B24;
+        --bright-gold: #FDE047;
+        --indigo-deep: #0f172a;
+        --indigo-accent: #2e3192;
+        --glass-bg: rgba(12, 12, 14, 0.75);
+        --glass-border: rgba(255, 255, 255, 0.08);
+      }
+
+      html, body {
+        background-color: var(--bg-color);
+        margin: 0;
+        padding: 0;
+        min-height: 100%;
+        width: 100%;
         font-family: 'Inter', sans-serif;
-        background-color: #09090b;
+        -webkit-font-smoothing: antialiased;
+        color: #f4f4f5;
+        overflow-x: hidden;
       }
-      .gold-glow {
-        box-shadow: 0 0 15px rgba(234, 179, 8, 0.3);
+
+      /* THE OBSIDIAN MESH PROTOCOL - UNIVERSAL VIEWPORT OPTIMIZATION */
+      .obsidian-mesh {
+        position: fixed;
+        inset: 0;
+        z-index: -1;
+        background-color: var(--bg-color);
+        overflow: hidden;
+        pointer-events: none;
+        transform: translate3d(0,0,0); /* Hardware acceleration */
       }
+
+      /* Vibrant Fluid Blobs - Positioned for Mobile Safe Zones */
+      .mesh-blob {
+        position: absolute;
+        border-radius: 50%;
+        filter: blur(100px);
+        -webkit-filter: blur(100px);
+        opacity: 0.22;
+        mix-blend-mode: screen;
+        pointer-events: none;
+        will-change: transform, opacity;
+      }
+
+      .blob-gold-primary {
+        width: 140vmax;
+        height: 140vmax;
+        background: radial-gradient(circle, var(--royal-gold) 0%, transparent 65%);
+        top: -40%;
+        left: -30%;
+        animation: silk-drift-1 45s infinite alternate ease-in-out;
+      }
+
+      .blob-indigo-primary {
+        width: 150vmax;
+        height: 150vmax;
+        background: radial-gradient(circle, var(--indigo-accent) 0%, var(--indigo-deep) 35%, transparent 75%);
+        bottom: -45%;
+        right: -25%;
+        opacity: 0.28;
+        animation: silk-drift-2 55s infinite alternate ease-in-out;
+      }
+
+      .blob-accent-glow {
+        width: 50vmax;
+        height: 50vmax;
+        background: radial-gradient(circle, var(--bright-gold) 0%, transparent 70%);
+        top: 15%;
+        right: 10%;
+        opacity: 0.08;
+        animation: silk-drift-3 30s infinite reverse ease-in-out;
+      }
+
+      @keyframes silk-drift-1 {
+        0% { transform: translate3d(0, 0, 0) scale(1) rotate(0deg); }
+        100% { transform: translate3d(5%, 10%, 0) scale(1.1) rotate(5deg); }
+      }
+
+      @keyframes silk-drift-2 {
+        0% { transform: translate3d(0, 0, 0) scale(1.15) rotate(0deg); }
+        100% { transform: translate3d(-8%, -12%, 0) scale(1) rotate(-8deg); }
+      }
+
+      @keyframes silk-drift-3 {
+        0% { transform: translate3d(0, 0, 0) rotate(0deg); }
+        100% { transform: translate3d(-10%, 5%, 0) rotate(360deg); }
+      }
+
+      /* NEURAL TOPOGRAPHY PATTERN - SCALED FOR ALL DEVICES */
+      .neural-topography {
+        position: absolute;
+        inset: 0;
+        /* Using high-contrast paths with responsive scaling */
+        background-image: url("data:image/svg+xml,%3Csvg width='1000' height='400' viewBox='0 0 1000 400' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' stroke='white' stroke-width='0.8' opacity='0.25'%3E%3Cpath d='M0 20 Q 250 0 500 20 T 1000 20'/%3E%3Cpath d='M0 40 Q 250 20 500 40 T 1000 40'/%3E%3Cpath d='M0 60 Q 250 40 500 60 T 1000 60'/%3E%3Cpath d='M0 80 Q 250 60 500 80 T 1000 80'/%3E%3Cpath d='M0 100 Q 250 80 500 100 T 1000 100'/%3E%3Cpath d='M0 120 Q 250 100 500 120 T 1000 120'/%3E%3Cpath d='M0 140 Q 250 120 500 140 T 1000 140'/%3E%3Cpath d='M0 160 Q 250 140 500 160 T 1000 160'/%3E%3Cpath d='M0 180 Q 250 160 500 180 T 1000 180'/%3E%3Cpath d='M0 200 Q 250 180 500 200 T 1000 200'/%3E%3Cpath d='M0 220 Q 250 200 500 220 T 1000 220'/%3E%3Cpath d='M0 240 Q 250 220 500 240 T 1000 240'/%3E%3Cpath d='M0 260 Q 250 240 500 260 T 1000 260'/%3E%3Cpath d='M0 280 Q 250 260 500 280 T 1000 280'/%3E%3Cpath d='M0 300 Q 250 280 500 300 T 1000 300'/%3E%3Cpath d='M0 320 Q 250 300 500 320 T 1000 320'/%3E%3Cpath d='M0 340 Q 250 320 500 340 T 1000 340'/%3E%3Cpath d='M0 360 Q 250 340 500 360 T 1000 360'/%3E%3Cpath d='M0 380 Q 250 360 500 380 T 1000 380'/%3E%3Cpath d='M0 400 Q 250 380 500 400 T 1000 400'/%3E%3C/g%3E%3C/svg%3E");
+        background-size: 100% auto; /* Key for mobile visibility: stretches to width */
+        background-repeat: repeat;
+        opacity: 0.55;
+        mix-blend-mode: soft-light; /* Soft-light is more consistent than overlay on mobile */
+        animation: topography-drift 120s linear infinite;
+        transform: translate3d(0,0,0);
+        pointer-events: none;
+      }
+
+      @media (min-width: 1024px) {
+        .neural-topography {
+          background-size: 1200px 480px;
+        }
+      }
+
+      @keyframes topography-drift {
+        from { background-position: 0 0; }
+        to { background-position: 1000px 400px; }
+      }
+
+      /* Premium tactile grain */
+      .obsidian-mesh::after {
+        content: "";
+        position: absolute;
+        inset: 0;
+        background-image: url("https://grainy-gradients.vercel.app/noise.svg");
+        opacity: 0.06;
+        filter: contrast(180%) brightness(1000%);
+        mix-blend-mode: overlay;
+        pointer-events: none;
+      }
+
+      .vignette-overlay {
+        position: fixed;
+        inset: 0;
+        background: radial-gradient(circle at center, transparent 0%, rgba(5, 5, 5, 0.8) 100%);
+        pointer-events: none;
+        z-index: -1;
+      }
+
+      /* Global Styles */
       .gold-text-gradient {
-        background: linear-gradient(135deg, #fde047 0%, #eab308 100%);
+        background: linear-gradient(135deg, #fde047 0%, #eab308 50%, #D4AF37 100%);
         -webkit-background-clip: text;
         -webkit-text-fill-color: transparent;
-      }
-      ::-webkit-scrollbar {
-        width: 6px;
-      }
-      ::-webkit-scrollbar-track {
-        background: #18181b;
-      }
-      ::-webkit-scrollbar-thumb {
-        background: #3f3f46;
-        border-radius: 3px;
-      }
-      ::-webkit-scrollbar-thumb:hover {
-        background: #eab308;
+        text-shadow: 0 0 30px rgba(234, 179, 8, 0.2);
       }
 
-      /* High-Performance Markdown Rendering */
+      .glass-panel {
+        background: var(--glass-bg);
+        backdrop-filter: blur(20px);
+        -webkit-backdrop-filter: blur(20px);
+        border: 1px solid var(--glass-border);
+      }
+
+      ::-webkit-scrollbar { width: 4px; }
+      ::-webkit-scrollbar-track { background: transparent; }
+      ::-webkit-scrollbar-thumb { background: rgba(212, 175, 55, 0.25); border-radius: 10px; }
+
+      /* Prose Overrides */
       .prose-krypto h1, .prose-krypto h2, .prose-krypto h3 {
-        color: #eab308;
+        color: var(--royal-gold);
         font-weight: 800;
-        letter-spacing: -0.025em;
-        margin-top: 1.5rem;
-        margin-bottom: 0.75rem;
-      }
-      .prose-krypto h3 { font-size: 1.1rem; }
-      
-      .prose-krypto p {
-        margin-bottom: 1rem;
-        line-height: 1.6;
-        color: #d1d1d6;
-        font-size: 0.9rem;
-      }
-
-      /* Modern Table Architecture */
-      .prose-krypto .table-container {
-        overflow-x: auto;
-        margin: 1.5rem 0;
-        border-radius: 16px;
-        background: rgba(24, 24, 27, 0.4);
-        border: 1px solid #27272a;
-      }
-      
-      .prose-krypto table {
-        width: 100%;
-        border-collapse: collapse;
-        font-size: 0.8rem;
-        text-align: left;
-      }
-      
-      .prose-krypto th {
-        background: #18181b;
-        color: #fde047;
-        font-weight: 800;
+        letter-spacing: -0.03em;
         text-transform: uppercase;
-        letter-spacing: 0.1em;
-        padding: 0.75rem 1rem;
-        border-bottom: 2px solid #27272a;
-        font-size: 0.7rem;
       }
-      
-      .prose-krypto td {
-        padding: 0.75rem 1rem;
-        border-bottom: 1px solid #18181b;
-        color: #e4e4e7;
-        font-weight: 500;
-      }
-      
-      .prose-krypto tr:last-child td {
-        border-bottom: none;
-      }
-      
-      .prose-krypto tr:hover td {
-        background: rgba(234, 179, 8, 0.04);
-      }
-
-      .prose-krypto strong {
-        color: #fde047;
-        font-weight: 700;
-      }
-      
-      .prose-krypto ul {
-        list-style-type: none;
-        padding-left: 0;
-        margin-bottom: 1.25rem;
-      }
-      
-      .prose-krypto li {
-        margin-bottom: 0.5rem;
-        position: relative;
-        padding-left: 1.25rem;
-        color: #d1d1d6;
-        font-size: 0.85rem;
-      }
-      
-      .prose-krypto li::before {
-        content: '→';
-        position: absolute;
-        left: 0;
-        color: #eab308;
-        font-weight: 900;
-      }
-      
-      .prose-krypto blockquote {
-        border-left: 3px solid #eab308;
-        background: rgba(234, 179, 8, 0.03);
-        padding: 0.75rem 1.25rem;
-        margin: 1.25rem 0;
-        border-radius: 0 10px 10px 0;
-        font-style: italic;
-        color: #a1a1aa;
-        font-size: 0.85rem;
-      }
-
-      /* Paper Preview Custom Styles for Premium Resume */
-      .prose-slate { 
-        font-family: 'Inter', serif; 
-        line-height: 1.5;
-        color: #0f172a;
-        text-align: left;
-      }
-      .prose-slate h1 { text-align: left; margin-bottom: 0.5rem !important; margin-top: 0 !important; font-size: 2rem; }
-      .prose-slate h2 { margin-top: 1.5rem !important; margin-bottom: 0.75rem !important; border-bottom: 1.5px solid #e2e8f0; padding-bottom: 4px; text-transform: uppercase; letter-spacing: 0.05em; text-align: left; font-size: 1.2rem; }
-      .prose-slate h3 { margin-top: 1rem !important; margin-bottom: 0.4rem !important; text-align: left; font-size: 1rem; }
-      .prose-slate p { margin-bottom: 0.5rem !important; text-align: left; font-size: 0.9rem; }
-      .prose-slate ul { margin-top: 0.4rem !important; margin-bottom: 1rem !important; text-align: left; }
-      .prose-slate li { margin-bottom: 0.3rem !important; text-align: left; font-size: 0.85rem; }
-      .prose-slate hr { margin: 1.5rem 0 !important; border: 0; border-top: 1px solid #cbd5e1; }
-      
-      .prose-slate blockquote {
-        border: none;
-        background-color: transparent;
-        padding: 0;
-        margin: 0 0 1rem 0 !important;
-        text-align: left;
-        font-style: normal;
-      }
-      .prose-slate blockquote p {
-        margin-top: 0;
-        margin-bottom: 0 !important;
-        font-weight: 700;
-        color: #475569;
-        text-align: left;
-      }
-
+      .prose-krypto p { color: #d1d1d6; line-height: 1.7; }
     </style>
-  <script type="importmap">
-{
-  "imports": {
-    "react-dom/": "https://esm.sh/react-dom@^19.2.3/",
-    "react": "https://esm.sh/react@^19.2.3",
-    "react/": "https://esm.sh/react@^19.2.3/",
-    "@google/genai": "https://esm.sh/@google/genai@^1.35.0",
-    "react-markdown": "https://esm.sh/react-markdown@^9.0.1",
-    "remark-gfm": "https://esm.sh/remark-gfm@^4.0.0",
-    "mammoth": "https://esm.sh/mammoth@^1.8.0",
-    "@supabase/supabase-js": "https://esm.sh/@supabase/supabase-js@2",
-    "@tailwindcss/typography": "https://esm.sh/@tailwindcss/typography@0.5.10"
-  }
-}
-</script>
-</head>
-  <body class="text-zinc-100 selection:bg-yellow-500/30">
+    <script type="importmap">
+    {
+      "imports": {
+        "react-dom/": "https://esm.sh/react-dom@^19.2.3/",
+        "react": "https://esm.sh/react@^19.2.3",
+        "react/": "https://esm.sh/react@^19.2.3/",
+        "@google/genai": "https://esm.sh/@google/genai@^1.35.0",
+        "react-markdown": "https://esm.sh/react-markdown@^9.0.1",
+        "remark-gfm": "https://esm.sh/remark-gfm@^4.0.0",
+        "mammoth": "https://esm.sh/mammoth@^1.8.0",
+        "@supabase/supabase-js": "https://esm.sh/@supabase/supabase-js@2",
+        "@tailwindcss/typography": "https://esm.sh/@tailwindcss/typography@0.5.10"
+      }
+    }
+    </script>
+  </head>
+  <body class="text-zinc-100 selection:bg-yellow-500/50">
+    <!-- REFINED BACKGROUND ARCHITECTURE -->
+    <div class="obsidian-mesh" aria-hidden="true">
+      <div class="mesh-blob blob-gold-primary"></div>
+      <div class="mesh-blob blob-indigo-primary"></div>
+      <div class="mesh-blob blob-accent-glow"></div>
+      <div class="neural-topography"></div>
+      <div class="vignette-overlay"></div>
+    </div>
+
     <div id="root"></div>
   </body>
 </html>
