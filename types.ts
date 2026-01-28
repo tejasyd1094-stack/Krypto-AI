@@ -1,5 +1,34 @@
-export type TabType = 'Home' | 'Resume Scorer' | 'Career Path' | 'Outreach Architect' | 'Interview Lab' | 'History' | 'Pricing' | 'Credit System';
+export type TabType = 'Home' | 'Profile & Roadmap' | 'Resume Scorer' | 'Career Path' | 'Outreach Architect' | 'Interview Lab' | 'History' | 'Pricing' | 'Credit System';
 export type PlanId = 'free' | 'starter' | 'pro' | 'ultra-pro';
+
+export interface ProfileMetadata {
+  avatarUrl?: string;
+  name?: string;
+  email?: string;
+  phone?: string;
+  currentCompany?: string;
+  currentDesignation?: string;
+  education?: {
+    graduate?: string;
+    masters?: string;
+  };
+  compensation?: {
+    fixed: string;
+    variable: string;
+  };
+  noticePeriod?: string;
+}
+
+export interface ProfileTasks {
+  profilePic: boolean;
+  resumeAdded: boolean;
+  compAdded: boolean;
+  noticeAdded: boolean;
+  scorerUsed: boolean;
+  careerUsed: boolean;
+  outreachUsed: boolean;
+  interviewUsed: boolean;
+}
 
 export interface HistoryItem {
   id: string;
@@ -29,6 +58,8 @@ export interface UserStatus {
   currency: string;
   symbol: string;
   history: HistoryItem[];
+  profile?: ProfileMetadata;
+  tasks: ProfileTasks;
 }
 
 export interface FeatureAccess {

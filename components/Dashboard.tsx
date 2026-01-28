@@ -202,6 +202,37 @@ const Dashboard: React.FC<DashboardProps> = ({ setActiveTab, messages, setMessag
   const fileInputRef = useRef<HTMLInputElement>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
+  // Precision Scrolling Refs
+  const atsFirstAttrRef = useRef<HTMLDivElement>(null);
+  const careerFirstAttrRef = useRef<HTMLDivElement>(null);
+  const outreachFirstAttrRef = useRef<HTMLDivElement>(null);
+  const interviewFirstAttrRef = useRef<HTMLDivElement>(null);
+
+  // Rule 1: Scroll to top on mount
+  useEffect(() => {
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  }, []);
+
+  // Rule 2: Precision-centering for attribute discovery
+  useEffect(() => {
+    if (openSubFeatures) {
+      const targetMap: Record<string, React.RefObject<HTMLDivElement>> = {
+        'ats': atsFirstAttrRef,
+        'career': careerFirstAttrRef,
+        'outreach': outreachFirstAttrRef,
+        'interview': interviewFirstAttrRef
+      };
+
+      const activeRef = targetMap[openSubFeatures];
+      if (activeRef?.current) {
+        // Small timeout to allow the transition/render of conditional content
+        setTimeout(() => {
+          activeRef.current?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        }, 100);
+      }
+    }
+  }, [openSubFeatures]);
+
   useEffect(() => {
     const initChatSession = async () => {
       try {
@@ -418,8 +449,8 @@ const Dashboard: React.FC<DashboardProps> = ({ setActiveTab, messages, setMessag
     }
   };
 
-  const BrandedScreenshot = ({ title, intro, children, className }: { title: string, intro: string, children?: React.ReactNode, className?: string }) => (
-    <div className={`flex flex-col gap-8 items-center ${className}`}>
+  const BrandedScreenshot = ({ title, intro, children, className, containerRef }: { title: string, intro: string, children?: React.ReactNode, className?: string, containerRef?: React.RefObject<HTMLDivElement> }) => (
+    <div ref={containerRef} className={`flex flex-col gap-8 items-center ${className}`}>
       <p className="text-center text-zinc-300 font-normal max-w-2xl mx-auto text-lg leading-relaxed">{intro}</p>
       <div className="w-full bg-zinc-950/50 border border-zinc-800 rounded-[32px] p-2 shadow-2xl backdrop-blur-sm">
         <div className="bg-black rounded-[24px] overflow-hidden border border-zinc-900">
@@ -595,7 +626,7 @@ const Dashboard: React.FC<DashboardProps> = ({ setActiveTab, messages, setMessag
           
           {openSubFeatures === 'ats' && (
             <div className="w-full max-w-4xl space-y-20 animate-in fade-in slide-in-from-bottom-8 duration-500">
-              <BrandedScreenshot title="Recruitment Index" intro="Leverage a multi-dimensional algorithmic audit that quantifies your marketability. Our engine simulates the decision-making patterns of thousands of ATS systems and elite recruiters to verify your asset's competitive standing.">
+              <BrandedScreenshot containerRef={atsFirstAttrRef} title="Recruitment Index" intro="Leverage a multi-dimensional algorithmic audit that quantifies your marketability. Our engine simulates the decision-making patterns of thousands of ATS systems and elite recruiters to verify your asset's competitive standing.">
                 <div className="flex flex-col items-center gap-10">
                   <div className="relative w-48 h-48 sm:w-56 sm:h-56">
                     <svg className="w-full h-full transform -rotate-90">
@@ -762,7 +793,7 @@ const Dashboard: React.FC<DashboardProps> = ({ setActiveTab, messages, setMessag
           </div>
           {openSubFeatures === 'career' && (
              <div className="w-full max-w-4xl space-y-20 animate-in fade-in slide-in-from-bottom-8 duration-500">
-                <BrandedScreenshot title="Career DNA: Market Topography" intro="Architect your career around high-yield economic corridors. We analyze the intersection of regional salary parity, emerging business hubs, and sector-specific demand to identify the precise locations where your skills command the highest premium.">
+                <BrandedScreenshot containerRef={careerFirstAttrRef} title="Career DNA: Market Topography" intro="Architect your career around high-yield economic corridors. We analyze the intersection of regional salary parity, emerging business hubs, and sector-specific demand to identify the precise locations where your skills command the highest premium.">
                     <div className="space-y-4 text-center max-w-sm mx-auto">
                         <p className="text-xs font-bold uppercase tracking-widest text-zinc-500">Detecting Local Salary Parity and Business Hubs.</p>
                         <button className="w-full py-4 bg-white text-black rounded-full font-bold">DETECT CITY</button>
@@ -920,7 +951,7 @@ const Dashboard: React.FC<DashboardProps> = ({ setActiveTab, messages, setMessag
                      <div className="text-left space-y-4 prose prose-krypto">
                         <h3>The 'Trojan Horse' Portfolio</h3>
                         <ul>
-                            <li>Strategy: Instead of a PDF portfolio, build a GitHub repository titled "GenAI-Creative-Toolkit."</li>
+                            <li>Strategy: Instead of a PDF portfolio, build a GitHub repository titled \"GenAI-Creative-Toolkit.\"</li>
                             <li>Content: Include 3 clean, documented scripts:
                                 <ul>
                                     <li>A script that converts a blog post into an Instagram caption and generates a matching image.</li>
@@ -946,7 +977,7 @@ const Dashboard: React.FC<DashboardProps> = ({ setActiveTab, messages, setMessag
                         <p><strong>Status:</strong> Active & Expanding</p>
                         <p><strong>Currency:</strong> USD ($)</p>
                         <h3>Executive Summary</h3>
-                        <p>The "Creative Technologist" role has evolved rapidly into a Generative AI-first discipline. The hiring landscape for early 2026 shows a clear bifurcation: <strong>Big Tech (Google)</strong> is hiring for high-fidelity prototyping and \"magic\" making, while <strong>Global Agencies (Media.Monks, WPP)</strong> are industrializing GenAI for content supply chains. A new corridor of opportunity has opened between <strong>San Francisco, London, and Bangalore</strong>.</p>
+                        <p>The \"Creative Technologist\" role has evolved rapidly into a Generative AI-first discipline. The hiring landscape for early 2026 shows a clear bifurcation: <strong>Big Tech (Google)</strong> is hiring for high-fidelity prototyping and \"magic\" making, while <strong>Global Agencies (Media.Monks, WPP)</strong> are industrializing GenAI for content supply chains. A new corridor of opportunity has opened between <strong>San Francisco, London, and Bangalore</strong>.</p>
                     </div>
                 </BrandedScreenshot>
                 
@@ -1030,7 +1061,7 @@ const Dashboard: React.FC<DashboardProps> = ({ setActiveTab, messages, setMessag
           </div>
            {openSubFeatures === 'outreach' && (
               <div className="w-full max-w-4xl animate-in fade-in slide-in-from-bottom-8 duration-500">
-                <BrandedScreenshot title="Conversation Forge Protocol" intro="Break through the noise of standard networking with hyper-personalized engagement logic. Our engine identifies recent company milestones to craft high-status narratives that virtually guarantee a reply from decision-makers.">
+                <BrandedScreenshot containerRef={outreachFirstAttrRef} title="Conversation Forge Protocol" intro="Break through the noise of standard networking with hyper-personalized engagement logic. Our engine identifies recent company milestones to craft high-status narratives that virtually guarantee a reply from decision-makers.">
                   <div className="space-y-6">
                       <div className="flex items-start gap-4">
                           <div className="w-10 h-10 rounded-2xl bg-zinc-900 border border-zinc-800 flex items-center justify-center flex-shrink-0"><KryptoLogo size={20} /></div>
@@ -1077,7 +1108,7 @@ const Dashboard: React.FC<DashboardProps> = ({ setActiveTab, messages, setMessag
           </div>
             {openSubFeatures === 'interview' && (
               <div className="w-full max-w-4xl space-y-20 animate-in fade-in slide-in-from-bottom-8 duration-500">
-                <BrandedScreenshot title="Interview Simulation Protocol" intro="Battle-test your composure in a simulated high-stakes environment. Calibrating the session protocol and complexity vector ensures you eliminate anxiety and perfect your responses through exposure to elite-level technical inquiries.">
+                <BrandedScreenshot containerRef={interviewFirstAttrRef} title="Interview Simulation Protocol" intro="Battle-test your composure in a simulated high-stakes environment. Calibrating the session protocol and complexity vector ensures you eliminate anxiety and perfect your responses through exposure to elite-level technical inquiries.">
                   <div className="p-6 bg-zinc-800 rounded-3xl space-y-6">
                     <div className="space-y-3">
                         <p className="text-xs font-bold text-zinc-500 uppercase">Session Protocol</p>
@@ -1217,7 +1248,13 @@ Your profile shows a high probability of success and longevity within this speci
                   {(['Home', 'Resume Scorer', 'Career Path', 'Outreach Architect', 'Interview Lab'] as TabType[]).map(item => (
                     <button 
                       key={item} 
-                      onClick={() => setActiveTab?.(item)}
+                      onClick={() => {
+                        if (item === 'Home') {
+                          window.scrollTo({ top: 0, behavior: 'smooth' });
+                        } else {
+                          setActiveTab?.(item);
+                        }
+                      }}
                       className="text-left text-xs font-bold text-zinc-500 hover:text-yellow-500 transition-colors uppercase tracking-widest"
                     >
                       {item}

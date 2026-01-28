@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import Sidebar from './components/Sidebar';
 import Dashboard from './components/Dashboard';
+import Profile from './components/Profile';
 import ResumeScorer from './components/ResumeScorer';
 import CareerPath from './components/CareerPath';
 import OutreachArchitect from './components/OutreachArchitect';
@@ -15,7 +16,7 @@ import { TabType, UserStatus, PricingPlan, PlanId, FeatureAccess, HistoryItem, R
 const App: React.FC = () => {
   const [session, setSession] = useState<any>(null);
   const [guestUser, setGuestUser] = useState<any>(null);
-  const [activeTab, setActiveTab] = useState<TabType>('Home');
+  const [activeTab, setActiveTab] = useState<TabType>('Profile & Roadmap'); // Default to Profile & Roadmap on login
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [isVerifyingLocation, setIsVerifyingLocation] = useState(false);
   const [newHistoryCount, setNewHistoryCount] = useState(0);
@@ -41,17 +42,33 @@ const App: React.FC = () => {
   const [user, setUser] = useState<UserStatus>({
     isPro: false,
     planId: 'free',
-    credits: 50,
+    credits: 0, // Initialized to 0 as requested
     trialUsed: false,
     location: '', 
     currency: 'USD',
     symbol: '$',
-    history: []
+    history: [],
+    tasks: {
+      profilePic: false,
+      resumeAdded: false,
+      compAdded: false,
+      noticeAdded: false,
+      scorerUsed: false,
+      careerUsed: false,
+      outreachUsed: false,
+      interviewUsed: false
+    }
   });
 
   useEffect(() => {
-    supabase.auth.getSession().then(({ data: { session } }) => setSession(session));
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => setSession(session));
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      setSession(session);
+      if (session) setActiveTab('Profile & Roadmap');
+    });
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+      setSession(session);
+      if (session) setActiveTab('Profile & Roadmap');
+    });
     return () => subscription.unsubscribe();
   }, []);
 
@@ -199,8 +216,37 @@ const App: React.FC = () => {
     return true;
   };
 
+  const awardCredits = (amount: number) => {
+    setUser(prev => ({ ...prev, credits: prev.credits + amount }));
+  };
+
   const saveToHistory = (item: HistoryItem) => {
-    setUser(prev => ({ ...prev, history: [item, ...prev.history] }));
+    setUser(prev => {
+        const newState = { ...prev, history: [item, ...prev.history] };
+        
+        // Task tracking for first-time use
+        if (item.type === 'resume-audit' && !newState.tasks.scorerUsed) {
+            newState.tasks.scorerUsed = true;
+            newState.credits += 5;
+        }
+        if (item.type === 'strategy' || item.type === 'market-insight') {
+            if (!newState.tasks.careerUsed) {
+                newState.tasks.careerUsed = true;
+                newState.credits += 10;
+            }
+        }
+        if (item.type === 'outreach' && !newState.tasks.outreachUsed) {
+            newState.tasks.outreachUsed = true;
+            newState.credits += 5;
+        }
+        if (item.type === 'interview-prep' && !newState.tasks.interviewUsed) {
+            newState.tasks.interviewUsed = true;
+            newState.credits += 5;
+        }
+        
+        return newState;
+    });
+    
     if (activeTab !== 'History') {
       setNewHistoryCount(prev => prev + 1);
     }
@@ -241,6 +287,7 @@ const App: React.FC = () => {
   const renderContent = () => {
     switch (activeTab) {
       case 'Home': return <Dashboard onUse={deductCredits} onNavigatePricing={() => setActiveTab('Pricing')} setActiveTab={setActiveTab} userCredits={user.credits} messages={chatMessages} setMessages={setChatMessages} onNewChat={handleNewChat} />;
+      case 'Profile & Roadmap': return <Profile user={user} onUpdateUser={(update) => setUser(prev => ({ ...prev, ...update }))} onAwardCredits={awardCredits} />;
       case 'Resume Scorer': return (
         <ResumeScorer 
           userCredits={user.credits} 
@@ -301,7 +348,7 @@ const App: React.FC = () => {
 
   const currentSession = session || guestUser;
 
-  if (!currentSession) return <Login onGuestLogin={() => setGuestUser({ user: { email: 'architect@krypto.ai' } })} />;
+  if (!currentSession) return <Login onGuestLogin={() => { setGuestUser({ user: { email: 'architect@krypto.ai' } }); setActiveTab('Profile & Roadmap'); }} />;
 
   return (
     <div className="flex min-h-screen bg-transparent text-zinc-100">
@@ -330,13 +377,16 @@ const App: React.FC = () => {
               <span className="text-[10px] font-black text-yellow-500 tracking-widest">{user.credits}</span>
             </div>
 
-            <div className="w-10 h-10 rounded-full bg-zinc-900 border border-zinc-800 overflow-hidden ring-2 ring-transparent hover:ring-yellow-500/20 transition-all p-0.5">
+            <button 
+              onClick={() => setActiveTab('Profile & Roadmap')}
+              className="w-10 h-10 rounded-full bg-zinc-900 border border-zinc-800 overflow-hidden ring-2 ring-transparent hover:ring-yellow-500/20 transition-all p-0.5"
+            >
                <img 
-                 src={`https://ui-avatars.com/api/?name=${currentSession.user.email}&background=18181b&color=eab308`} 
+                 src={user.profile?.avatarUrl || `https://ui-avatars.com/api/?name=${currentSession.user.email}&background=18181b&color=eab308`} 
                  alt="User" 
                  className="w-full h-full rounded-full"
                />
-            </div>
+            </button>
           </div>
         </header>
         <section ref={scrollRef} className="flex-1 overflow-y-auto pb-20 bg-transparent">{renderContent()}</section>
