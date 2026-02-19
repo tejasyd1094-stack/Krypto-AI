@@ -72,9 +72,10 @@ interface InterviewLabProps {
   onUse: (amt: number) => boolean;
   onSaveHistory: (item: HistoryItem) => void;
   onNavigatePricing: () => void;
+  onStartSimulation: (inputs: any, jd: string | null) => void;
 }
 
-const InterviewLab: React.FC<InterviewLabProps> = ({ userCredits, userLocation, onUse, onSaveHistory, onNavigatePricing }) => {
+const InterviewLab: React.FC<InterviewLabProps> = ({ userCredits, userLocation, onUse, onSaveHistory, onNavigatePricing, onStartSimulation }) => {
   const [runningProcess, setRunningProcess] = useState<'simulation' | 'review' | null>(null);
   const [inputs, setInputs] = useState({ 
     company: '', 
@@ -173,40 +174,8 @@ const InterviewLab: React.FC<InterviewLabProps> = ({ userCredits, userLocation, 
 
   const handleStartSession = async () => {
     if (userCredits < 15) { onNavigatePricing(); return; }
-    
-    setRunningProcess('simulation');
-    setLoading(true);
-    setJdError(null);
-    setSimulationResult(null);
-    setWorthinessResult(null);
-    setReviewStage('form');
-
-    try {
-      const msg = await getMockInterviewSession(inputs, jdData || undefined);
-      
-      if (msg.includes('[INVALID_JD]')) {
-        setJdError("System Alert: The provided Job Description appears invalid or lacks clear responsibilities. Please upload a legitimate JD for exact results.");
-        setSimulationResult(msg.replace('[INVALID_JD]', '').trim());
-      } else if (msg.includes('[REFUSAL]')) {
-        setSimulationResult(msg.replace('[REFUSAL]', '').trim());
-      } else {
-        onUse(15);
-        setLoadingProgress(100);
-        setSimulationResult(msg);
-        onSaveHistory({
-          id: Math.random().toString(36).substr(2, 9),
-          type: 'interview-prep',
-          title: `Mock Session: ${inputs.company} (${inputs.role})`,
-          date: new Date().toLocaleDateString(),
-          inputs: { ...inputs, hasJD: jdFile ? 'Yes' : 'No' } as any,
-          result: msg
-        });
-      }
-    } catch (err) {
-      console.error(err);
-    } finally {
-      setTimeout(() => setLoading(false), 800);
-    }
+    // Start the new interactive simulation
+    onStartSimulation(inputs, typeof jdData === 'string' ? jdData : null);
   };
 
   const handleStartReview = async () => {

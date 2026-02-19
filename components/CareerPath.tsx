@@ -150,7 +150,7 @@ const RadarChart = ({ scores }: { scores: PersonalityTraitScores }) => {
   const max = 50;
   const size = 500;
   const center = size / 2;
-  const r = 170; // Larger radius for a bigger covered area
+  const r = 170; 
   const labels: (keyof PersonalityTraitScores)[] = ['analytic', 'creative', 'leadership', 'social', 'practical', 'investigative'];
 
   const [activeIdx, setActiveIdx] = useState<number | null>(null);
@@ -328,6 +328,7 @@ const CareerPath: React.FC<CareerPathProps> = ({
   };
 
   const handlePredict = async () => {
+    const locationToUse = userLocation || 'GLOBAL';
     const cost = userType === 'experienced' ? 35 : 25;
     if (userCredits < cost) { onNavigatePricing(); return; }
     setLoading(true);
@@ -338,7 +339,7 @@ const CareerPath: React.FC<CareerPathProps> = ({
     }, 100);
 
     try {
-      const response = await predictCareerPaths(scores, userLocation || 'GLOBAL', userType || 'fresher', resumeData as any);
+      const response = await predictCareerPaths(scores, locationToUse, userType || 'fresher', resumeData as any);
       if (!response.refused) onUse(cost);
       setLoadingProgress(100);
       setResult(response);
@@ -450,7 +451,7 @@ const CareerPath: React.FC<CareerPathProps> = ({
       type,
       title: `${type === 'strategy' ? 'Strategy' : 'Insights'}: ${role}`,
       date: new Date().toLocaleDateString(),
-      inputs: { role, location: userLocation || 'GLOBAL' },
+      inputs: { role, location: userLocation || 'UNSPECIFIED' },
       result: content
     });
     alert(`${type === 'strategy' ? 'Strategy' : 'Insights'} archived in vault.`);
@@ -480,7 +481,7 @@ const CareerPath: React.FC<CareerPathProps> = ({
         </h2>
         
         {currentStep < 6 && !loading && (
-          <div className="max-w-2xl mx-auto p-1 bg-zinc-900/40 border border-zinc-800 rounded-[40px] shadow-3xl overflow-hidden">
+          <div className="max-w-2xl mx-auto p-1 bg-zinc-900/40 border border-zinc-800 rounded-[40px] shadow-3xl overflow-hidden relative">
              <div className="p-6 sm:p-8 space-y-6">
                <div className="flex flex-col sm:flex-row items-center gap-4">
                   <div className="flex-1 space-y-1 text-center sm:text-left">
@@ -494,17 +495,17 @@ const CareerPath: React.FC<CareerPathProps> = ({
                     disabled={isVerifyingLocation} 
                     className="w-full sm:w-auto px-6 py-4 bg-zinc-100 text-zinc-950 rounded-[20px] font-black text-[9px] uppercase tracking-widest hover:bg-yellow-500 transition-all flex items-center justify-center gap-3 active:scale-95 disabled:opacity-50"
                   >
-                    {isVerifyingLocation ? <div className="w-3 h-3 border-2 border-zinc-950 border-t-transparent rounded-full animate-spin"></div> : "Detect City"}
+                    {isVerifyingLocation ? <div className="w-3 h-3 border-2 border-zinc-950 border-t-transparent rounded-full animate-spin"></div> : "Auto-Detect"}
                   </button>
                </div>
                <div className="flex flex-col sm:flex-row gap-3">
-                 <input type="text" value={manualCity} onChange={(e) => setManualCity(e.target.value)} placeholder="Enter City Name..." className="flex-1 bg-zinc-950 border border-zinc-800 rounded-[20px] px-5 py-4 text-[10px] text-zinc-100 uppercase font-black tracking-widest focus:border-blue-500/50 outline-none transition-all placeholder:text-zinc-700 w-full" />
-                 <button onClick={() => onSetManualLocation(manualCity)} disabled={!manualCity.trim()} className="w-full sm:w-auto px-6 py-4 bg-zinc-800 text-zinc-300 rounded-[20px] text-[9px] font-black uppercase tracking-widest border border-zinc-700 hover:bg-zinc-700 hover:text-white transition-all active:scale-95">Update City</button>
+                 <input type="text" value={manualCity} onChange={(e) => setManualCity(e.target.value)} placeholder="ENTER TARGET LOCATION (e.g. LONDON, UK)" className="flex-1 bg-zinc-950 border border-zinc-800 rounded-[20px] px-5 py-4 text-[10px] text-zinc-100 uppercase font-black tracking-widest focus:border-blue-500/50 outline-none transition-all placeholder:text-zinc-700 w-full" />
+                 <button onClick={() => { onSetManualLocation(manualCity); setManualCity(''); }} disabled={!manualCity.trim()} className="w-full sm:w-auto px-6 py-4 bg-zinc-800 text-zinc-300 rounded-[20px] text-[9px] font-black uppercase tracking-widest border border-zinc-700 hover:bg-zinc-700 hover:text-white transition-all active:scale-95">Lock Geography</button>
                </div>
                {userLocation && (
-                  <div className="pt-4 border-t border-zinc-800 flex items-center justify-center gap-2">
+                  <div className="pt-4 border-t border-zinc-800 flex items-center justify-center gap-2 animate-in zoom-in">
                     <span className="w-1.5 h-1.5 rounded-full bg-green-500 shadow-[0_0_8px_#22c55e]"></span>
-                    <p className="text-[9px] font-black text-zinc-400 uppercase tracking-[0.2em]">Targeting: <span className="text-zinc-100">{userLocation}</span></p>
+                    <p className="text-[9px] font-black text-zinc-400 uppercase tracking-[0.2em]">Targeting Corridor: <span className="text-zinc-100">{userLocation}</span></p>
                   </div>
                )}
              </div>
@@ -601,163 +602,95 @@ const CareerPath: React.FC<CareerPathProps> = ({
                    </div>
                    
                    <div className="max-w-[280px] p-5 bg-yellow-500/5 border border-yellow-500/10 rounded-2xl text-center">
-                      <p className="text-[9px] font-black text-zinc-400 leading-relaxed uppercase tracking-widest italic">
-                        Sequence representing your unique professional architecture.
-                      </p>
+                      <p className="text-[10px] font-black text-zinc-600 uppercase tracking-widest mb-1">Archetype</p>
+                      <p className="text-[11px] font-bold text-zinc-100 uppercase">{result.personaSummary}</p>
                    </div>
                 </div>
              </div>
-             <div className="space-y-10">
-                <div className="p-10 bg-zinc-950 border border-zinc-900 rounded-[40px] shadow-2xl relative overflow-hidden">
-                   <div className="absolute top-0 right-0 w-24 h-24 bg-yellow-500/[0.02] rounded-bl-full pointer-events-none"></div>
-                   <h3 className="text-[9px] font-black text-yellow-500 uppercase tracking-[0.4em] mb-6">Archetype Decoding</h3>
-                   <p className="text-2xl font-black text-zinc-100 tracking-tighter leading-tight italic">"{result.personaSummary}"</p>
+             
+             <div className="space-y-8">
+                <div className="space-y-2">
+                   <span className="text-[11px] font-black text-blue-500 uppercase tracking-[0.4em]">Ideal Role Alignment</span>
+                   <h3 className="text-4xl font-black uppercase tracking-tighter text-zinc-100">Market <span className="gold-text-gradient">Recommendations</span></h3>
                 </div>
                 
-                <div className="flex flex-wrap gap-4 justify-center lg:justify-start">
-                   <div className="text-center px-4">
-                      <p className="text-[8px] font-black text-zinc-700 uppercase tracking-widest mb-0.5">Parity</p>
-                      <p className="text-base font-black text-zinc-100 uppercase">Premium</p>
-                   </div>
-                   <div className="w-px h-8 bg-zinc-900 hidden sm:block"></div>
-                   <div className="text-center px-4">
-                      <p className="text-[8px] font-black text-zinc-700 uppercase tracking-widest mb-0.5">Market Hub</p>
-                      <p className="text-base font-black text-zinc-100 uppercase">{userLocation || 'Global'}</p>
-                   </div>
+                <div className="space-y-4">
+                   {result.careers.map((career, i) => (
+                     <div key={i} className="bg-zinc-950 border border-zinc-900 rounded-[32px] p-8 space-y-6 hover:border-yellow-500/30 transition-all group">
+                        <div className="flex items-start justify-between">
+                           <div className="space-y-1">
+                              <h4 className="text-xl font-black text-zinc-100 uppercase tracking-tight">{career.title}</h4>
+                              <div className="flex items-center gap-2">
+                                 <span className="w-1.5 h-1.5 rounded-full bg-green-500"></span>
+                                 <span className="text-[10px] font-black text-green-500 uppercase tracking-widest">{career.matchPercentage}% Alignment</span>
+                              </div>
+                           </div>
+                           <div className="text-right">
+                              <p className="text-[9px] font-black text-zinc-600 uppercase tracking-widest">Est. Comp</p>
+                              <p className="text-sm font-black text-zinc-100">{career.salaryExpectation}</p>
+                           </div>
+                        </div>
+                        
+                        <p className="text-xs text-zinc-500 font-medium leading-relaxed">{career.reason}</p>
+                        
+                        <div className="grid grid-cols-2 gap-4">
+                           <button onClick={() => { setActiveStrategyIdx(i); setStrategyResults({}); }} className="py-3 bg-zinc-900 border border-zinc-800 rounded-xl text-[9px] font-black uppercase tracking-widest text-zinc-400 hover:text-white hover:border-yellow-500/30 transition-all">Strategic Roadmap</button>
+                           <button onClick={() => unlockInsights(i, career.title)} className="py-3 bg-zinc-900 border border-zinc-800 rounded-xl text-[9px] font-black uppercase tracking-widest text-zinc-400 hover:text-white hover:border-blue-500/30 transition-all">Market Intel</button>
+                        </div>
+
+                        {/* Strategy Selection Overlay */}
+                        {activeStrategyIdx === i && (
+                          <div className="mt-6 p-6 bg-zinc-900/50 border border-yellow-500/20 rounded-2xl space-y-4 animate-in slide-in-from-top-4">
+                             <div className="flex justify-between items-center">
+                                <h5 className="text-[10px] font-black text-yellow-500 uppercase tracking-widest">Blueprint Parameters</h5>
+                                <button onClick={() => setActiveStrategyIdx(null)} className="text-zinc-600 hover:text-white"><svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M6 18L18 6M6 6l12 12" /></svg></button>
+                             </div>
+                             <div className="grid grid-cols-3 gap-3">
+                                <input type="number" placeholder="BUDGET" value={strategyInputs.budget} onChange={e => setStrategyInputs({...strategyInputs, budget: e.target.value})} className="bg-zinc-950 border border-zinc-800 rounded-lg p-3 text-[10px] font-black text-zinc-100 text-center outline-none focus:border-yellow-500/40" />
+                                <input type="number" placeholder="MONTHS" value={strategyInputs.months} onChange={e => setStrategyInputs({...strategyInputs, months: e.target.value})} className="bg-zinc-950 border border-zinc-800 rounded-lg p-3 text-[10px] font-black text-zinc-100 text-center outline-none focus:border-yellow-500/40" />
+                                <input type="number" placeholder="HRS/DAY" value={strategyInputs.hours} onChange={e => setStrategyInputs({...strategyInputs, hours: e.target.value})} className="bg-zinc-950 border border-zinc-800 rounded-lg p-3 text-[10px] font-black text-zinc-100 text-center outline-none focus:border-yellow-500/40" />
+                             </div>
+                             <button onClick={() => unlockStrategy(i, career.title)} className="w-full py-4 bg-yellow-500 text-zinc-950 rounded-xl text-[10px] font-black uppercase tracking-[0.2em] hover:bg-yellow-400">Unlock Strategy (10 Cr.)</button>
+                          </div>
+                        )}
+
+                        {/* Strategy Result */}
+                        {strategyResults[i] && (
+                           <div id={`strat-result-${i}`} className="mt-6 p-8 bg-zinc-900/50 border border-yellow-500/20 rounded-3xl space-y-6 animate-in fade-in">
+                              <div className="flex items-center justify-between">
+                                 <h5 className="text-[10px] font-black text-yellow-500 uppercase tracking-widest">Strategic Execution Blueprint</h5>
+                                 <button onClick={() => handleSaveToVault('strategy', i, career.title)} className="text-[9px] font-black text-zinc-500 hover:text-yellow-500 uppercase">Save to Vault</button>
+                              </div>
+                              <div className="prose-krypto prose-sm text-zinc-300"><ReactMarkdown>{strategyResults[i]}</ReactMarkdown></div>
+                           </div>
+                        )}
+
+                        {/* Market Intel Result */}
+                        {insightResults[i] && (
+                           <div id={`insight-result-${i}`} className="mt-6 p-8 bg-zinc-900/50 border border-blue-500/20 rounded-3xl space-y-6 animate-in fade-in">
+                              <div className="flex items-center justify-between">
+                                 <h5 className="text-[10px] font-black text-blue-400 uppercase tracking-widest">Market Topography Insights</h5>
+                                 <button onClick={() => handleSaveToVault('market-insight', i, career.title)} className="text-[9px] font-black text-zinc-500 hover:text-blue-400 uppercase">Save to Vault</button>
+                              </div>
+                              <div className="prose-krypto prose-sm text-zinc-300"><ReactMarkdown>{insightResults[i]}</ReactMarkdown></div>
+                           </div>
+                        )}
+
+                        {/* Sub-loading state */}
+                        {(subLoading[`strat-${i}`] || subLoading[`insight-${i}`]) && (
+                           <div className="mt-6 p-8 bg-zinc-900/40 border border-zinc-800 rounded-3xl flex flex-col items-center gap-4 animate-in fade-in">
+                              <div className="w-12 h-12 border-4 border-zinc-800 border-t-yellow-500 rounded-full animate-spin"></div>
+                              <p className="text-[9px] font-black text-zinc-500 uppercase tracking-widest">Synthesizing Protocol: {Math.round(subLoading[`strat-${i}`] ? subLoadingProgress[`strat-${i}`] : subLoadingProgress[`insight-${i}`])}%</p>
+                           </div>
+                        )}
+                     </div>
+                   ))}
                 </div>
              </div>
           </div>
-          <div className="space-y-12 pt-12 border-t border-zinc-900">
-            <h4 className="text-center text-[10px] font-black text-zinc-600 uppercase tracking-[0.8em] mb-8">Sequenced Paths</h4>
-            {result.careers.map((career, idx) => (
-              <div key={idx} className="bg-[#0c0c0e] border border-zinc-800 rounded-[48px] p-10 sm:p-16 shadow-3xl space-y-12 relative overflow-hidden group hover:border-zinc-700 transition-all border-b-4 border-zinc-900">
-                <div className="absolute top-0 right-0 w-48 h-48 bg-yellow-500/[0.01] rounded-bl-full pointer-events-none"></div>
-                
-                <div className="flex flex-col lg:flex-row justify-between gap-10 relative z-10">
-                   <div className="space-y-5 flex-1">
-                      <div className="flex items-center gap-3">
-                        <span className="px-2.5 py-1 bg-yellow-500/10 border border-yellow-500/20 rounded-lg text-yellow-500 text-[8px] font-black uppercase tracking-widest leading-none">Rank #{idx + 1}</span>
-                        <div className="h-px bg-zinc-800 flex-1"></div>
-                      </div>
-                      <h4 className="text-2xl sm:text-4xl font-black text-zinc-100 tracking-tighter uppercase leading-tight break-words">{career.title} <br /><span className="gold-text-gradient text-xl sm:text-2xl">{career.matchPercentage}% Alignment</span></h4>
-                      <p className="text-zinc-500 text-sm font-medium leading-relaxed max-w-2xl">{career.reason}</p>
-                   </div>
-                   <div className="bg-zinc-950 p-8 rounded-[32px] border border-zinc-900 shadow-2xl text-center min-w-[200px] border-b-4 border-green-500/30 self-start">
-                      <span className="text-[8px] font-black text-zinc-600 uppercase tracking-[0.3em] block mb-2">Comp Benchmark</span>
-                      <span className="text-2xl font-black text-green-500 block tracking-tighter">{career.salaryExpectation}</span>
-                      <span className="text-[8px] font-bold text-zinc-700 uppercase tracking-widest mt-1 block">Localized to {userLocation}</span>
-                   </div>
-                </div>
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 relative z-10">
-                   <div className="space-y-4">
-                      <button onClick={() => setActiveStrategyIdx(activeStrategyIdx === idx ? null : idx)} disabled={subLoading[`strat-${idx}`]} className="w-full h-14 bg-zinc-100 text-zinc-950 rounded-[20px] text-[9px] font-black uppercase tracking-widest hover:bg-yellow-500 transition-all flex items-center justify-center gap-3 active:scale-95 shadow-lg border-b-2 border-zinc-300 relative overflow-hidden">
-                         {subLoading[`strat-${idx}`] ? (
-                           <>
-                             <div className="absolute inset-0 bg-yellow-500 transition-all duration-300" style={{ width: `${subLoadingProgress[`strat-${idx}`]}%` }}></div>
-                             <span className="relative z-10">Strategy Forge {Math.round(subLoadingProgress[`strat-${idx}`])}%</span>
-                           </>
-                         ) : "Unlock Strategy (10 Cr)"}
-                      </button>
-                      {activeStrategyIdx === idx && (
-                        <div className="bg-zinc-950 border border-zinc-800 p-6 rounded-[24px] space-y-5 animate-in slide-in-from-top-4">
-                           <p className="text-[8px] font-black text-zinc-500 uppercase tracking-widest text-center">Simulation Parameters</p>
-                           <div className="grid grid-cols-3 gap-3">
-                              <div className="space-y-1">
-                                 <label className="text-[7px] text-zinc-600 uppercase font-black px-1">Budget ({userSymbol})</label>
-                                 <input type="text" placeholder={`${userSymbol}500`} value={strategyInputs.budget} onChange={e => setStrategyInputs({...strategyInputs, budget: e.target.value})} className="w-full bg-zinc-900 border border-zinc-800 rounded-lg p-2 text-[9px] text-zinc-300 outline-none focus:border-yellow-500/30" />
-                              </div>
-                              <div className="space-y-1">
-                                 <label className="text-[7px] text-zinc-600 uppercase font-black px-1">Months</label>
-                                 <input type="number" placeholder="3" value={strategyInputs.months} onChange={e => setStrategyInputs({...strategyInputs, months: e.target.value})} className="w-full bg-zinc-900 border border-zinc-800 rounded-lg p-2 text-[9px] text-zinc-300 outline-none focus:border-yellow-500/30" />
-                              </div>
-                              <div className="space-y-1">
-                                 <label className="text-[7px] text-zinc-600 uppercase font-black px-1">Daily Hrs</label>
-                                 <input type="number" placeholder="2" value={strategyInputs.hours} onChange={e => setStrategyInputs({...strategyInputs, hours: e.target.value})} className="w-full bg-zinc-900 border border-zinc-800 rounded-lg p-2 text-[9px] text-zinc-300 outline-none focus:border-yellow-500/30" />
-                              </div>
-                           </div>
-                           <button onClick={() => unlockStrategy(idx, career.title)} disabled={!strategyInputs.budget || !strategyInputs.months || !strategyInputs.hours} className="w-full py-2.5 bg-yellow-500 text-zinc-950 rounded-xl text-[8px] font-black uppercase tracking-widest hover:bg-yellow-400 active:scale-95 disabled:opacity-30">Deploy Simulation</button>
-                        </div>
-                      )}
-                      {strategyResults[idx] && (
-                        <div id={`strat-result-${idx}`} className="space-y-6 scroll-mt-24">
-                           <div className="bg-zinc-950 border border-zinc-800 p-8 rounded-[32px] animate-in fade-in slide-in-from-top-4 relative group/result">
-                              <div className="prose-krypto">
-                                 <ReactMarkdown>{strategyResults[idx]}</ReactMarkdown>
-                              </div>
-                           </div>
-                           <button onClick={() => handleSaveToVault('strategy', idx, career.title)} className="w-full py-3 bg-zinc-900 border border-zinc-800 text-zinc-400 text-[8px] font-black uppercase tracking-widest rounded-xl hover:text-yellow-500 hover:border-yellow-500/30 transition-all flex items-center justify-center gap-2">
-                              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7H5a2 2 0 00-2 2v9a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-3m-1 4l-3 3m0 0l-3-3m3 3V4" /></svg>
-                              Save Strategy to Vault
-                           </button>
-                        </div>
-                      )}
-                   </div>
-                   <div className="space-y-4">
-                      <button onClick={() => unlockInsights(idx, career.title)} disabled={subLoading[`insight-${idx}`]} className="w-full h-14 bg-zinc-800 text-zinc-300 rounded-[20px] text-[9px] font-black uppercase tracking-widest border border-zinc-700 hover:bg-zinc-700 hover:text-white transition-all flex items-center justify-center gap-3 active:scale-95 shadow-lg relative overflow-hidden">
-                         {subLoading[`insight-${idx}`] ? (
-                            <>
-                              <div className="absolute inset-0 bg-zinc-700 transition-all duration-300" style={{ width: `${subLoadingProgress[`insight-${idx}`]}%` }}></div>
-                              <span className="relative z-10">Market Audit {Math.round(subLoadingProgress[`insight-${idx}`])}%</span>
-                            </>
-                         ) : "Market Insights (10 Cr)"}
-                      </button>
-                      {insightResults[idx] && (
-                        <div id={`insight-result-${idx}`} className="space-y-6 scroll-mt-24">
-                           <div className="bg-zinc-950 border border-blue-500/20 p-8 rounded-[32px] animate-in fade-in slide-in-from-top-4 relative group/result">
-                              <div className="prose-krypto">
-                                 <ReactMarkdown>{insightResults[idx]}</ReactMarkdown>
-                              </div>
-                           </div>
-                           <button onClick={() => handleSaveToVault('market-insight', idx, career.title)} className="w-full py-3 bg-zinc-900 border border-zinc-800 text-zinc-400 text-[8px] font-black uppercase tracking-widest rounded-xl hover:text-blue-500 hover:border-blue-500/30 transition-all flex items-center justify-center gap-2">
-                              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7H5a2 2 0 00-2 2v9a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-3m-1 4l-3 3m0 0l-3-3m3 3V4" /></svg>
-                              Save Insights to Vault
-                           </button>
-                        </div>
-                      )}
-                   </div>
-                </div>
-                
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-8 pt-10 border-t border-zinc-900 relative z-10">
-                   <div className="space-y-5">
-                      <div className="flex items-center gap-3">
-                        <div className="w-8 h-8 rounded-lg bg-zinc-900 border border-zinc-800 flex items-center justify-center">
-                          <svg className="w-4 h-4 text-zinc-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" /></svg>
-                        </div>
-                        <span className="text-[10px] font-black text-zinc-600 uppercase tracking-widest">Baseline Skills</span>
-                      </div>
-                      <div className="flex flex-wrap gap-2">
-                         {career.requiredSkills.map((s, i) => (
-                           <span key={i} className="px-4 py-2 bg-zinc-950 border border-zinc-800 rounded-xl text-[9px] font-bold text-zinc-400 uppercase tracking-widest">{s}</span>
-                         ))}
-                      </div>
-                   </div>
-                   <div className="space-y-5">
-                      <div className="flex items-center gap-3">
-                        <div className="w-8 h-8 rounded-lg bg-blue-500/10 border border-blue-500/20 flex items-center justify-center">
-                          <svg className="w-4 h-4 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M9 12l2 2 4-4" /></svg>
-                        </div>
-                        <span className="text-[10px] font-black text-zinc-600 uppercase tracking-widest">Premium Certifications</span>
-                      </div>
-                      <div className="grid grid-cols-1 gap-3">
-                         {career.certifications.map((cert, i) => (
-                            <div key={i} className="p-4 bg-zinc-950 border border-zinc-900 rounded-2xl flex items-center gap-4 group hover:border-blue-500/30 transition-all">
-                               <div className="w-8 h-8 rounded-full bg-blue-500/5 flex items-center justify-center border border-blue-500/10">
-                                 <svg className="w-4 h-4 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
-                               </div>
-                               <div className="flex-1">
-                                  <span className="text-[10px] font-black text-zinc-200 uppercase tracking-tight block leading-none mb-1">{cert}</span>
-                                  <span className="text-[7px] font-black text-zinc-700 uppercase tracking-widest">Industry standard Verification</span>
-                               </div>
-                            </div>
-                         ))}
-                      </div>
-                   </div>
-                </div>
-              </div>
-            ))}
-          </div>
-          <div className="text-center pt-10 animate-in slide-in-from-bottom-4 duration-1000">
-             <button onClick={handleReset} className="px-10 py-5 bg-zinc-100 text-zinc-950 rounded-[28px] text-[10px] font-black uppercase tracking-[0.3em] hover:bg-yellow-500 active:scale-95 transition-all shadow-3xl border-b-4 border-zinc-300">New Mapping Protocol</button>
+
+          <div className="pt-20 text-center">
+             <button onClick={handleReset} className="px-10 py-5 bg-zinc-900 border border-zinc-800 text-zinc-500 rounded-2xl text-[10px] font-black uppercase tracking-[0.4em] hover:text-zinc-100 transition-all">New DNA Sequence</button>
           </div>
         </div>
       )}

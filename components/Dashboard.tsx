@@ -14,6 +14,8 @@ interface DashboardProps {
   messages: Message[];
   setMessages: React.Dispatch<React.SetStateAction<Message[]>>;
   onNewChat: () => void;
+  onVerifyLocation?: () => void;
+  onUpdateLocation?: (loc: string) => void;
 }
 
 const PLACEHOLDERS = [
@@ -32,12 +34,12 @@ const POLICY_CONTENT = {
 # Privacy Intelligence Protocol
 **Operational Level: Grade-A Secure**
 
-At Krypto AI, your professional DNA and career metadata are treated with absolute architectural integrity. Our infrastructure is built on the principle of "Data Zero," ensuring that your personal identifiers are never commoditized.
+At Krypto AI, your professional DNA and career metadata are treated with absolute architectural integrity. Our infrastructure is built on the principle of \"Data Zero,\" ensuring that your personal identifiers are never commoditized.
 
 - **Data Encapsulation**: All uploaded resumes and personality metrics are encrypted in transit via TLS 1.3 and at rest using AES-256 protocols.
 - **Neural Isolation**: We operate a strict firewall between user data and model training. Your unique professional history is used exclusively to power your individual Career Architecture simulations and is never used to train third-party LLMs.
 - **Identity Obfuscation**: Any visual data, including headshots or PII (Personally Identifiable Information) detected in document scans, is processed in volatile memory and purged immediately after the simulation concludes.
-- **Vault Sovereignty**: You retain 100% legal ownership of your career vault. At any moment, you may trigger a "Hard Purge," which executes a recursive deletion of all session logs and optimized assets from our nodes.
+- **Vault Sovereignty**: You retain 100% legal ownership of your career vault. At any moment, you may trigger a \"Hard Purge,\" which executes a recursive deletion of all session logs and optimized assets from our nodes.
   `,
   terms: `
 # Terms of Usage & Engagement
@@ -45,8 +47,8 @@ At Krypto AI, your professional DNA and career metadata are treated with absolut
 
 By initializing a session with Krypto AI, you agree to the following rigorous operational parameters. Any violation of these terms may result in immediate terminal suspension.
 
-- **Non-Malicious Optimization**: Krypto AI is designed for professional enhancement. Users are strictly prohibited from using the platform to generate fraudulent credentials, misrepresent identities, or maliciously attempt to disrupt automated recruitment systems through "prompt injection" techniques in resumes.
-- **Neural Protection**: Users agree not to scrape, reverse-engineer, or attempt "model extraction" on our proprietary Career Path Logic or the Krypto Intelligence Layer.
+- **Non-Malicious Optimization**: Krypto AI is designed for professional enhancement. Users are strictly prohibited from using the platform to generate fraudulent credentials, misrepresent identities, or maliciously attempt to disrupt automated recruitment systems through \"prompt injection\" techniques in resumes.
+- **Neural Protection**: Users agree not to scrape, reverse-engineer, or attempt \"model extraction\" on our proprietary Career Path Logic or the Krypto Intelligence Layer.
 - **Credit Allocation & Ledger**: Usage of high-performance neural compute is subject to the Krypto Unit Ledger. Credits are consumed upon successful inference and are non-transferable.
 - **Professional Liability**: While our simulations use 2026 market signals and RIASEC psychometrics to provide elite-level guidance, these results are strategic projections and do not constitute a guarantee of legal employment or salary contracts.
   `,
@@ -67,14 +69,13 @@ Krypto AI utilizes essential persistence identifiers to ensure your career traje
 
 Krypto AI adheres to the leading global standards in AI ethics and data protection sovereignty.
 
-- **IP Protection**: All brand assets, including the "KryptonPath" identity, "Krypto AI" neural engine, and "Executive Blueprint" templates, are the exclusive intellectual property of KryptonPath. Unauthorized reproduction or commercial resale of our platform's logic is strictly prohibited.
-- **AI Ethics Framework**: Our models are audited monthly for socioeconomic bias to ensure that our "Recruitment Index" provides meritocratic assessments regardless of geography or background.
+- **IP Protection**: All brand assets, including the \"KryptonPath\" identity, \"Krypto AI\" neural engine, and \"Executive Blueprint\" templates, are the exclusive intellectual property of KryptonPath. Unauthorized reproduction or commercial resale of our platform's logic is strictly prohibited.
+- **AI Ethics Framework**: Our models are audited monthly for socioeconomic bias to ensure that our \"Recruitment Index\" provides meritocratic assessments regardless of geography or background.
 - **Regulatory Alignment**: Fully aligned with GDPR (EU), CCPA (USA), and emerging global AI safety frameworks.
-- **Attribution**: "Crafted by KryptonPath" represents our commitment to architectural excellence in career technology. All AI-generated outputs for users are licensed for personal professional development.
+- **Attribution**: \"Crafted by KryptonPath\" represents our commitment to architectural excellence in career technology. All AI-generated outputs for users are licensed for personal professional development.
   `
 };
 
-// In-component type definition as per user constraints
 interface PersonalityTraitScores {
   analytic: number;
   creative: number;
@@ -84,12 +85,11 @@ interface PersonalityTraitScores {
   investigative: number;
 }
 
-// In-component RadarChart, replicated from CareerPath.tsx as per user constraints
 const RadarChart = ({ scores }: { scores: PersonalityTraitScores }) => {
   const max = 50;
   const size = 500;
   const center = size / 2;
-  const r = 170; // Larger radius for a bigger covered area
+  const r = 170; 
   const labels: (keyof PersonalityTraitScores)[] = ['analytic', 'creative', 'leadership', 'social', 'practical', 'investigative'];
 
   const [activeIdx, setActiveIdx] = useState<number | null>(null);
@@ -189,7 +189,7 @@ const RadarChart = ({ scores }: { scores: PersonalityTraitScores }) => {
 };
 
 
-const Dashboard: React.FC<DashboardProps> = ({ setActiveTab, messages, setMessages, onNewChat }) => {
+const Dashboard: React.FC<DashboardProps> = ({ setActiveTab, messages, setMessages, onNewChat, onVerifyLocation, onUpdateLocation }) => {
   const [chatSession, setChatSession] = useState<Chat | null>(null);
   const [currentInput, setCurrentInput] = useState('');
   const [loading, setLoading] = useState(true);
@@ -208,12 +208,10 @@ const Dashboard: React.FC<DashboardProps> = ({ setActiveTab, messages, setMessag
   const outreachFirstAttrRef = useRef<HTMLDivElement>(null);
   const interviewFirstAttrRef = useRef<HTMLDivElement>(null);
 
-  // Rule 1: Scroll to top on mount
   useEffect(() => {
     window.scrollTo({ top: 0, behavior: 'smooth' });
   }, []);
 
-  // Rule 2: Precision-centering for attribute discovery
   useEffect(() => {
     if (openSubFeatures) {
       const targetMap: Record<string, React.RefObject<HTMLDivElement>> = {
@@ -225,7 +223,6 @@ const Dashboard: React.FC<DashboardProps> = ({ setActiveTab, messages, setMessag
 
       const activeRef = targetMap[openSubFeatures];
       if (activeRef?.current) {
-        // Small timeout to allow the transition/render of conditional content
         setTimeout(() => {
           activeRef.current?.scrollIntoView({ behavior: 'smooth', block: 'center' });
         }, 100);
@@ -301,7 +298,6 @@ const Dashboard: React.FC<DashboardProps> = ({ setActiveTab, messages, setMessag
     onNewChat();
     removeFile();
     setCurrentInput('');
-    // Re-initialize chat session for the new chat
     const initChatSession = async () => {
         const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
         const session = ai.chats.create({ model: 'gemini-3-flash-preview', config: { systemInstruction: SYSTEM_INSTRUCTION }});
@@ -485,17 +481,17 @@ const Dashboard: React.FC<DashboardProps> = ({ setActiveTab, messages, setMessag
   
   return (
     <div className="max-w-6xl mx-auto py-12 px-6 space-y-32 pb-40">
-      {/* Hero Section */}
-      <div className="text-center space-y-8 animate-in fade-in slide-in-from-top-4 duration-1000">
-        <h2 className="text-5xl sm:text-8xl font-black tracking-tighter leading-none text-zinc-100 uppercase">
-          Welcome, <br /><span className="gold-text-gradient">Career Architect!</span>
-        </h2>
-        <p className="text-zinc-500 text-xl sm:text-2xl font-medium max-w-2xl mx-auto leading-relaxed">
-          Your dedicated AI career coach. Let's engineer your professional trajectory, validate your assets, and secure market dominance.
-        </p>
+      <div className="text-center space-y-10 animate-in fade-in slide-in-from-top-4 duration-1000">
+        <div className="space-y-4">
+          <h2 className="text-5xl sm:text-8xl font-black tracking-tighter leading-[0.9] text-zinc-100 uppercase">
+            Engineer Your <br /><span className="gold-text-gradient">Career DNA.</span>
+          </h2>
+          <p className="text-zinc-500 text-lg sm:text-xl font-black max-w-2xl mx-auto leading-relaxed uppercase tracking-[0.4em]">
+            The Intelligence Layer for Professional Identity Architecture.
+          </p>
+        </div>
         
         <div className="max-w-3xl mx-auto relative mt-12">
-          {/* Chatbot UI */}
           <div className="bg-zinc-900/40 border border-zinc-800 rounded-[40px] p-2 focus-within:border-yellow-500/40 focus-within:ring-[12px] focus-within:ring-yellow-500/5 transition-all shadow-3xl backdrop-blur-2xl overflow-hidden relative group">
             <div className="absolute inset-0 bg-gradient-to-br from-yellow-500/5 to-transparent opacity-0 group-focus-within:opacity-100 transition-opacity pointer-events-none"></div>
 
@@ -598,573 +594,319 @@ const Dashboard: React.FC<DashboardProps> = ({ setActiveTab, messages, setMessag
       </div>
 
       <div className="max-w-6xl mx-auto text-center mt-32 animate-in fade-in slide-in-from-bottom-8 duration-1000">
-        <h3 className="text-2xl font-black text-zinc-500 uppercase tracking-[0.4em]">
-          Explore The Labs<span className="gold-text-gradient">. Engineer Your Dominance.</span>
+        <h3 className="text-2xl font-black text-zinc-500 uppercase tracking-[0.4em] mb-4">
+          The <span className="gold-text-gradient">Krypto Labs</span>
         </h3>
+        <p className="text-zinc-600 font-medium max-w-xl mx-auto uppercase text-[10px] tracking-[0.3em]">Access specialized architectural modules to accelerate your career evolution.</p>
       </div>
       
+      {/* LABS GRID */}
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-8 animate-in fade-in slide-in-from-bottom-12 duration-1000">
+        {/* Lab 1: ATS Optimization */}
+        <div className={`p-10 rounded-[56px] border transition-all duration-700 flex flex-col justify-between group relative overflow-hidden ${openSubFeatures === 'ats' ? 'bg-zinc-900 border-yellow-500/40 shadow-2xl scale-[1.02]' : 'bg-[#0c0c0e] border-zinc-800 hover:border-zinc-700 hover:bg-zinc-900/50'}`}>
+           <div className="absolute top-0 right-0 w-32 h-32 bg-yellow-500/5 rounded-bl-full pointer-events-none group-hover:bg-yellow-500/10 transition-all duration-700"></div>
+           <div className="space-y-8 relative z-10">
+              <div className="w-16 h-16 bg-zinc-950 rounded-2xl border border-zinc-800 flex items-center justify-center group-hover:border-yellow-500/40 transition-all duration-500 shadow-xl">
+                  <svg className="w-8 h-8 text-zinc-500 group-hover:text-yellow-500 transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg>
+              </div>
+              <div className="space-y-3">
+                 <span className="text-[9px] font-black text-yellow-500 uppercase tracking-widest bg-yellow-500/10 px-3 py-1 rounded-full border border-yellow-500/20">Architecture Suite</span>
+                 <h4 className="text-3xl font-black text-white uppercase tracking-tight leading-none">ATS <span className="gold-text-gradient">Optimizer</span></h4>
+                 <p className="text-zinc-500 text-[13px] font-medium leading-relaxed">Turn your resume into a performance beast. We audit keywords, detect formatting discrepancies, and rebuild assets using the Google XYZ formula.</p>
+              </div>
+           </div>
+           <div className="flex gap-4 mt-12 relative z-10">
+              <button onClick={() => setOpenSubFeatures(openSubFeatures === 'ats' ? null : 'ats')} className="flex-1 py-4 bg-zinc-950 text-zinc-400 rounded-2xl text-[9px] font-black uppercase tracking-widest hover:bg-zinc-800 hover:text-white border border-zinc-800 transition-all shadow-lg active:scale-95">
+                {openSubFeatures === 'ats' ? 'Hide Details' : 'View Attributes'}
+              </button>
+              <button onClick={() => setActiveTab?.('Resume Scorer')} className="flex-1 py-4 bg-yellow-500 text-zinc-950 rounded-2xl text-[9px] font-black uppercase tracking-widest hover:bg-yellow-400 border-b-4 border-yellow-700 transition-all shadow-xl active:scale-95">
+                Enter Lab
+              </button>
+           </div>
+        </div>
+
+        {/* Lab 2: Career DNA Mapping */}
+        <div className={`p-10 rounded-[56px] border transition-all duration-700 flex flex-col justify-between group relative overflow-hidden ${openSubFeatures === 'career' ? 'bg-zinc-900 border-blue-500/40 shadow-2xl scale-[1.02]' : 'bg-[#0c0c0e] border-zinc-800 hover:border-zinc-700 hover:bg-zinc-900/50'}`}>
+           <div className="absolute top-0 right-0 w-32 h-32 bg-blue-500/5 rounded-bl-full pointer-events-none group-hover:bg-blue-500/10 transition-all duration-700"></div>
+           <div className="space-y-8 relative z-10">
+              <div className="w-16 h-16 bg-zinc-950 rounded-2xl border border-zinc-800 flex items-center justify-center group-hover:border-blue-500/40 transition-all duration-500 shadow-xl">
+                  <svg className="w-8 h-8 text-zinc-500 group-hover:text-blue-400 transition-colors" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M12 3V7" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/><path d="M12 17V21" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/><path d="M16 12C16 14.2091 14.2091 16 12 16C9.79086 16 8 14.2091 8 12C8 9.79086 9.79086 8 12 8C14.2091 8 16 9.79086 16 12Z" stroke="currentColor" strokeWidth="1.5"/><path d="M12 16C12 16 16 17 16 21" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/><path d="M12 8C12 8 8 7 8 3" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/></svg>
+              </div>
+              <div className="space-y-3">
+                 <span className="text-[9px] font-black text-blue-400 uppercase tracking-widest bg-blue-500/10 px-3 py-1 rounded-full border border-blue-500/20">Market Intelligence</span>
+                 <h4 className="text-3xl font-black text-white uppercase tracking-tight leading-none">DNA <span className="gold-text-gradient">Mapping</span></h4>
+                 <p className="text-zinc-500 text-[13px] font-medium leading-relaxed">Map personality vectors to global talent shifts. Get deep market signals, city topography, business hub analysis, and precise salary benchmarks.</p>
+              </div>
+           </div>
+           <div className="flex gap-4 mt-12 relative z-10">
+              <button onClick={() => setOpenSubFeatures(openSubFeatures === 'career' ? null : 'career')} className="flex-1 py-4 bg-zinc-950 text-zinc-400 rounded-2xl text-[9px] font-black uppercase tracking-widest hover:bg-zinc-800 hover:text-white border border-zinc-800 transition-all shadow-lg active:scale-95">
+                {openSubFeatures === 'career' ? 'Hide Details' : 'View Attributes'}
+              </button>
+              <button onClick={() => setActiveTab?.('Career Path')} className="flex-1 py-4 bg-blue-500 text-zinc-100 rounded-2xl text-[9px] font-black uppercase tracking-widest hover:bg-blue-400 border-b-4 border-blue-700 transition-all shadow-xl active:scale-95">
+                Enter Lab
+              </button>
+           </div>
+        </div>
+
+        {/* Lab 3: Outreach Architect */}
+        <div className={`p-10 rounded-[56px] border transition-all duration-700 flex flex-col justify-between group relative overflow-hidden ${openSubFeatures === 'outreach' ? 'bg-zinc-900 border-yellow-500/40 shadow-2xl scale-[1.02]' : 'bg-[#0c0c0e] border-zinc-800 hover:border-zinc-700 hover:bg-zinc-900/50'}`}>
+           <div className="absolute top-0 right-0 w-32 h-32 bg-yellow-500/5 rounded-bl-full pointer-events-none group-hover:bg-yellow-500/10 transition-all duration-700"></div>
+           <div className="space-y-8 relative z-10">
+              <div className="w-16 h-16 bg-zinc-950 rounded-2xl border border-zinc-800 flex items-center justify-center group-hover:border-yellow-500/40 transition-all duration-500 shadow-xl">
+                  <svg className="w-8 h-8 text-zinc-500 group-hover:text-yellow-500 transition-colors" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M3 8L7.89 11.26C9.93 12.64 12.63 13.03 14.9 12.16L21 10" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/><path d="M21 8V16C21 18.2091 19.2091 20 17 20H7C4.79086 20 3 18.2091 3 16V8C3 5.79086 4.79086 4 7 4H17C19.2091 4 21 5.79086 21 8Z" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/></svg>
+              </div>
+              <div className="space-y-3">
+                 <span className="text-[9px] font-black text-yellow-500 uppercase tracking-widest bg-yellow-500/10 px-3 py-1 rounded-full border border-yellow-500/20">Outreach Suite</span>
+                 <h4 className="text-3xl font-black text-white uppercase tracking-tight leading-none">Conversation <span className="gold-text-gradient">Forge</span></h4>
+                 <p className="text-zinc-500 text-[13px] font-medium leading-relaxed">High-conversion protocols for cold networking. We research company trajectory in real-time to craft messages that guarantee engagement.</p>
+              </div>
+           </div>
+           <div className="flex gap-4 mt-12 relative z-10">
+              <button onClick={() => setOpenSubFeatures(openSubFeatures === 'outreach' ? null : 'outreach')} className="flex-1 py-4 bg-zinc-950 text-zinc-400 rounded-2xl text-[9px] font-black uppercase tracking-widest hover:bg-zinc-800 hover:text-white border border-zinc-800 transition-all shadow-lg active:scale-95">
+                {openSubFeatures === 'outreach' ? 'Hide Details' : 'View Attributes'}
+              </button>
+              <button onClick={() => setActiveTab?.('Outreach Architect')} className="flex-1 py-4 bg-yellow-500 text-zinc-950 rounded-2xl text-[9px] font-black uppercase tracking-widest hover:bg-yellow-400 border-b-4 border-yellow-700 transition-all shadow-xl active:scale-95">
+                Enter Lab
+              </button>
+           </div>
+        </div>
+
+        {/* Lab 4: Interview Simulation */}
+        <div className={`p-10 rounded-[56px] border transition-all duration-700 flex flex-col justify-between group relative overflow-hidden ${openSubFeatures === 'interview' ? 'bg-zinc-900 border-blue-500/40 shadow-2xl scale-[1.02]' : 'bg-[#0c0c0e] border-zinc-800 hover:border-zinc-700 hover:bg-zinc-900/50'}`}>
+           <div className="absolute top-0 right-0 w-32 h-32 bg-blue-500/5 rounded-bl-full pointer-events-none group-hover:bg-blue-500/10 transition-all duration-700"></div>
+           <div className="space-y-8 relative z-10">
+              <div className="w-16 h-16 bg-zinc-950 rounded-2xl border border-zinc-800 flex items-center justify-center group-hover:border-blue-500/40 transition-all duration-500 shadow-xl">
+                  <svg className="w-8 h-8 text-zinc-500 group-hover:text-blue-400 transition-colors" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z" fill="currentColor"/><path d="M19 10v2a7 7 0 0 1-14 0v-2" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/></svg>
+              </div>
+              <div className="space-y-3">
+                 <span className="text-[9px] font-black text-blue-400 uppercase tracking-widest bg-blue-500/10 px-3 py-1 rounded-full border border-blue-500/20">Simulation Lab</span>
+                 <h4 className="text-3xl font-black text-white uppercase tracking-tight leading-none">Interview <span className="gold-text-gradient">Simulator</span></h4>
+                 <p className="text-zinc-500 text-[13px] font-medium leading-relaxed">Battle-test your responses in specific technical and behavioral environments. Get real-time neural feedback on your hiring readiness.</p>
+              </div>
+           </div>
+           <div className="flex gap-4 mt-12 relative z-10">
+              <button onClick={() => setOpenSubFeatures(openSubFeatures === 'interview' ? null : 'interview')} className="flex-1 py-4 bg-zinc-950 text-zinc-400 rounded-2xl text-[9px] font-black uppercase tracking-widest hover:bg-zinc-800 hover:text-white border border-zinc-800 transition-all shadow-lg active:scale-95">
+                {openSubFeatures === 'interview' ? 'Hide Details' : 'View Attributes'}
+              </button>
+              <button onClick={() => setActiveTab?.('Interview Lab')} className="flex-1 py-4 bg-blue-500 text-zinc-100 rounded-2xl text-[9px] font-black uppercase tracking-widest hover:bg-blue-400 border-b-4 border-blue-700 transition-all shadow-xl active:scale-95">
+                Enter Lab
+              </button>
+           </div>
+        </div>
+      </div>
+      
+      {/* DETAILED FEATURES SECTIONS (Rendered below grid when open) */}
       <div className="space-y-32">
-        {/* ATS Optimization Lab */}
-        <div className="flex flex-col gap-12 items-center">
-          <div className="text-center space-y-6">
-            <div className="inline-block px-4 py-1 rounded-full bg-yellow-500/10 border border-yellow-500/20 text-yellow-500 text-[9px] font-black uppercase tracking-widest">Architecture Suite</div>
-            <div className="w-24 h-24 bg-zinc-900/50 rounded-full border-4 border-zinc-800 flex items-center justify-center mx-auto relative overflow-hidden">
-                <svg className="w-12 h-12 text-zinc-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg>
-                <svg className="w-5 h-5 text-yellow-500 absolute top-5 right-5 animate-spin" style={{ animationDuration: '4s' }} fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"></path><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path></svg>
-            </div>
-            <h4 className="text-4xl sm:text-6xl font-black tracking-tight uppercase leading-tight">ATS <span className="gold-text-gradient">Optimization Lab</span></h4>
-            <p className="text-zinc-500 text-lg font-medium leading-relaxed max-w-2xl mx-auto">Turn your resume into a performance beast. We audit keywords, detect formatting discrepancies, and rebuild assets using the Google XYZ formula.</p>
-            <div className="flex justify-center items-center gap-4">
-                <button onClick={() => setOpenSubFeatures(openSubFeatures === 'ats' ? null : 'ats')} className="px-8 py-4 bg-zinc-800 text-zinc-300 rounded-2xl text-[10px] font-black uppercase tracking-widest hover:bg-zinc-700 transition-all shadow-lg">
-                {openSubFeatures === 'ats' ? 'Collapse Attributes' : 'Explore Attributes'}
-                </button>
-                <button onClick={() => setActiveTab?.('Resume Scorer')} className="px-8 py-4 bg-yellow-500 text-zinc-950 rounded-2xl text-[10px] font-black uppercase tracking-widest hover:bg-yellow-400 active:scale-95 transition-all shadow-lg border-b-2 border-yellow-700">
-                Explore Resume Scorer
-                </button>
-            </div>
+        {/* Detail: ATS Optimization Lab */}
+        {openSubFeatures === 'ats' && (
+          <div className="w-full max-w-4xl mx-auto space-y-20 animate-in fade-in slide-in-from-bottom-8 duration-500">
+            <BrandedScreenshot containerRef={atsFirstAttrRef} title="Recruitment Index" intro="Leverage a multi-dimensional algorithmic audit that quantifies your marketability. Our engine simulates the decision-making patterns of thousands of ATS systems and elite recruiters to verify your asset's competitive standing.">
+              <div className="flex flex-col items-center gap-10">
+                <div className="relative w-48 h-48 sm:w-56 sm:h-56">
+                  <svg className="w-full h-full transform -rotate-90">
+                      <circle cx="50%" cy="50%" r={radius} className="stroke-zinc-800" strokeWidth="12" fill="none" />
+                      <circle
+                          cx="50%" cy="50%"
+                          r={radius}
+                          className={`fill-none transition-all duration-1500 ease-out ${scoreColors.stroke}`}
+                          strokeWidth="12"
+                          strokeDasharray={circumference}
+                          strokeDashoffset={scoreOffset}
+                          strokeLinecap="round"
+                      />
+                  </svg>
+                  <div className={`absolute inset-0 flex items-center justify-center flex-col`}>
+                      <span className={`text-6xl font-black tracking-tighter ${scoreColors.text}`}>{score}</span>
+                      <span className={`text-[9px] font-black uppercase tracking-[0.3em] ${scoreColors.text}`}>Recruitment Index</span>
+                  </div>
+                </div>
+                  <div className="w-full space-y-8">
+                     {[
+                        { l: 'Impact Quantization', v: 25, d: "Metric-driven accomplishments and quantifiable performance indicators.", color: 'bg-red-500' },
+                        { l: 'Keyword Alignment', v: 35, d: "Industry-specific terminology and skill-set semantic density.", color: 'bg-yellow-500' },
+                        { l: 'Recruiter Readability', v: 60, d: "Visual hierarchy optimization for the 6-second recruiter glance.", color: 'bg-blue-500' },
+                        { l: 'ATS Parsability', v: 72, d: "Structural compliance with automated parsing and ranking algorithms.", color: 'bg-purple-500' }
+                     ].map((item) => (
+                       <div key={item.l}>
+                           <div className="flex justify-between items-baseline">
+                               <p className="text-sm font-black text-zinc-300 uppercase tracking-widest">{item.l}</p>
+                               <p className="text-sm font-black text-zinc-300">{item.v}%</p>
+                           </div>
+                           <p className="text-xs font-medium text-zinc-500 mt-1">{item.d}</p>
+                           <div className="mt-3 h-2 w-full bg-zinc-800 rounded-full">
+                              <div className={`${item.color} h-2 rounded-full`} style={{ width: `${item.v}%` }}></div>
+                           </div>
+                       </div>
+                     ))}
+                  </div>
+              </div>
+            </BrandedScreenshot>
+
+            <BrandedScreenshot title="Executive Audit Findings" intro="Identify critical structural vulnerabilities that trigger rejection filters. Our diagnostic engine performs a granular sweep of your document's logic, tone, and hierarchy to meet the high bar of executive-level hiring teams.">
+              <p className="text-zinc-300 font-medium leading-relaxed italic text-lg border-l-4 border-yellow-500 pl-6">
+                \"Remove the dual phone number listing; one mobile number is sufficient and cleaner. Eliminate the 'Microsoft Office tools' from the Skills section immediately—it signals technological illiteracy for a Programmer II role. Consider switching to a single-column layout to ensure 100% parsing accuracy across older ATS systems, as the current split layout can sometimes confuse reading order. Remove 'Sample preparation' unless it refers to specific data sampling techniques, then specify the technology. Your summary lacks quantifiable impact; it must be re-engineered to lead with metrics.\"
+              </p>
+            </BrandedScreenshot>
+
+            <BrandedScreenshot title="Impact Quantization Engine" intro="Convert passive task descriptions into measurable outcomes that demonstrate immediate ROI. By applying the Google XYZ architectural logic, we ensure every bullet point proves your technical value through data-driven performance indicators.">
+                <div className="space-y-4">
+                  <p className="text-xl font-black text-zinc-100 uppercase tracking-tight">Rewrite the DHI Mortgage bullet to quantify the efficiency gain rather than just stating the volume of actions.</p>
+                  <div className="px-4 py-2 bg-yellow-500/10 border border-yellow-500/20 rounded-full inline-flex items-center gap-2"><span className="w-1.5 h-1.5 rounded-full bg-yellow-500"></span><span className="text-xs font-black text-yellow-500 uppercase">Logic Tier 1</span></div>
+                </div>
+                <div className="mt-8 grid grid-cols-1 gap-8">
+                  <div className="p-6 bg-red-500/5 border-l-4 border-red-500 rounded-r-2xl">
+                    <p className="text-xs font-black text-red-400 uppercase tracking-widest mb-2">Original Deficiency</p>
+                    <p className="text-zinc-400 italic">\"Prepares programs requiring a wide variety and over 100 internal processing actions.\"</p>
+                  </div>
+                  <div className="p-6 bg-green-500/5 border-l-4 border-green-500 rounded-r-2xl">
+                    <p className="text-xs font-black text-green-400 uppercase tracking-widest mb-2">Architected (XYZ Formula)</p>
+                    <p className="font-bold text-zinc-100">ENGINEERED A MORTGAGE PROCESSING AUTOMATION SCRIPT HANDLING 100+ DAILY INTERNAL ACTIONS, REDUCING MANUAL DATA ENTRY TIME BY 30% USING PYTHON AND SQL.</p>
+                  </div>
+                </div>
+                <div className="mt-8 p-6 bg-yellow-500/5 border border-yellow-500/10 rounded-2xl">
+                  <p className="text-xs font-black text-yellow-400 uppercase tracking-widest mb-2">Rationale / Why:</p>
+                  <p className="text-zinc-400 text-sm">The original bullet describes a task (preparing programs). The improvement uses the XYZ formula to demonstrate value (time reduction) and specific tools, proving ROI to the employer.</p>
+                </div>
+            </BrandedScreenshot>
+
+            <BrandedScreenshot title="Krypto Executive Blueprint" intro="Deploy a master-tier career asset engineered for maximum parsability and psychological impact. Our blueprint optimizes whitespace, semantic density, and typographic hierarchy to capture a recruiter's attention in the critical 6-second window.">
+              <div className="bg-white text-slate-800 p-8 rounded-2xl shadow-inner-lg max-w-full overflow-x-auto">
+                  <div className="prose prose-slate">
+                      <h1><b>JANE DOE</b></h1>
+                      <h3><b>SENIOR SOFTWARE ENGINEER</b></h3>
+                      <blockquote>
+                        <p><b>San Francisco, CA</b> | <b>(123) 456-7890</b> | <b>jane.doe@email.com</b> | <b>linkedin.com/in/janedoe</b></p>
+                      </blockquote>
+                      <hr />
+                      <h2><b>SUMMARY</b></h2>
+                      <p>Results-driven Senior Software Engineer with 8+ years of experience architecting and deploying scalable backend systems. Proven ability to lead cross-functional teams in agile environments, resulting in a <b>40% reduction</b> in server costs and a <b>15% improvement</b> in application performance. Seeking to leverage expertise in cloud infrastructure and distributed systems to solve complex challenges at a forward-thinking tech company.</p>
+                      <hr />
+                      <h2><b>KEY SKILLS</b></h2>
+                      <ul>
+                        <li><b>Technical:</b> <b>Python</b>, Golang, Java, <b>AWS</b>, GCP, Docker, Kubernetes, Terraform</li>
+                        <li><b>Strategic:</b> System Design, Microservices Architecture, CI/CD, Agile Methodologies</li>
+                      </ul>
+                      <hr />
+                      <h2><b>PROFESSIONAL EXPERIENCE</b></h2>
+                      <h3><b>Senior Software Engineer</b></h3>
+                      <blockquote>
+                          <p><b>Tech Solutions Inc.</b> | <b>San Francisco, CA</b> | <b>Jan 2020 – Present</b></p>
+                      </blockquote>
+                      <ul>
+                          <li>Architected a new microservices-based platform using <b>Golang</b> and <b>Kubernetes</b>, improving system reliability by <b>99.95%</b> and supporting a <b>200% increase</b> in user traffic.</li>
+                          <li>Led a team of <b>5 engineers</b> to migrate legacy infrastructure to AWS, reducing monthly operational costs by <b>$50,000</b>.</li>
+                      </ul>
+                  </div>
+              </div>
+            </BrandedScreenshot>
           </div>
-          
-          {openSubFeatures === 'ats' && (
-            <div className="w-full max-w-4xl space-y-20 animate-in fade-in slide-in-from-bottom-8 duration-500">
-              <BrandedScreenshot containerRef={atsFirstAttrRef} title="Recruitment Index" intro="Leverage a multi-dimensional algorithmic audit that quantifies your marketability. Our engine simulates the decision-making patterns of thousands of ATS systems and elite recruiters to verify your asset's competitive standing.">
-                <div className="flex flex-col items-center gap-10">
-                  <div className="relative w-48 h-48 sm:w-56 sm:h-56">
-                    <svg className="w-full h-full transform -rotate-90">
-                        <circle cx="50%" cy="50%" r={radius} className="stroke-zinc-800" strokeWidth="12" fill="none" />
-                        <circle
-                            cx="50%" cy="50%"
-                            r={radius}
-                            className={`fill-none transition-all duration-1500 ease-out ${scoreColors.stroke}`}
-                            strokeWidth="12"
-                            strokeDasharray={circumference}
-                            strokeDashoffset={scoreOffset}
-                            strokeLinecap="round"
-                        />
-                    </svg>
-                    <div className={`absolute inset-0 flex items-center justify-center flex-col`}>
-                        <span className={`text-6xl font-black tracking-tighter ${scoreColors.text}`}>{score}</span>
-                        <span className={`text-[9px] font-black uppercase tracking-[0.3em] ${scoreColors.text}`}>Recruitment Index</span>
-                    </div>
-                  </div>
-                    <div className="w-full space-y-8">
-                       {[
-                          { l: 'Impact Quantization', v: 25, d: "Metric-driven accomplishments and quantifiable performance indicators.", color: 'bg-red-500' },
-                          { l: 'Keyword Alignment', v: 35, d: "Industry-specific terminology and skill-set semantic density.", color: 'bg-yellow-500' },
-                          { l: 'Recruiter Readability', v: 60, d: "Visual hierarchy optimization for the 6-second recruiter glance.", color: 'bg-blue-500' },
-                          { l: 'ATS Parsability', v: 72, d: "Structural compliance with automated parsing and ranking algorithms.", color: 'bg-purple-500' }
-                       ].map((item) => (
-                         <div key={item.l}>
-                             <div className="flex justify-between items-baseline">
-                                 <p className="text-sm font-black text-zinc-300 uppercase tracking-widest">{item.l}</p>
-                                 <p className="text-sm font-black text-zinc-300">{item.v}%</p>
-                             </div>
-                             <p className="text-xs font-medium text-zinc-500 mt-1">{item.d}</p>
-                             <div className="mt-3 h-2 w-full bg-zinc-800 rounded-full">
-                                <div className={`${item.color} h-2 rounded-full`} style={{ width: `${item.v}%` }}></div>
-                             </div>
-                         </div>
-                       ))}
-                    </div>
-                </div>
-              </BrandedScreenshot>
+        )}
 
-              <BrandedScreenshot title="Executive Audit Findings" intro="Identify critical structural vulnerabilities that trigger rejection filters. Our diagnostic engine performs a granular sweep of your document's logic, tone, and hierarchy to meet the high bar of executive-level hiring teams.">
-                <p className="text-zinc-300 font-medium leading-relaxed italic text-lg border-l-4 border-yellow-500 pl-6">
-                  "Remove the dual phone number listing; one mobile number is sufficient and cleaner. Eliminate the 'Microsoft Office tools' from the Skills section immediately—it signals technological illiteracy for a Programmer II role. Consider switching to a single-column layout to ensure 100% parsing accuracy across older ATS systems, as the current split layout can sometimes confuse reading order. Remove 'Sample preparation' unless it refers to specific data sampling techniques, then specify the technology. Your summary lacks quantifiable impact; it must be re-engineered to lead with metrics."
-                </p>
-              </BrandedScreenshot>
+        {/* Detail: Career DNA Mapping */}
+        {openSubFeatures === 'career' && (
+          <div className="w-full max-w-4xl mx-auto space-y-20 animate-in fade-in slide-in-from-bottom-8 duration-500">
+             <BrandedScreenshot containerRef={careerFirstAttrRef} title="Career DNA: Market Topography" intro="Architect your career around high-yield economic corridors. We analyze the intersection of regional salary parity, emerging business hubs, and sector-specific demand to identify the precise locations where your skills command the highest premium.">
+                 <div className="space-y-4 text-center max-w-sm mx-auto">
+                     <p className="text-xs font-bold uppercase tracking-widest text-zinc-500">Detecting Local Salary Parity and Business Hubs.</p>
+                     <button className="w-full py-4 bg-white text-black rounded-full font-bold uppercase tracking-widest text-[10px]" onClick={onVerifyLocation}>Detect City</button>
+                     <input type="text" placeholder="ENTER CITY NAME..." className="w-full py-4 bg-zinc-800 text-center rounded-full font-bold text-zinc-500 placeholder:text-zinc-700 outline-none focus:border-blue-500/50 border border-transparent transition-all" onChange={(e) => onUpdateLocation?.(e.target.value)} />
+                     <button className="w-full py-4 bg-zinc-700 text-white rounded-full font-bold uppercase tracking-widest text-[10px]">Update City</button>
+                 </div>
+             </BrandedScreenshot>
 
-              <BrandedScreenshot title="Impact Quantization Engine" intro="Convert passive task descriptions into measurable outcomes that demonstrate immediate ROI. By applying the Google XYZ architectural logic, we ensure every bullet point proves your technical value through data-driven performance indicators.">
-                  <div className="space-y-4">
-                    <p className="text-xl font-black text-zinc-100 uppercase tracking-tight">Rewrite the DHI Mortgage bullet to quantify the efficiency gain rather than just stating the volume of actions.</p>
-                    <div className="px-4 py-2 bg-yellow-500/10 border border-yellow-500/20 rounded-full inline-flex items-center gap-2"><span className="w-1.5 h-1.5 rounded-full bg-yellow-500"></span><span className="text-xs font-black text-yellow-500 uppercase">Logic Tier 1</span></div>
-                  </div>
-                  <div className="mt-8 grid grid-cols-1 gap-8">
-                    <div className="p-6 bg-red-500/5 border-l-4 border-red-500 rounded-r-2xl">
-                      <p className="text-xs font-black text-red-400 uppercase tracking-widest mb-2">Original Deficiency</p>
-                      <p className="text-zinc-400 italic">"Prepares programs requiring a wide variety and over 100 internal processing actions."</p>
-                    </div>
-                    <div className="p-6 bg-green-500/5 border-l-4 border-green-500 rounded-r-2xl">
-                      <p className="text-xs font-black text-green-400 uppercase tracking-widest mb-2">Architected (XYZ Formula)</p>
-                      <p className="font-bold text-zinc-100">ENGINEERED A MORTGAGE PROCESSING AUTOMATION SCRIPT HANDLING 100+ DAILY INTERNAL ACTIONS, REDUCING MANUAL DATA ENTRY TIME BY 30% USING PYTHON AND SQL.</p>
-                    </div>
-                  </div>
-                  <div className="mt-8 p-6 bg-yellow-500/5 border border-yellow-500/10 rounded-2xl">
-                    <p className="text-xs font-black text-yellow-400 uppercase tracking-widest mb-2">Rationale / Why:</p>
-                    <p className="text-zinc-400 text-sm">The original bullet describes a task (preparing programs). The improvement uses the XYZ formula to demonstrate value (time reduction) and specific tools, proving ROI to the employer.</p>
-                  </div>
-              </BrandedScreenshot>
-
-              <BrandedScreenshot title="Krypto Executive Blueprint" intro="Deploy a master-tier career asset engineered for maximum parsability and psychological impact. Our blueprint optimizes whitespace, semantic density, and typographic hierarchy to capture a recruiter's attention in the critical 6-second window.">
-                <div className="bg-white text-slate-800 p-8 rounded-2xl shadow-inner-lg max-w-full overflow-x-auto">
-                    <div className="prose prose-slate">
-                        <h1><b>JANE DOE</b></h1>
-                        <h3><b>SENIOR SOFTWARE ENGINEER</b></h3>
-                        <blockquote>
-                          <p><b>San Francisco, CA</b> | <b>(123) 456-7890</b> | <b>jane.doe@email.com</b> | <b>linkedin.com/in/janedoe</b></p>
-                        </blockquote>
-                        <hr />
-                        <h2><b>SUMMARY</b></h2>
-                        <p>Results-driven Senior Software Engineer with 8+ years of experience architecting and deploying scalable backend systems. Proven ability to lead cross-functional teams in agile environments, resulting in a <b>40% reduction</b> in server costs and a <b>15% improvement</b> in application performance. Seeking to leverage expertise in cloud infrastructure and distributed systems to solve complex challenges at a forward-thinking tech company.</p>
-                        <hr />
-                        <h2><b>KEY SKILLS</b></h2>
-                        <ul>
-                          <li><b>Technical:</b> <b>Python</b>, Golang, Java, <b>AWS</b>, GCP, Docker, Kubernetes, Terraform</li>
-                          <li><b>Strategic:</b> System Design, Microservices Architecture, CI/CD, Agile Methodologies</li>
-                        </ul>
-                        <hr />
-                        <h2><b>PROFESSIONAL EXPERIENCE</b></h2>
-                        <h3><b>Senior Software Engineer</b></h3>
-                        <blockquote>
-                            <p><b>Tech Solutions Inc.</b> | <b>San Francisco, CA</b> | <b>Jan 2020 – Present</b></p>
-                        </blockquote>
-                        <ul>
-                            <li>Architected a new microservices-based platform using <b>Golang</b> and <b>Kubernetes</b>, improving system reliability by <b>99.95%</b> and supporting a <b>200% increase</b> in user traffic.</li>
-                            <li>Led a team of <b>5 engineers</b> to migrate legacy infrastructure to AWS, reducing monthly operational costs by <b>$50,000</b>.</li>
-                        </ul>
-                    </div>
-                </div>
-              </BrandedScreenshot>
-              
-              <BrandedScreenshot title="Overseas Optimization Protocol" intro="Optimize your professional identity for international mobility. This protocol re-architects your asset's structural DNA to align with regional legal requirements, visa compliance markers, and the cultural expectations of global business hubs.">
-                  <div className="space-y-6">
-                      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                          <div>
-                              <label className="text-[10px] font-bold text-zinc-500 uppercase tracking-widest">Target Company (for Keywords)</label>
-                              <input type="text" readOnly value="Siemens" className="mt-2 w-full bg-zinc-800 rounded-xl p-3 font-bold text-sm text-zinc-300 border border-zinc-700"/>
-                          </div>
-                          <div>
-                              <label className="text-[10px] font-bold text-zinc-500 uppercase tracking-widest">Target Country</label>
-                              <input type="text" readOnly value="Germany" className="mt-2 w-full bg-zinc-800 rounded-xl p-3 font-bold text-sm text-zinc-300 border border-zinc-700"/>
-                          </div>
-                      </div>
-                      <div>
-                          <label className="text-[10px] font-bold text-zinc-500 uppercase tracking-widest">Visa Status</label>
-                          <input type="text" readOnly value="Working Visa (Valid until 2028)" className="mt-2 w-full bg-zinc-800 rounded-xl p-3 font-bold text-sm text-zinc-300 border border-zinc-700"/>
-                      </div>
-                      <button className="w-full py-4 bg-blue-500 text-white rounded-2xl font-bold text-[10px] uppercase tracking-[0.2em]">Deploy Customization (10 CR)</button>
-
-                      <div className="mt-8 pt-6 border-t border-zinc-800/50">
-                          <p className="text-center text-[10px] font-bold text-zinc-500 uppercase tracking-widest mb-4">Result Snippet: Header Re-Architecture</p>
-                          <div className="grid grid-cols-2 gap-4">
-                              <div className="p-4 bg-red-500/5 border border-red-500/20 rounded-xl">
-                                  <p className="text-[9px] font-bold text-red-400 uppercase mb-2">Before</p>
-                                  <p className="text-xs text-zinc-400"><b>San Francisco, CA</b> | <b>(123) 456-7890</b></p>
-                              </div>
-                              <div className="p-4 bg-green-500/5 border border-green-500/20 rounded-xl">
-                                  <p className="text-[9px] font-bold text-green-400 uppercase mb-2">After</p>
-                                  <p className="text-xs text-zinc-200"><b>San Francisco, CA</b> | <b>Germany</b> | <b>Working Visa (Valid until 2028)</b></p>
-                              </div>
-                          </div>
-                      </div>
-                  </div>
-              </BrandedScreenshot>
-
-            </div>
-          )}
-        </div>
-
-        {/* Career DNA Mapping */}
-        <div className="flex flex-col gap-12 items-center">
-           <div className="text-center space-y-6">
-            <div className="inline-block px-4 py-1 rounded-full bg-blue-500/10 border border-blue-500/20 text-blue-500 text-[9px] font-black uppercase tracking-widest">Market Intelligence</div>
-            <div className="w-24 h-24 bg-zinc-900/50 rounded-full border-4 border-zinc-800 flex items-center justify-center mx-auto">
-                <svg className="w-12 h-12" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                    <path d="M12 3V7" stroke="#3b82f6" strokeWidth="1.5" strokeLinecap="round"/>
-                    <path d="M12 17V21" stroke="#3b82f6" strokeWidth="1.5" strokeLinecap="round"/>
-                    <path d="M16 12C16 14.2091 14.2091 16 12 16C9.79086 16 8 14.2091 8 12C8 9.79086 9.79086 8 12 8C14.2091 8 16 9.79086 16 12Z" stroke="#a5b4fc" strokeWidth="1.5"/>
-                    <path d="M12 16C12 16 16 17 16 21" stroke="#3b82f6" strokeWidth="1.5" strokeLinecap="round"/>
-                    <path d="M12 8C12 8 8 7 8 3" stroke="#3b82f6" strokeWidth="1.5" strokeLinecap="round"/>
-                    <circle cx="12" cy="12" r="1.5" className="fill-yellow-400 animate-pulse" />
-                    <circle cx="8" cy="3" r="1.5" className="fill-yellow-400 animate-pulse" style={{ animationDelay: '0.2s' }} />
-                    <circle cx="16" cy="21" r="1.5" className="fill-yellow-400 animate-pulse" style={{ animationDelay: '0.4s' }} />
-                </svg>
-            </div>
-            <h4 className="text-4xl sm:text-6xl font-black tracking-tight uppercase leading-tight">Career <span className="gold-text-gradient">DNA Mapping</span></h4>
-            <p className="text-zinc-500 text-lg font-medium leading-relaxed max-w-2xl mx-auto">Map personality vectors to global talent shifts. Get deep market signals, city topography, business hub analysis, and precise salary benchmarks.</p>
-            <div className="flex justify-center items-center gap-4">
-                <button onClick={() => setOpenSubFeatures(openSubFeatures === 'career' ? null : 'career')} className="px-8 py-4 bg-zinc-800 text-zinc-300 rounded-2xl text-[10px] font-black uppercase tracking-widest hover:bg-zinc-700 transition-all shadow-lg">
-                {openSubFeatures === 'career' ? 'Collapse Attributes' : 'Explore Attributes'}
-                </button>
-                <button onClick={() => setActiveTab?.('Career Path')} className="px-8 py-4 bg-blue-500 text-zinc-100 rounded-2xl text-[10px] font-black uppercase tracking-widest hover:bg-blue-400 active:scale-95 transition-all shadow-lg border-b-2 border-blue-700">
-                Explore Career Path
-                </button>
-            </div>
-          </div>
-          {openSubFeatures === 'career' && (
-             <div className="w-full max-w-4xl space-y-20 animate-in fade-in slide-in-from-bottom-8 duration-500">
-                <BrandedScreenshot containerRef={careerFirstAttrRef} title="Career DNA: Market Topography" intro="Architect your career around high-yield economic corridors. We analyze the intersection of regional salary parity, emerging business hubs, and sector-specific demand to identify the precise locations where your skills command the highest premium.">
-                    <div className="space-y-4 text-center max-w-sm mx-auto">
-                        <p className="text-xs font-bold uppercase tracking-widest text-zinc-500">Detecting Local Salary Parity and Business Hubs.</p>
-                        <button className="w-full py-4 bg-white text-black rounded-full font-bold">DETECT CITY</button>
-                        <input type="text" placeholder="ENTER CITY NAME..." className="w-full py-4 bg-zinc-800 text-center rounded-full font-bold text-zinc-500 placeholder:text-zinc-700"/>
-                        <button className="w-full py-4 bg-zinc-700 text-white rounded-full font-bold">UPDATE CITY</button>
-                    </div>
-                </BrandedScreenshot>
-
-                 <BrandedScreenshot title="Career DNA: Protocol Selection" intro="Calibrate the AI's logic engine based on your specific career trajectory. Protocol selection ensures that our neural simulations apply the appropriate depth of analysis for leadership pivots or initial market entry.">
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-                      <div className="p-6 bg-zinc-900 rounded-3xl text-center border border-zinc-800">
-                        <div className="w-20 h-20 mx-auto mb-4 flex items-center justify-center">
-                            <svg viewBox="0 0 24 24" className="w-14 h-14">
-                                <path d="M5 5.39C5 4.07 6.07 3 7.39 3H16.61C17.93 3 19 4.07 19 5.39V12C19 17.35 13.38 20.38 12.34 20.85C12.13 20.94 11.87 20.94 11.66 20.85C10.62 20.38 5 17.35 5 12V5.39Z" 
-                                    fill="#18181b" 
-                                    stroke="#eab308" 
-                                    strokeWidth="1.5"
-                                />
-                                <rect x="10" y="1" width="4" height="2" rx="1" fill="#eab308"/>
-                                <path d="M9.5 12.5L11.5 14.5L15.5 10.5" stroke="black" strokeOpacity="0.5" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"/>
-                                <path d="M9 12L11 14L15 10" stroke="#eab308" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" fill="none"/>
-                            </svg>
-                        </div>
-                        <h4 className="font-black text-2xl text-white">EXPERIENCED</h4>
-                        <p className="text-xs font-bold text-zinc-500 tracking-widest">STRATEGIC PIVOT • GROWTH MAPPING</p>
-                        <button className="mt-6 w-full py-3 bg-yellow-500 text-black rounded-full font-bold">35 CREDITS</button>
-                      </div>
-                       <div className="p-6 bg-zinc-900 rounded-3xl text-center border border-zinc-800">
-                        <div className="w-20 h-20 mx-auto mb-4 rounded-2xl bg-blue-500 flex items-center justify-center"><svg viewBox="0 0 24 24" className="w-12 h-12 text-black" fill="none" stroke="currentColor" strokeWidth="1.5"><path d="M12 14l9-5-9-5-9 5 9 5z"/><path d="M12 14l6.16-3.422a12.083 12.083 0 01.665 6.479A11.952 11.952 0 0012 20.055a11.952 11.952 0 00-6.824-2.998 12.078 12.078 0 01.665-6.479L12 14z"/><path d="M12 14l9-5-9-5-9 5 9 5z" stroke-linejoin="round"/></svg></div>
-                        <h4 className="font-black text-2xl text-white">FRESHER</h4>
-                        <p className="text-xs font-bold text-zinc-500 tracking-widest">ACADEMIC ANALYSIS • POTENTIAL MAPPING</p>
-                         <button className="mt-6 w-full py-3 bg-zinc-700 text-white rounded-full font-bold">25 CREDITS</button>
-                      </div>
-                    </div>
-                </BrandedScreenshot>
-
-                <BrandedScreenshot title="Neural Identity Sequence" intro="Capture your professional essence through a proprietary psychometric vector. This sequence acts as a digital fingerprint of your natural aptitude, mapping analytic, creative, and leadership traits into a visualize strategic baseline.">
-                    <RadarChart scores={sampleScores} />
-                     <div className="text-center mt-8 space-y-4">
-                        <div className="px-4 py-2 bg-zinc-800 rounded-full inline-block text-sm font-mono text-yellow-500 tracking-widest">{dnaCode}</div>
-                        <p className="text-xs font-bold text-zinc-500 uppercase tracking-widest">Sequence representing your unique professional architecture.</p>
-                    </div>
-                </BrandedScreenshot>
-
-                <BrandedScreenshot title="Archetype Decoding" intro="Synthesize complex personality data into a high-impact narrative. This process identifies your professional archetype, defining your unique value proposition in a way that resonates with organizational leadership and recruitment teams.">
-                   <p className="text-lg font-bold text-zinc-200 leading-relaxed">"DNA Code: S15-A10-C10-L10-P0 (The Social Catalyst). Your profile exhibits a distinct 'Human-Bridge' configuration. With a dominant Social score (15) balanced by equal Analytic, Creative, and Leadership traits (10), you excel at translating complex value propositions into human narratives. The critical zero score in Practicality indicates a strong aversion to manual, repetitive operations or purely mechanical implementation; you belong in the layer of strategy and relationship."</p>
-                </BrandedScreenshot>
-
-                <BrandedScreenshot title="Ideal Role Alignment" intro="Achieve perfect market-skill alignment through data-driven role selection. Our engine matches your unique DNA to high-velocity career tracks, providing a precision match index that reduces search friction and maximizes earnings potential.">
-                  <div className="space-y-4">
-                    <p className="text-xs font-bold text-yellow-500 uppercase">Rank #1</p>
-                    <h4 className="text-3xl font-black text-white">DECENTRALIZED COMMUNITY ARCHITECT (WEB3)</h4>
-                    <p className="text-3xl font-black gold-text-gradient">94% ALIGNMENT</p>
-                    <p className="text-zinc-400 leading-relaxed">This role capitalizes on your peak Social score (15) to manage distributed human networks, while your Creative (10) and Leadership (10) traits allow you to design governance models and engagement campaigns. The zero Practical score is mitigated as this role relies on digital influence rather than physical logistics.</p>
-                    <div className="mt-6 p-6 bg-green-500/10 border-2 border-green-500/20 rounded-3xl text-center">
-                        <p className="text-xs font-bold text-zinc-500 uppercase">Comp Benchmark</p>
-                        <p className="text-3xl font-black text-green-400">$60,000 - $115,000 USD</p>
-                        <p className="text-xs font-bold text-zinc-500 uppercase">(Global Remote)</p>
-                    </div>
-                  </div>
-                </BrandedScreenshot>
-
-                <BrandedScreenshot title="Skill Blueprint" intro="Bridge the gap between your current profile and market dominance. Our blueprint provides a curated roadmap of technical hard skills and top-tier certifications that serve as the necessary architectural components to secure your target role.">
-                  <div className="space-y-8">
-                      <div>
-                        <p className="text-xs font-bold text-zinc-500 uppercase mb-4">Baseline Skills</p>
-                        <div className="flex flex-wrap gap-3">
-                          {["DAO Governance Tools (Snapshot, Tally)", "Discord/Telegram Architecture", "Crisis Communication", "Meme Theory & Viral Marketing", "Sentiment Analysis"].map(skill => <div key={skill} className="px-4 py-2 bg-zinc-800 rounded-full text-sm font-bold text-zinc-300">{skill}</div>)}
-                        </div>
-                      </div>
-                      <div>
-                        <p className="text-xs font-bold text-zinc-500 uppercase mb-4">Premium Certifications</p>
-                        <div className="space-y-3">
-                           {["Certified Blockchain Expert [Blockchain Council]", "Meta Social Media Marketing Professional Certificate [Coursera]", "Web3 Community Management [Udemy]"].map(cert => (
-                             <div key={cert} className="flex items-center gap-3 p-3 bg-zinc-800 rounded-xl">
-                               <div className="w-6 h-6 rounded-full bg-blue-500 flex items-center justify-center text-black"><svg viewBox="0 0 24 24" className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth="3"><path d="M20 6L9 17l-5-5"/></svg></div>
-                               <p className="text-sm font-bold text-zinc-300">{cert}</p>
-                             </div>
-                           ))}
-                        </div>
-                      </div>
-                  </div>
-                </BrandedScreenshot>
-
-                {/* Strategy Sub-Features */}
-                <div className="pt-10 border-t border-zinc-800 text-center space-y-4">
-                  <h4 className="text-2xl font-black uppercase tracking-widest gold-text-gradient">Strategic Blueprints</h4>
-                  <p className="text-zinc-500">Actionable roadmaps to secure your target role.</p>
-                </div>
-
-                <BrandedScreenshot title="Strategy: Simulation Parameters" intro="Execute a precision-timed career offensive. By simulating resource allocation across budget and time constraints, we generate a high-ROI strategy that eliminates trial and error, ensuring every hour spent moves you closer to your offer.">
-                   <div className="space-y-6">
-                      <button className="w-full py-4 bg-white text-black rounded-full font-bold text-sm">UNLOCK STRATEGY (10 CR)</button>
-                      <div className="p-6 bg-zinc-800 rounded-3xl space-y-4">
-                         <div className="grid grid-cols-3 gap-4 text-center">
-                            <div><p className="text-xs text-zinc-500 font-bold">BUDGET ($)</p><input type="text" value="500" readOnly className="w-full bg-zinc-700 text-center p-2 rounded-lg font-bold text-lg"/></div>
-                            <div><p className="text-xs text-zinc-500 font-bold">MONTHS</p><input type="text" value="6" readOnly className="w-full bg-zinc-700 text-center p-2 rounded-lg font-bold text-lg"/></div>
-                            <div><p className="text-xs text-zinc-500 font-bold">DAILY HRS</p><input type="text" value="2" readOnly className="w-full bg-zinc-700 text-center p-2 rounded-lg font-bold text-lg"/></div>
-                         </div>
-                         <button className="w-full py-3 bg-yellow-500 text-black rounded-full font-bold">DEPLOY SIMULATION</button>
-                      </div>
-                      <button className="w-full py-4 bg-zinc-700 text-white rounded-full font-bold text-sm">MARKET INSIGHTS (10 CR)</button>
+              <BrandedScreenshot title="Career DNA: Protocol Selection" intro="Calibrate the AI's logic engine based on your specific career trajectory. Protocol selection ensures that our neural simulations apply the appropriate depth of analysis for leadership pivots or initial market entry.">
+                 <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                   <div className="p-6 bg-zinc-900 rounded-3xl text-center border border-zinc-800">
+                     <div className="w-20 h-20 mx-auto mb-4 flex items-center justify-center">
+                         <svg viewBox="0 0 24 24" className="w-14 h-14">
+                             <path d="M5 5.39C5 4.07 6.07 3 7.39 3H16.61C17.93 3 19 4.07 19 5.39V12C19 17.35 13.38 20.38 12.34 20.85C12.13 20.94 11.87 20.94 11.66 20.85C10.62 20.38 5 17.35 5 12V5.39Z" fill="#18181b" stroke="#eab308" strokeWidth="1.5"/>
+                             <rect x="10" y="1" width="4" height="2" rx="1" fill="#eab308"/>
+                             <path d="M9.5 12.5L11.5 14.5L15.5 10.5" stroke="black" strokeOpacity="0.5" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"/>
+                             <path d="M9 12L11 14L15 10" stroke="#eab308" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" fill="none"/>
+                         </svg>
+                     </div>
+                     <h4 className="font-black text-2xl text-white">EXPERIENCED</h4>
+                     <p className="text-xs font-bold text-zinc-500 tracking-widest">STRATEGIC PIVOT • GROWTH MAPPING</p>
+                     <button className="mt-6 w-full py-3 bg-yellow-500 text-black rounded-full font-bold uppercase text-[9px] tracking-widest">35 Credits</button>
                    </div>
-                </BrandedScreenshot>
+                    <div className="p-6 bg-zinc-900 rounded-3xl text-center border border-zinc-800">
+                     <div className="w-20 h-20 mx-auto mb-4 rounded-2xl bg-blue-500 flex items-center justify-center"><svg viewBox="0 0 24 24" className="w-12 h-12 text-black" fill="none" stroke="currentColor" strokeWidth="1.5"><path d="M12 14l9-5-9-5-9 5 9 5z"/><path d="M12 14l6.16-3.422a12.083 12.083 0 01.665 6.479A11.952 11.952 0 0012 20.055a11.952 11.952 0 00-6.824-2.998 12.078 12.078 0 01.665-6.479L12 14z"/></svg></div>
+                     <h4 className="font-black text-2xl text-white">FRESHER</h4>
+                     <p className="text-xs font-bold text-zinc-500 tracking-widest">ACADEMIC ANALYSIS • POTENTIAL MAPPING</p>
+                      <button className="mt-6 w-full py-3 bg-zinc-700 text-white rounded-full font-bold uppercase text-[9px] tracking-widest">25 Credits</button>
+                   </div>
+                 </div>
+             </BrandedScreenshot>
 
-                 <BrandedScreenshot title="Strategy: I. Executive Skill Matrix" intro="Identify the technical multipliers that will double your market value. Our skill matrix identifies high-leverage abilities required to pivot into emerging sectors, focusing on competencies that define industry leaders.">
-                    <div className="text-left space-y-4 prose prose-krypto">
-                      <h3>Priority Technical Hard Skills</h3>
-                      <ul>
-                        <li>Workflow Orchestration: Mastery of ComfyUI for node-based Stable Diffusion workflows and automatic1111.</li>
-                        <li>Python Scripting: Ability to write scripts to interact with APIs and automate creative pipelines.</li>
-                      </ul>
-                    </div>
-                 </BrandedScreenshot>
-
-                 <BrandedScreenshot title="Strategy: II. Tactical Learning Track" intro="Maximize your learning efficiency through a curated, time-bound education protocol. We identify the most cost-effective learning paths with the highest recognized credentials, ensuring an elite skill set without financial drainage.">
-                    <div className="text-left space-y-4 prose prose-krypto">
-                      <p>Total Estimated Cost: $345 (Leaving $155 buffer for API credits)</p>
-                      <h3>Month 1: The Foundation (Python & Prompting)</h3>
-                      <ul>
-                         <li>Course: 100 Days of Code: The Complete Python Pro Bootcamp</li>
-                         <li>Platform: Udemy</li>
-                         <li>Focus: Python basics, scripting, API interaction. You do not need to finish the whole course; focus on the first 45 days.</li>
-                         <li>Cost: ~$15 (wait for sale)</li>
-                      </ul>
-                       <ul>
-                         <li>Course: Prompt Engineering for Developers</li>
-                         <li>Platform: DeepLearning.AI</li>
-                         <li>Focus: Systematic prompt construction, avoiding hallucinations, formatting outputs.</li>
-                         <li>Cost: Free</li>
-                      </ul>
-                      <h3>Month 2-3: Visual Generative AI</h3>
-                      <p>...</p>
-                    </div>
-                 </BrandedScreenshot>
-
-                <BrandedScreenshot title="Strategy: III. Resume Engineering" intro="Re-engineer your professional narrative for specific sector dominance. This attribute focuses on high-impact headline strategy and bullet point optimization that forces recruiters to recognize your ROI immediately.">
-                    <div className="text-left space-y-4 prose prose-krypto">
-                        <h3>Headline Strategy</h3>
-                        <ul>
-                          <li>Current: [Your Old Title]</li>
-                          <li>Target: Generative AI Creative Technologist | AI Workflow Prototyper</li>
-                        </ul>
-                        <h3>Experience Bullet Point Optimization</h3>
-                        <ul>
-                          <li>Old: "Designed marketing assets for campaigns."</li>
-                          <li>New: "Architected an automated content pipeline using Python and Stable Diffusion API, reducing asset production time by 40% while maintaining brand consistency via custom LoRA training."</li>
-                          <li>Old: "Managed creative teams."</li>
-                          <li>New: "Led AI adoption strategy, implementing RAG workflows to ensure generated copy adhered to brand voice."</li>
-                        </ul>
-                    </div>
-                </BrandedScreenshot>
-
-                <BrandedScreenshot title="Strategy: IV. The Job Blitz" intro="Deploy a high-conversion application protocol that bypasses traditional bottlenecks. We architect 'Trojan Horse' portfolio strategies and targeted outreach methods that prove competence through tangible technical demonstration.">
-                     <div className="text-left space-y-4 prose prose-krypto">
-                        <h3>The 'Trojan Horse' Portfolio</h3>
-                        <ul>
-                            <li>Strategy: Instead of a PDF portfolio, build a GitHub repository titled \"GenAI-Creative-Toolkit.\"</li>
-                            <li>Content: Include 3 clean, documented scripts:
-                                <ul>
-                                    <li>A script that converts a blog post into an Instagram caption and generates a matching image.</li>
-                                    <li>A ComfyUI workflow JSON file for consistent character generation.</li>
-                                    <li>A simple chatbot trained on a specific public domain document (e.g., a technical manual).</li>
-                                </ul>
-                            </li>
-                        </ul>
-                        <h3>Target Selection</h3>
-                        <p>...</p>
-                    </div>
-                </BrandedScreenshot>
-
-                 {/* Market Insight Sub-Features */}
-                <div className="pt-10 border-t border-zinc-800 text-center space-y-4">
-                  <h4 className="text-2xl font-black uppercase tracking-widest text-blue-400">Market Insights</h4>
-                  <p className="text-zinc-500">Real-time intelligence on your target market.</p>
-                </div>
-
-                <BrandedScreenshot title="Market Insights: Executive Summary" intro="Stay ahead of market volatility with real-time sector intelligence. This summary provides a macro view of hiring trends, industry bifurcations, and emerging opportunity corridors to position you at the forefront of talent shifts.">
-                    <div className="text-left space-y-4 prose prose-krypto">
-                        <p><strong>Date:</strong> January 21, 2026</p>
-                        <p><strong>Status:</strong> Active & Expanding</p>
-                        <p><strong>Currency:</strong> USD ($)</p>
-                        <h3>Executive Summary</h3>
-                        <p>The \"Creative Technologist\" role has evolved rapidly into a Generative AI-first discipline. The hiring landscape for early 2026 shows a clear bifurcation: <strong>Big Tech (Google)</strong> is hiring for high-fidelity prototyping and \"magic\" making, while <strong>Global Agencies (Media.Monks, WPP)</strong> are industrializing GenAI for content supply chains. A new corridor of opportunity has opened between <strong>San Francisco, London, and Bangalore</strong>.</p>
-                    </div>
-                </BrandedScreenshot>
-                
-                <BrandedScreenshot title="Market Insights: Top Active Employers" intro="Target the organizations with the strongest strategic alignment to your archetype. We identify highest-velocity employers, auditing their pipelines to ensure your next move is both stable and high-impact.">
-                    <div className="text-left space-y-4 prose prose-krypto">
-                        <h3>1. Google Creative Lab</h3>
-                        <ul>
-                            <li><strong>Hiring Zone:</strong> New York, NY / Mountain View, CA (USA)</li>
-                            <li><strong>Strategic Fit:</strong> The pinnacle of \"Blue Sky\" creative tech. They are currently seeking technologists to \"make Google's magic more magical,\" moving beyond simple prompting to building bespoke GenAI prototypes that define future product interactions.</li>
-                            <li><strong>Key Projects/Culture:</strong> Culture is described as a \"start-up inside a giant.\" Expect to work on unreleased LLM tools, high-fidelity storytelling, and \"Vibe Coding\" (using AI to code).</li>
-                        </ul>
-                        <h3>2. Media.Monks</h3>
-                        <p>...</p>
-                    </div>
-                </BrandedScreenshot>
-
-                <BrandedScreenshot title="Market Insights: Salary Analysis" intro="Negotiate from a position of data-backed authority. Our analysis provides precision salary tiers adjusted for local purchasing power and market parity, ensuring you capture your full worth in any global hub.">
-                    <div className="text-left space-y-4 prose prose-krypto">
-                        <p>Note: Salaries reflect \"Local Parity\"—the buying power and standard market rate for top-tier talent in that specific hub.</p>
-                        <h3>Tier 1: United States (SF / NYC / LA)</h3>
-                        <ul>
-                            <li><strong>Junior / Mid-Level:</strong> $105,000 - $145,000</li>
-                            <li><strong>Senior / Staff:</strong> $175,000 - $265,000+ (Google offers equity packages pushing this significantly higher)</li>
-                            <li><strong>Insight:</strong> US salaries remain the global ceiling. The premium is paid for \"Hybrid Talent\"—engineers who have art school backgrounds.</li>
-                        </ul>
-                        <h3>Tier 2: United Kingdom / Europe (London / Lisbon)</h3>
-                        <p>...</p>
-                    </div>
-                </BrandedScreenshot>
-
-                <BrandedScreenshot title="Market Insights: Cultural Audit" intro="Decode the invisible hiring criteria of elite organizations. Our cultural audit reveals the specific mindset shifts and values currently prioritized by leadership teams, allowing you to align your interview persona with their internal vision.">
-                    <div className="text-left space-y-4 prose prose-krypto">
-                        <h3>The \"Vibe Coder\" Shift</h3>
-                        <p>Teams are moving away from pure syntax proficiency (writing C++ from scratch) to \"Vibe Coding\"—using AI cursors and LLMs to architect solutions. The value is now on system architecture and creative taste rather than rote coding.</p>
-                        <h3>Agency vs. Product</h3>
-                        <ul>
-                            <li><strong>Agencies (WPP, Monks):</strong> Values speed, visual impact, and \"never-been-done-before\" buzz. High burnout risk but incredible portfolio building.</li>
-                            <li><strong>Product/Lab (Google, frog):</strong> Values depth, usability, and human interaction. Slower pace, deeper focus on \"why\" we are building this.</li>
-                        </ul>
-                    </div>
-                </BrandedScreenshot>
-
-                <BrandedScreenshot title="Market Insights: Geographical Hubs" intro="Visualize the global ecosystem of your profession. By mapping the primary development and studio hubs of your industry, you can strategically choose your home base to maximize networking and long-term growth.">
-                    <div className="text-left space-y-4 prose prose-krypto">
-                        <ul>
-                            <li><strong>San Francisco / Silicon Valley:</strong> The \"Brain\" of the operation. Proximity to OpenAI and Google DeepMind makes this the hub for those building the tools and models.</li>
-                            <li><strong>New York City / London:</strong> The \"Showroom.\" Where the tech is applied to culture, advertising, and media.</li>
-                            <li><strong>Bangalore:</strong> The \"Engine Room.\" Rapidly shifting from back-end maintenance to high-fidelity prototyping and creative engineering.</li>
-                            <li><strong>Los Angeles:</strong> The \"Studio.\" The central hub for Generative Video, AI filmmaking, and synthetic media.</li>
-                        </ul>
-                        <h3>SOURCES</h3>
-                        <p>...</p>
-                    </div>
-                </BrandedScreenshot>
-             </div>
-          )}
-        </div>
-
-        {/* Outreach Architect */}
-        <div className="flex flex-col gap-12 items-center">
-          <div className="text-center space-y-6">
-            <div className="inline-block px-4 py-1 rounded-full bg-yellow-500/10 border border-yellow-500/20 text-yellow-500 text-[9px] font-black uppercase tracking-widest">Outreach Suite</div>
-            <div className="w-24 h-24 bg-zinc-900/50 rounded-full border-4 border-zinc-800 flex items-center justify-center mx-auto">
-                <svg className="w-12 h-12" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                    <path d="M3 8L7.89 11.26C9.93 12.64 12.63 13.03 14.9 12.16L21 10" stroke="#fde047" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
-                    <path d="M21 8V16C21 18.2091 19.2091 20 17 20H7C4.79086 20 3 18.2091 3 16V8C3 5.79086 4.79086 4 7 4H17C19.2091 4 21 5.79086 21 8Z" stroke="#a1a1aa" strokeWidth="1.5" strokeLinecap="round"/>
-                    <path d="M7 15L9 13" stroke="#fde047" strokeOpacity="0.5" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
-                    <path d="M17 15L15 13" stroke="#fde047" strokeOpacity="0.5" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
-                </svg>
-            </div>
-            <h4 className="text-4xl sm:text-6xl font-black tracking-tight uppercase leading-tight">Outreach <span className="gold-text-gradient">Architect</span></h4>
-            <p className="text-zinc-500 text-lg font-medium leading-relaxed max-w-2xl mx-auto">High-conversion protocols for cold networking. We research company trajectory in real-time to craft messages that guarantee engagement.</p>
-            <div className="flex justify-center items-center gap-4">
-                <button onClick={() => setOpenSubFeatures(openSubFeatures === 'outreach' ? null : 'outreach')} className="px-8 py-4 bg-zinc-800 text-zinc-300 rounded-2xl text-[10px] font-black uppercase tracking-widest hover:bg-zinc-700 transition-all shadow-lg">
-                {openSubFeatures === 'outreach' ? 'Collapse Attributes' : 'Explore Attributes'}
-                </button>
-                <button onClick={() => setActiveTab?.('Outreach Architect')} className="px-8 py-4 bg-yellow-500 text-zinc-950 rounded-2xl text-[10px] font-black uppercase tracking-widest hover:bg-yellow-400 active:scale-95 transition-all shadow-lg border-b-2 border-yellow-700">
-                Explore Outreach Architect
-                </button>
-            </div>
+             <BrandedScreenshot title="Neural Identity Sequence" intro="Capture your professional essence through a proprietary psychometric vector. This sequence acts as a digital fingerprint of your natural aptitude, mapping traits into a visualize strategic baseline.">
+                 <RadarChart scores={sampleScores} />
+                  <div className="text-center mt-8 space-y-4">
+                     <div className="px-4 py-2 bg-zinc-800 rounded-full inline-block text-sm font-mono text-yellow-500 tracking-widest">{dnaCode}</div>
+                     <p className="text-xs font-bold text-zinc-500 uppercase tracking-widest">Sequence representing your unique professional architecture.</p>
+                 </div>
+             </BrandedScreenshot>
           </div>
-           {openSubFeatures === 'outreach' && (
-              <div className="w-full max-w-4xl animate-in fade-in slide-in-from-bottom-8 duration-500">
-                <BrandedScreenshot containerRef={outreachFirstAttrRef} title="Conversation Forge Protocol" intro="Break through the noise of standard networking with hyper-personalized engagement logic. Our engine identifies recent company milestones to craft high-status narratives that virtually guarantee a reply from decision-makers.">
-                  <div className="space-y-6">
-                      <div className="flex items-start gap-4">
-                          <div className="w-10 h-10 rounded-2xl bg-zinc-900 border border-zinc-800 flex items-center justify-center flex-shrink-0"><KryptoLogo size={20} /></div>
-                          <div className="bg-zinc-900 border border-zinc-800 p-6 rounded-[24px] rounded-tl-none flex-1 space-y-4 shadow-lg">
-                              <p className="text-xs font-black text-yellow-500 uppercase tracking-widest">AI Outreach Protocol Generated (94% Engagement Probability)</p>
-                              <p className="text-zinc-300 leading-relaxed italic">\"Hi Jensen, I noticed NVIDIA's recent advancement in Blackwell architecture—it's a massive leap for real-time generative physics...\"</p>
-                              <div className="p-3 bg-yellow-500/5 border-l-4 border-yellow-500 rounded-r-lg">
-                                  <p className="text-xs font-black text-yellow-500 uppercase">Strategic Hook Detection</p>
-                                  <p className="text-xs text-zinc-400">System identified current company milestone via real-time Google Search Study.</p>
-                              </div>
+        )}
+
+        {/* Detail: Outreach Architect */}
+        {openSubFeatures === 'outreach' && (
+          <div className="w-full max-w-4xl mx-auto animate-in fade-in slide-in-from-bottom-8 duration-500">
+            <BrandedScreenshot containerRef={outreachFirstAttrRef} title="Conversation Forge Protocol" intro="Break through the noise of standard networking with hyper-personalized engagement logic. Our engine identifies recent company milestones to craft high-status narratives that virtually guarantee a reply from decision-makers.">
+              <div className="space-y-6">
+                  <div className="flex items-start gap-4">
+                      <div className="w-10 h-10 rounded-2xl bg-zinc-900 border border-zinc-800 flex items-center justify-center flex-shrink-0"><KryptoLogo size={20} /></div>
+                      <div className="bg-zinc-900 border border-zinc-800 p-6 rounded-[24px] rounded-tl-none flex-1 space-y-4 shadow-lg">
+                          <p className="text-xs font-black text-yellow-500 uppercase tracking-widest">AI Outreach Protocol Generated (94% Engagement Probability)</p>
+                          <p className="text-zinc-300 leading-relaxed italic">\"Hi Jensen, I noticed NVIDIA's recent advancement in Blackwell architecture—it's a massive leap for real-time generative physics...\"</p>
+                          <div className="p-3 bg-yellow-500/5 border-l-4 border-yellow-500 rounded-r-lg">
+                              <p className="text-xs font-black text-yellow-500 uppercase">Strategic Hook Detection</p>
+                              <p className="text-xs text-zinc-400">System identified current company milestone via real-time Google Search Study.</p>
                           </div>
                       </div>
                   </div>
-                </BrandedScreenshot>
               </div>
-           )}
-        </div>
-
-        {/* Interview Simulation Lab */}
-        <div className="flex flex-col gap-12 items-center">
-          <div className="text-center space-y-6">
-            <div className="inline-block px-4 py-1 rounded-full bg-blue-500/10 border border-blue-500/20 text-blue-500 text-[9px] font-black uppercase tracking-widest">Simulation Lab</div>
-            <div className="w-24 h-24 bg-zinc-900/50 rounded-full border-4 border-zinc-800 flex items-center justify-center mx-auto relative">
-                <svg className="w-12 h-12 text-blue-400" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                    <path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z" fill="#1e3a8a"/>
-                    <path d="M19 10v2a7 7 0 0 1-14 0v-2" stroke="#3b82f6" strokeWidth="1.5" strokeLinecap="round"/>
-                    <path d="M12 19v4" stroke="#3b82f6" strokeWidth="1.5" strokeLinecap="round"/>
-                    <path d="M8 23h8" stroke="#3b82f6" strokeWidth="1.5" strokeLinecap="round"/>
-                </svg>
-                <div className="absolute inset-0 flex items-center justify-center">
-                    <div className="w-16 h-16 border-t-2 border-blue-500 rounded-full animate-spin" style={{ animationDuration: '3s' }}></div>
-                </div>
-            </div>
-            <h4 className="text-4xl sm:text-6xl font-black tracking-tight uppercase leading-tight">Interview <span className="gold-text-gradient">Simulation Lab</span></h4>
-            <p className="text-zinc-500 text-lg font-medium leading-relaxed max-w-2xl mx-auto">Battle-test your responses in specific technical and behavioral environments. Neural feedback on your hiring bar readiness.</p>
-            <div className="flex justify-center items-center gap-4">
-                <button onClick={() => setOpenSubFeatures(openSubFeatures === 'interview' ? null : 'interview')} className="px-8 py-4 bg-zinc-800 text-zinc-300 rounded-2xl text-[10px] font-black uppercase tracking-widest hover:bg-zinc-700 transition-all shadow-lg">
-                {openSubFeatures === 'interview' ? 'Collapse Attributes' : 'Explore Attributes'}
-                </button>
-                <button onClick={() => setActiveTab?.('Interview Lab')} className="px-8 py-4 bg-blue-500 text-zinc-100 rounded-2xl text-[10px] font-black uppercase tracking-widest hover:bg-blue-400 active:scale-95 transition-all shadow-lg border-b-2 border-blue-700">
-                Explore Interview Lab
-                </button>
-            </div>
+            </BrandedScreenshot>
           </div>
-            {openSubFeatures === 'interview' && (
-              <div className="w-full max-w-4xl space-y-20 animate-in fade-in slide-in-from-bottom-8 duration-500">
-                <BrandedScreenshot containerRef={interviewFirstAttrRef} title="Interview Simulation Protocol" intro="Battle-test your composure in a simulated high-stakes environment. Calibrating the session protocol and complexity vector ensures you eliminate anxiety and perfect your responses through exposure to elite-level technical inquiries.">
-                  <div className="p-6 bg-zinc-800 rounded-3xl space-y-6">
-                    <div className="space-y-3">
-                        <p className="text-xs font-bold text-zinc-500 uppercase">Session Protocol</p>
-                        <div className="p-4 bg-zinc-700 rounded-xl font-bold text-white flex justify-between items-center">BEHAVIORAL <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M19 9l-7 7-7-7"/></svg></div>
-                    </div>
-                     <div className="space-y-3">
-                        <p className="text-xs font-bold text-zinc-500 uppercase">Complexity Vector</p>
-                        <div className="p-4 bg-zinc-700 rounded-xl font-bold text-white flex justify-between items-center">STANDARD <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M19 9l-7 7-7-7"/></svg></div>
-                    </div>
-                    <button onClick={() => setActiveTab?.('Interview Lab')} className="w-full py-4 bg-yellow-500 text-black rounded-full font-bold text-sm">INITIALIZE SIMULATION (15 CREDITS)</button>
-                  </div>
-                </BrandedScreenshot>
+        )}
 
-                <BrandedScreenshot title="Personalized Worthiness Score" intro="Quantify your cultural compatibility through attitudinal mapping. This score predicts your resilience within a specific organizational structure, providing a definitive signal on whether a company is a high-potential environment for your archetype.">
-                  <div className="grid grid-cols-1 lg:grid-cols-3 gap-12 items-center mb-12">
-                    <div className="lg:col-span-1 flex flex-col items-center text-center">
-                      <div className="relative w-40 h-40">
-                        <svg className="w-full h-full transform -rotate-90">
-                          <circle cx="50%" cy="50%" r={60} className="stroke-zinc-900 fill-none" strokeWidth="8" />
-                          <circle 
-                            cx="50%" 
-                            cy="50%" 
-                            r={60} 
-                            className="stroke-green-500 fill-none" 
-                            strokeWidth="8" 
-                            strokeDasharray={2 * Math.PI * 60} 
-                            strokeDashoffset={(2 * Math.PI * 60) - (88 / 100) * (2 * Math.PI * 60)} 
-                            strokeLinecap="round" 
-                          />
-                        </svg>
-                        <div className="absolute inset-0 flex items-center justify-center">
-                          <span className="text-5xl font-black tracking-tighter text-green-500">88</span>
-                        </div>
-                      </div>
-                      <p className="mt-4 text-sm font-black uppercase tracking-[0.2em] text-green-500">
-                        High Potential
-                      </p>
-                    </div>
-                    <div className="lg:col-span-2">
-                      <div className="prose-krypto text-zinc-300">
-                        <ReactMarkdown>
-                          {`**Disclaimer:** This Worthiness Score is a personalized index calculated by simulating your attitudinal responses against real-world, data-driven challenges specific to this role and organization.
-
-### Your Simulated Performance
-Your responses indicate a strong alignment with a pragmatic, results-oriented culture, showing resilience in high-pressure scenarios which directly counters the identified pain point of 'project scope creep'.
-
-### Final Verdict
-Your profile shows a high probability of success and longevity within this specific organizational structure.`}
-                        </ReactMarkdown>
-                      </div>
-                    </div>
-                  </div>
-                </BrandedScreenshot>
+        {/* Detail: Interview Lab */}
+        {openSubFeatures === 'interview' && (
+          <div className="w-full max-w-4xl mx-auto space-y-20 animate-in fade-in slide-in-from-bottom-8 duration-500">
+            <BrandedScreenshot containerRef={interviewFirstAttrRef} title="Interview Simulation Protocol" intro="Battle-test your composure in a simulated high-stakes environment. Calibrating the session protocol and complexity vector ensures you eliminate anxiety and perfect your responses through exposure to elite-level technical inquiries.">
+              <div className="p-6 bg-zinc-800 rounded-3xl space-y-6">
+                <div className="space-y-3">
+                    <p className="text-xs font-bold text-zinc-500 uppercase">Session Protocol</p>
+                    <div className="p-4 bg-zinc-700 rounded-xl font-bold text-white flex justify-between items-center text-[10px] tracking-widest uppercase">BEHAVIORAL <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M19 9l-7 7-7-7"/></svg></div>
+                </div>
+                 <div className="space-y-3">
+                    <p className="text-xs font-bold text-zinc-500 uppercase">Complexity Vector</p>
+                    <div className="p-4 bg-zinc-700 rounded-xl font-bold text-white flex justify-between items-center text-[10px] tracking-widest uppercase">STANDARD <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M19 9l-7 7-7-7"/></svg></div>
+                </div>
+                <button onClick={() => setActiveTab?.('Interview Lab')} className="w-full py-4 bg-yellow-500 text-black rounded-full font-bold text-[10px] tracking-widest uppercase">Initialize Simulation (15 Credits)</button>
               </div>
-           )}
-        </div>
+            </BrandedScreenshot>
+
+            <BrandedScreenshot title="Personalized Worthiness Score" intro="Quantify your cultural compatibility through attitudinal mapping. This score predicts your resilience within a specific organizational structure, providing a definitive signal on whether a company is a high-potential environment for your archetype.">
+              <div className="grid grid-cols-1 lg:grid-cols-3 gap-12 items-center mb-12">
+                <div className="lg:col-span-1 flex flex-col items-center text-center">
+                  <div className="relative w-40 h-40">
+                    <svg className="w-full h-full transform -rotate-90">
+                      <circle cx="50%" cy="50%" r={60} className="stroke-zinc-900 fill-none" strokeWidth="8" />
+                      <circle cx="50%" cy="50%" r={60} className="stroke-green-500 fill-none" strokeWidth="8" strokeDasharray={2 * Math.PI * 60} strokeDashoffset={(2 * Math.PI * 60) - (88 / 100) * (2 * Math.PI * 60)} strokeLinecap="round" />
+                    </svg>
+                    <div className="absolute inset-0 flex items-center justify-center"><span className="text-5xl font-black tracking-tighter text-green-500">88</span></div>
+                  </div>
+                  <p className="mt-4 text-sm font-black uppercase tracking-[0.2em] text-green-500">High Potential</p>
+                </div>
+                <div className="lg:col-span-2">
+                  <div className="prose-krypto text-zinc-300">
+                    <ReactMarkdown>{`**Disclaimer:** This Worthiness Score is a personalized index calculated by simulating your attitudinal responses against real-world, data-driven challenges.\n\n### Final Verdict\nYour profile shows a high probability of success and longevity within this specific organizational structure.`}</ReactMarkdown>
+                  </div>
+                </div>
+              </div>
+            </BrandedScreenshot>
+          </div>
+        )}
       </div>
 
 
@@ -1183,7 +925,7 @@ Your profile shows a high probability of success and longevity within this speci
              <div key={i} className="bg-zinc-900/40 border border-zinc-800 p-10 rounded-[48px] space-y-8 hover:bg-zinc-900/60 transition-all">
                 <div className="flex text-yellow-500 gap-1">{'★★★★★'.split('').map((s, idx) => <span key={idx}>{s}</span>)}</div>
                 <p className="text-zinc-400 text-base italic font-medium leading-relaxed prose-krypto">
-                  <ReactMarkdown>{`"${r.text}"`}</ReactMarkdown>
+                  <ReactMarkdown>{`\"${r.text}\"`}</ReactMarkdown>
                 </p>
                 <div className="pt-6 border-t border-zinc-800 flex items-center gap-4">
                   <img 
@@ -1201,22 +943,15 @@ Your profile shows a high probability of success and longevity within this speci
         </div>
       </div>
 
-      {/* Award Winning Sleek Footer */}
       <footer className="pt-48 pb-24 border-t border-zinc-900/50 relative overflow-hidden bg-gradient-to-b from-transparent to-zinc-950/80">
         <div className="max-w-7xl mx-auto px-6 relative z-10">
           <div className="grid grid-cols-1 md:grid-cols-12 gap-16 md:gap-8 items-start">
-            
-            {/* Branding Column */}
             <div className="md:col-span-5 space-y-10">
               <div className="group cursor-default inline-flex items-center gap-6">
                 <div className="relative">
                   <div className="absolute -inset-2 bg-yellow-500/20 rounded-full blur-xl opacity-0 group-hover:opacity-100 transition-opacity duration-700"></div>
                   <div className="w-24 h-24 rounded-full p-1 bg-gradient-to-tr from-yellow-500/40 to-transparent shadow-[0_0_30px_rgba(234,179,8,0.1)]">
-                    <img 
-                      src="https://i.postimg.cc/7YdGjhgV/IMG-1149.jpg" 
-                      alt="KryptonPath Logo" 
-                      className="w-full h-full rounded-full object-cover border-2 border-zinc-950"
-                    />
+                    <img src="https://i.postimg.cc/7YdGjhgV/IMG-1149.jpg" alt="KryptonPath Logo" className="w-full h-full rounded-full object-cover border-2 border-zinc-950" />
                   </div>
                 </div>
                 <div>
@@ -1224,121 +959,54 @@ Your profile shows a high probability of success and longevity within this speci
                   <p className="text-zinc-500 text-[10px] font-black uppercase tracking-[0.4em] mt-2">Architecture • Intelligence • Career</p>
                 </div>
               </div>
-              <p className="text-zinc-500 text-sm font-medium leading-relaxed max-w-sm">
-                Engineering the next generation of professional identity through high-precision recruitment protocols. Crafted with absolute technical rigor by <span className="text-zinc-300">KryptonPath</span>.
-              </p>
+              <p className="text-zinc-500 text-sm font-medium leading-relaxed max-w-sm">Engineering the next generation of professional identity through high-precision recruitment protocols. Crafted with absolute technical rigor by <span className="text-zinc-300">KryptonPath</span>.</p>
               <div className="flex gap-4">
-                <a href="https://www.facebook.com/share/1AeBLY3qN2/?mibextid=wwXIfr" target="_blank" rel="noopener noreferrer" className="w-10 h-10 rounded-xl bg-zinc-900 border border-zinc-800 flex items-center justify-center text-zinc-600 hover:text-yellow-500 hover:border-yellow-500/30 transition-all cursor-pointer group">
-                  <svg className="w-5 h-5 fill-current opacity-60 group-hover:opacity-100" viewBox="0 0 24 24"><path d="M22.675 0h-21.35C.597 0 0 .597 0 1.325v21.351C0 23.403.597 24 1.325 24H12.82v-9.294H9.692v-3.622h3.128V8.413c0-3.1 1.893-4.788 4.659-4.788 1.325 0 2.463.099 2.795.143v3.24l-1.918.001c-1.504 0-1.795.715-1.795 1.763v2.313h3.587l-.467 3.622h-3.12V24h6.116c.73 0 1.323-.597 1.323-1.325V1.325C24 .597 23.403 0 22.675 0z"/></svg>
-                </a>
-                <a href="https://www.instagram.com/kryptonpath?igsh=MTdtem9jMXd5amluNw%3D%3D&utm_source=qr" target="_blank" rel="noopener noreferrer" className="w-10 h-10 rounded-xl bg-zinc-900 border border-zinc-800 flex items-center justify-center text-zinc-600 hover:text-yellow-500 hover:border-yellow-500/30 transition-all cursor-pointer group">
-                  <svg className="w-5 h-5 fill-current opacity-60 group-hover:opacity-100" viewBox="0 0 24 24"><path d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zm0-2.163c-3.259 0-3.667.014-4.947.072-4.358.2-6.78 2.618-6.98 6.98-.059 1.281-.073 1.689-.073 4.948 0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98 1.281.058 1.689.072 4.948.072 3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98-1.281-.059-1.69-.073-4.949-.073zm0 5.838c-3.403 0-6.162 2.759-6.162 6.162s2.759 6.163 6.162 6.163 6.162-2.759 6.162-6.163c0-3.403-2.759-6.162-6.162-6.162zm0 10.162c-2.209 0-4-1.79-4-4 0-2.209 1.791-4 4-4s4 1.791 4 4c0 2.21-1.791 4-4 4zm6.406-11.845c-.796 0-1.441.645-1.441 1.44s.645 1.44 1.441 1.44c.795 0 1.439-.645 1.439-1.44s-.644-1.44-1.439-1.44z"/></svg>
-                </a>
-                <a href="https://www.linkedin.com/company/kryptonpath/" target="_blank" rel="noopener noreferrer" className="w-10 h-10 rounded-xl bg-zinc-900 border border-zinc-800 flex items-center justify-center text-zinc-600 hover:text-yellow-500 hover:border-yellow-500/30 transition-all cursor-pointer group">
-                  <svg className="w-5 h-5 fill-current opacity-60 group-hover:opacity-100" viewBox="0 0 24 24"><path d="M19 0h-14c-2.761 0-5 2.239-5 5v14c0 2.761 2.239 5 5 5h14c2.762 0 5-2.239 5-5v-14c0-2.761-2.238-5-5-5zm-11 19h-3v-11h3v11zm-1.5-12.268c-.966 0-1.75-.79-1.75-1.764s.784-1.764 1.75-1.764 1.75.79 1.75 1.764-.783 1.764-1.75 1.764zm13.5 12.268h-3v-5.604c0-3.368-4-3.113-4 0v5.604h-3v-11h3v1.765c1.396-2.586 7-2.777 7 2.476v6.759z"/></svg>
-                </a>
+                <a href="https://www.facebook.com/share/1AeBLY3qN2/?mibextid=wwXIfr" target="_blank" rel="noopener noreferrer" className="w-10 h-10 rounded-xl bg-zinc-900 border border-zinc-800 flex items-center justify-center text-zinc-600 hover:text-yellow-500 hover:border-yellow-500/30 transition-all cursor-pointer group"><svg className="w-5 h-5 fill-current opacity-60 group-hover:opacity-100" viewBox="0 0 24 24"><path d="M22.675 0h-21.35C.597 0 0 .597 0 1.325v21.351C0 23.403.597 24 1.325 24H12.82v-9.294H9.692v-3.622h3.128V8.413c0-3.1 1.893-4.788 4.659-4.788 1.325 0 2.463.099 2.795.143v3.24l-1.918.001c-1.504 0-1.795.715-1.795 1.763v2.313h3.587l-.467 3.622h-3.12V24h6.116c.73 0 1.323-.597 1.323-1.325V1.325C24 .597 23.403 0 22.675 0z"/></svg></a>
+                <a href="https://www.instagram.com/kryptonpath?igsh=MTdtem9jMXd5amluNw%3D%3D&utm_source=qr" target="_blank" rel="noopener noreferrer" className="w-10 h-10 rounded-xl bg-zinc-900 border border-zinc-800 flex items-center justify-center text-zinc-600 hover:text-yellow-500 hover:border-yellow-500/30 transition-all cursor-pointer group"><svg className="w-5 h-5 fill-current opacity-60 group-hover:opacity-100" viewBox="0 0 24 24"><path d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zm0-2.163c-3.259 0-3.667.014-4.947.072-4.358.2-6.78 2.618-6.98 6.98-.059 1.281-.073 1.689-.073 4.948 0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98 1.281.058 1.689.072 4.948.072 3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98-1.281-.059-1.69-.073-4.949-.073zm0 5.838c-3.403 0-6.162 2.759-6.162 6.162s2.759 6.163 6.162 6.163 6.162-2.759 6.162-6.163c0-3.403-2.759-6.162-6.162-6.162zm0 10.162c-2.209 0-4-1.79-4-4 0-2.209 1.791-4 4-4s4 1.791 4 4c0 2.21-1.791 4-4 4zm6.406-11.845c-.796 0-1.441.645-1.441 1.44s.645 1.44 1.441 1.44c.795 0 1.439-.645 1.439-1.44s-.644-1.44-1.439-1.44z"/></svg></a>
+                <a href="https://www.linkedin.com/company/kryptonpath/" target="_blank" rel="noopener noreferrer" className="w-10 h-10 rounded-xl bg-zinc-900 border border-zinc-800 flex items-center justify-center text-zinc-600 hover:text-yellow-500 hover:border-yellow-500/30 transition-all cursor-pointer group"><svg className="w-5 h-5 fill-current opacity-60 group-hover:opacity-100" viewBox="0 0 24 24"><path d="M19 0h-14c-2.761 0-5 2.239-5 5v14c0 2.761 2.239 5 5 5h14c2.762 0 5-2.239 5-5v-14c0-2.761-2.238-5-5-5zm-11 19h-3v-11h3v11zm-1.5-12.268c-.966 0-1.75-.79-1.75-1.764s.784-1.764 1.75-1.764 1.75.79 1.75 1.764-.783 1.764-1.75 1.764zm13.5 12.268h-3v-5.604c0-3.368-4-3.113-4 0v5.604h-3v-11h3v1.765c1.396-2.586 7-2.777 7 2.476v6.759z"/></svg></a>
               </div>
             </div>
-
-            {/* Navigation Columns */}
             <div className="md:col-span-7 grid grid-cols-2 sm:grid-cols-2 gap-12">
               <div className="space-y-6">
                 <h5 className="text-[10px] font-black text-zinc-100 uppercase tracking-[0.3em] border-b border-zinc-800 pb-3">Products</h5>
                 <nav className="flex flex-col gap-4">
                   {(['Home', 'Resume Scorer', 'Career Path', 'Outreach Architect', 'Interview Lab'] as TabType[]).map(item => (
-                    <button 
-                      key={item} 
-                      onClick={() => {
-                        if (item === 'Home') {
-                          window.scrollTo({ top: 0, behavior: 'smooth' });
-                        } else {
-                          setActiveTab?.(item);
-                        }
-                      }}
-                      className="text-left text-xs font-bold text-zinc-500 hover:text-yellow-500 transition-colors uppercase tracking-widest"
-                    >
-                      {item}
-                    </button>
+                    <button key={item} onClick={() => { if (item === 'Home') window.scrollTo({ top: 0, behavior: 'smooth' }); else setActiveTab?.(item); }} className="text-left text-xs font-bold text-zinc-500 hover:text-yellow-500 transition-colors uppercase tracking-widest">{item}</button>
                   ))}
                 </nav>
               </div>
-
               <div className="space-y-6">
                 <h5 className="text-[10px] font-black text-zinc-100 uppercase tracking-[0.3em] border-b border-zinc-800 pb-3">Legal</h5>
                 <nav className="flex flex-col gap-4">
                   {(['privacy', 'terms', 'cookies', 'compliance'] as const).map((slug) => (
-                    <button 
-                      key={slug}
-                      onClick={() => setActivePolicy(slug)}
-                      className="text-left text-xs font-bold text-zinc-500 hover:text-yellow-500 transition-colors uppercase tracking-widest"
-                    >
-                      {slug === 'cookies' ? 'Cookies' : slug.charAt(0).toUpperCase() + slug.slice(1)}
-                    </button>
+                    <button key={slug} onClick={() => setActivePolicy(slug)} className="text-left text-xs font-bold text-zinc-500 hover:text-yellow-500 transition-colors uppercase tracking-widest">{slug === 'cookies' ? 'Cookies' : slug.charAt(0).toUpperCase() + slug.slice(1)}</button>
                   ))}
                 </nav>
               </div>
             </div>
           </div>
-
           <div className="mt-32 pt-12 border-t border-zinc-900/80 flex flex-col sm:flex-row justify-between items-center gap-8">
-            <div className="flex items-center gap-6">
-              <p className="text-[9px] font-black text-zinc-600 uppercase tracking-[0.6em]">
-                © 2026 Krypto AI • All Rights Reserved
-              </p>
-            </div>
-            
+            <p className="text-[9px] font-black text-zinc-600 uppercase tracking-[0.6em]">© 2026 Krypto AI • All Rights Reserved</p>
             <div className="flex items-center gap-4">
                <div className="h-px w-12 bg-zinc-900"></div>
-               <div className="flex gap-2">
-                 <span className="w-1.5 h-1.5 rounded-full bg-zinc-800"></span>
-                 <span className="w-1.5 h-1.5 rounded-full bg-yellow-500/40 animate-pulse"></span>
-                 <span className="w-1.5 h-1.5 rounded-full bg-zinc-800"></span>
-               </div>
+               <div className="flex gap-2"><span className="w-1.5 h-1.5 rounded-full bg-zinc-800"></span><span className="w-1.5 h-1.5 rounded-full bg-yellow-500/40 animate-pulse"></span><span className="w-1.5 h-1.5 rounded-full bg-zinc-800"></span></div>
                <div className="h-px w-12 bg-zinc-900"></div>
             </div>
-
             <div className="w-20 lg:block hidden"></div>
           </div>
         </div>
       </footer>
 
-      {/* Policy Intelligence Overlay */}
       {activePolicy && (
         <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 sm:p-10 animate-in fade-in duration-400">
            <div className="absolute inset-0 bg-black/95 backdrop-blur-3xl" onClick={() => setActivePolicy(null)}></div>
            <div className="relative w-full max-w-4xl max-h-[85vh] bg-zinc-950 border border-zinc-800 rounded-[64px] shadow-[0_0_100px_rgba(0,0,0,1)] overflow-hidden flex flex-col animate-in zoom-in-95 duration-500 border-t-yellow-500/20">
-              
-              {/* Overlay Header */}
               <div className="h-24 flex items-center justify-between px-12 border-b border-zinc-900 bg-zinc-900/30">
-                 <div className="flex items-center gap-4">
-                    <div className="w-3 h-3 rounded-full bg-yellow-500 shadow-[0_0_10px_#eab308]"></div>
-                    <span className="text-[11px] font-black text-zinc-100 uppercase tracking-[0.5em]">Intel Protocol: {activePolicy}</span>
-                 </div>
-                 <button 
-                  onClick={() => setActivePolicy(null)} 
-                  className="w-12 h-12 flex items-center justify-center rounded-2xl bg-zinc-900 border border-zinc-800 text-zinc-500 hover:text-white hover:border-yellow-500/40 transition-all group"
-                 >
-                    <svg className="w-6 h-6 transition-transform group-hover:rotate-90" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M6 18L18 6M6 6l12 12" /></svg>
-                 </button>
+                 <div className="flex items-center gap-4"><div className="w-3 h-3 rounded-full bg-yellow-500 shadow-[0_0_10px_#eab308]"></div><span className="text-[11px] font-black text-zinc-100 uppercase tracking-[0.5em]">Intel Protocol: {activePolicy}</span></div>
+                 <button onClick={() => setActivePolicy(null)} className="w-12 h-12 flex items-center justify-center rounded-2xl bg-zinc-900 border border-zinc-800 text-zinc-500 hover:text-white hover:border-yellow-500/40 transition-all group"><svg className="w-6 h-6 transition-transform group-hover:rotate-90" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M6 18L18 6M6 6l12 12" /></svg></button>
               </div>
-
-              {/* Overlay Content */}
-              <div className="flex-1 overflow-y-auto p-12 sm:p-20 custom-scrollbar">
-                 <div className="prose prose-invert prose-krypto max-w-none">
-                    <ReactMarkdown>{POLICY_CONTENT[activePolicy]}</ReactMarkdown>
-                 </div>
-              </div>
-
-              {/* Overlay Footer */}
-              <div className="h-20 flex items-center justify-between px-12 border-t border-zinc-900 bg-zinc-900/20">
-                 <p className="text-[9px] font-black text-zinc-600 uppercase tracking-[0.4em]">Verified Compliance Node • 2026 Architectural Sync</p>
-                 <button 
-                  onClick={() => setActivePolicy(null)}
-                  className="px-6 py-2 bg-zinc-900 border border-zinc-800 text-zinc-400 rounded-full text-[8px] font-black uppercase tracking-widest hover:text-white hover:bg-zinc-800 transition-all"
-                 >
-                   Acknowledge Protocol
-                 </button>
-              </div>
+              <div className="flex-1 overflow-y-auto p-12 sm:p-20 custom-scrollbar"><div className="prose prose-invert prose-krypto max-w-none"><ReactMarkdown>{POLICY_CONTENT[activePolicy]}</ReactMarkdown></div></div>
+              <div className="h-20 flex items-center justify-between px-12 border-t border-zinc-900 bg-zinc-900/20"><p className="text-[9px] font-black text-zinc-600 uppercase tracking-[0.4em]">Verified Compliance Node • 2026 Architectural Sync</p><button onClick={() => setActivePolicy(null)} className="px-6 py-2 bg-zinc-900 border border-zinc-800 text-zinc-400 rounded-full text-[8px] font-black uppercase tracking-widest hover:text-white hover:bg-zinc-800 transition-all">Acknowledge Protocol</button></div>
            </div>
         </div>
       )}

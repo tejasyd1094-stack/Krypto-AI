@@ -65,6 +65,10 @@ const ResumeScorer: React.FC<ResumeScorerProps> = ({
   const [isCopying, setIsCopying] = useState(false);
   const [isDownloading, setIsDownloading] = useState(false);
   const [isHoveringScore, setIsHoveringScore] = useState(false);
+
+  // Consent Modal State
+  const [showConsentModal, setShowConsentModal] = useState(false);
+  const [pendingAction, setPendingAction] = useState<'copy' | 'download' | null>(null);
   
   const [isOverseasVisible, setIsOverseasVisible] = useState(false);
   const [isOverseasActivated, setIsOverseasActivated] = useState(false);
@@ -192,49 +196,71 @@ const ResumeScorer: React.FC<ResumeScorerProps> = ({
     }
   };
 
-  const handleDownloadDoc = () => {
+  const executeDownloadDoc = () => {
     if (!formattedResume) return;
     setIsDownloading(true);
     try {
+      // Basic markdown to HTML mapping for the Word export hack
       const htmlContent = formattedResume
         .replace(/^### (.*$)/gim, '<h3>$1</h3>')
         .replace(/^## (.*$)/gim, '<h2>$1</h2>')
         .replace(/^# (.*$)/gim, '<h1>$1</h1>')
-        .replace(/^\s*\*\s+(.*$)/gim, '<li>$1</li>')
+        .replace(/^\s*[\*\-]\s+(.*$)/gim, '<li>$1</li>')
         .replace(/\*\*(.*?)\*\*/g, '<b>$1</b>')
         .replace(/\n/gim, '<br />');
 
       const fullHtml = `
         <html xmlns:o='urn:schemas-microsoft-com:office:office' xmlns:w='urn:schemas-microsoft-com:office:word' xmlns='http://www.w3.org/TR/REC-html40'>
-        <head><meta charset='utf-8'><title>Executive Blueprint Export</title></head>
-        <body style="font-family: Arial, sans-serif; line-height: 1.5; color: #333;">
-          <div style="max-width: 800px; margin: 0 auto; padding: 20px;">
+        <head>
+          <meta charset='utf-8'>
+          <title>Executive Blueprint Export</title>
+          <style>
+            body { font-family: "Calibri", "Arial", sans-serif; line-height: 1.2; color: #000; }
+            h1 { font-size: 24pt; font-weight: bold; margin-bottom: 5pt; }
+            h2 { font-size: 16pt; font-weight: bold; border-bottom: 1pt solid #ccc; margin-top: 15pt; margin-bottom: 5pt; }
+            h3 { font-size: 13pt; font-weight: bold; margin-top: 10pt; margin-bottom: 3pt; }
+            p, li { font-size: 11pt; margin-bottom: 4pt; }
+            b { font-weight: bold; }
+          </style>
+        </head>
+        <body>
+          <div style="max-width: 800px; margin: 0 auto;">
             ${htmlContent}
           </div>
         </body>
         </html>
       `;
 
-      const blob = new Blob(['\ufeff', fullHtml], { type: 'application/msword' });
+      const blob = new Blob(['\ufeff', fullHtml], { type: 'application/vnd.ms-word' });
       const url = URL.createObjectURL(blob);
+      
       const link = document.createElement('a');
       link.href = url;
-      const safeTitle = (file?.name || 'Resume').replace(/[^a-zA-Z0-9]/g, '_');
-      link.download = `KryptoAI_Blueprint_${safeTitle}.doc`;
+      
+      const fileName = file?.name || 'Optimized_Resume';
+      const safeTitle = fileName.replace(/\.[^/.]+$/, "").replace(/[^a-zA-Z0-9]/g, '_');
+      link.setAttribute('download', `KryptoAI_Blueprint_${safeTitle}.doc`);
       
       document.body.appendChild(link);
       link.click();
       
+      // Clean up
       setTimeout(() => {
         document.body.removeChild(link);
         URL.revokeObjectURL(url);
-      }, 200);
+      }, 500);
+      
     } catch (err) {
       console.error("Download Error:", err);
-      alert("Download failed.");
+      alert("Intelligence export failed. Please try copying the text directly.");
     } finally {
       setIsDownloading(false);
     }
+  };
+
+  const handleDownloadDoc = () => {
+    setPendingAction('download');
+    setShowConsentModal(true);
   };
 
   const handleSaveToVault = () => {
@@ -258,7 +284,7 @@ const ResumeScorer: React.FC<ResumeScorerProps> = ({
     }, 600);
   };
 
-  const handleCopyToClipboard = async () => {
+  const executeCopyToClipboard = async () => {
     const el = document.getElementById('scorer-resume-preview');
     if (!el) return;
     
@@ -292,6 +318,11 @@ const ResumeScorer: React.FC<ResumeScorerProps> = ({
     }
   };
 
+  const handleCopyToClipboard = () => {
+    setPendingAction('copy');
+    setShowConsentModal(true);
+  };
+
   const handleSaveAuditToVault = () => {
     if (!result) return;
     setIsSaving(true);
@@ -321,6 +352,16 @@ const ResumeScorer: React.FC<ResumeScorerProps> = ({
     setFormattedResume(null);
     setResumeData(null);
     if (fileInputRef.current) fileInputRef.current.value = '';
+  };
+
+  const onConfirmConsent = () => {
+    setShowConsentModal(false);
+    if (pendingAction === 'copy') {
+      executeCopyToClipboard();
+    } else if (pendingAction === 'download') {
+      executeDownloadDoc();
+    }
+    setPendingAction(null);
   };
 
   const radius = 70;
@@ -411,7 +452,7 @@ const ResumeScorer: React.FC<ResumeScorerProps> = ({
             </div>
             
             <div className="w-full max-md max-w-md space-y-6">
-              <div className="relative h-3 bg-zinc-900/50 rounded-full border border-zinc-800 overflow-hidden">
+              <div className="relative h-3 bg-zinc-900/50 rounded-full border border-zinc-800 overflow-hidden shadow-inner">
                 <div 
                   className="h-full bg-yellow-500 transition-all duration-300 shadow-[0_0_15px_#eab308]" 
                   style={{ width: `${loadingProgress}%` }}
@@ -739,6 +780,61 @@ const ResumeScorer: React.FC<ResumeScorerProps> = ({
           </div>
         )}
       </div>
+
+      {/* User Acceptance Policy Modal */}
+      {showConsentModal && (
+        <div className="fixed inset-0 z-[110] flex items-center justify-center p-4 bg-black/90 backdrop-blur-md animate-in fade-in duration-300">
+          <div className="bg-zinc-900 border border-zinc-800 w-full max-w-2xl rounded-[48px] shadow-[0_0_80px_rgba(0,0,0,1)] overflow-hidden flex flex-col animate-in zoom-in-95 duration-400">
+            <div className="p-10 sm:p-14 space-y-8">
+              <div className="flex items-center gap-5">
+                <div className="w-14 h-14 bg-yellow-500/10 rounded-2xl flex items-center justify-center border border-yellow-500/30 text-yellow-500">
+                  <svg className="w-7 h-7" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" /></svg>
+                </div>
+                <h3 className="text-2xl font-black uppercase tracking-tight text-zinc-100 leading-tight">Architectural Consent <span className="gold-text-gradient">Protocol</span></h3>
+              </div>
+              
+              <div className="space-y-6">
+                <p className="text-sm font-bold text-zinc-400 leading-relaxed">
+                  By proceeding with this action, you acknowledge and consent to the structural re-engineering of your professional identity. Krypto AI provides an optimization service designed to maximize visibility within ATS systems and human recruitment networks.
+                </p>
+                
+                <div className="bg-zinc-950 border border-zinc-800 rounded-3xl p-6 space-y-4">
+                  <div className="flex items-start gap-4">
+                    <div className="w-5 h-5 rounded-full bg-yellow-500/20 flex items-center justify-center flex-shrink-0 mt-0.5"><span className="text-[10px] font-black text-yellow-500">1</span></div>
+                    <p className="text-xs text-zinc-500 font-medium"><strong>No Guarantee:</strong> This optimization does not guarantee job interviews, placement, or specific career outcomes.</p>
+                  </div>
+                  <div className="flex items-start gap-4">
+                    <div className="w-5 h-5 rounded-full bg-yellow-500/20 flex items-center justify-center flex-shrink-0 mt-0.5"><span className="text-[10px] font-black text-yellow-500">2</span></div>
+                    <p className="text-xs text-zinc-500 font-medium"><strong>Final Responsibility:</strong> You are the sole curator of your identity. You must verify all generated content for factual accuracy before submission.</p>
+                  </div>
+                  <div className="flex items-start gap-4">
+                    <div className="w-5 h-5 rounded-full bg-yellow-500/20 flex items-center justify-center flex-shrink-0 mt-0.5"><span className="text-[10px] font-black text-yellow-500">3</span></div>
+                    <p className="text-xs text-zinc-500 font-medium"><strong>Liability Release:</strong> Krypto AI and KryptonPath are not liable for professional rejections or consequences arising from the usage of this asset.</p>
+                  </div>
+                </div>
+              </div>
+
+              <div className="flex flex-col sm:flex-row gap-4 pt-4">
+                <button 
+                  onClick={onConfirmConsent}
+                  className="flex-1 py-5 bg-yellow-500 text-zinc-950 rounded-2xl text-[11px] font-black uppercase tracking-[0.3em] hover:bg-yellow-400 active:scale-95 transition-all shadow-xl shadow-yellow-500/10 border-b-4 border-yellow-700"
+                >
+                  Accept & Continue
+                </button>
+                <button 
+                  onClick={() => { setShowConsentModal(false); setPendingAction(null); }}
+                  className="px-10 py-5 bg-zinc-800 text-zinc-400 rounded-2xl text-[11px] font-black uppercase tracking-[0.3em] hover:bg-zinc-700 hover:text-zinc-100 transition-all"
+                >
+                  Decline
+                </button>
+              </div>
+            </div>
+            <div className="bg-zinc-800/20 py-4 px-10 border-t border-zinc-800 text-center">
+              <p className="text-[9px] font-black text-zinc-600 uppercase tracking-[0.4em]">Secure Verification Node • Career Architect Compliance</p>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

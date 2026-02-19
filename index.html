@@ -33,6 +33,14 @@
         --indigo-accent: #2e3192;
         --glass-bg: rgba(12, 12, 14, 0.75);
         --glass-border: rgba(255, 255, 255, 0.08);
+        --mesh-blur: 100px;
+      }
+
+      /* MOBILE OPTIMIZATION: Reduce blur radius to save VRAM on iOS/Mobile */
+      @media (max-width: 768px) {
+        :root {
+          --mesh-blur: 40px;
+        }
       }
 
       html, body {
@@ -56,18 +64,25 @@
         overflow: hidden;
         pointer-events: none;
         transform: translate3d(0,0,0); /* Hardware acceleration */
+        transition: opacity 0.5s ease-in-out;
+      }
+
+      /* CRITICAL FIX: Hide the heavy mesh during simulation to prevent Safari process crashes */
+      body.simulation-active .obsidian-mesh {
+        display: none !important;
       }
 
       /* Vibrant Fluid Blobs - Positioned for Mobile Safe Zones */
       .mesh-blob {
         position: absolute;
         border-radius: 50%;
-        filter: blur(100px);
-        -webkit-filter: blur(100px);
+        filter: blur(var(--mesh-blur));
+        -webkit-filter: blur(var(--mesh-blur));
         opacity: 0.22;
         mix-blend-mode: screen;
         pointer-events: none;
         will-change: transform, opacity;
+        transform: translate3d(0,0,0);
       }
 
       .blob-gold-primary {
@@ -118,12 +133,11 @@
       .neural-topography {
         position: absolute;
         inset: 0;
-        /* Using high-contrast paths with responsive scaling */
         background-image: url("data:image/svg+xml,%3Csvg width='1000' height='400' viewBox='0 0 1000 400' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' stroke='white' stroke-width='0.8' opacity='0.25'%3E%3Cpath d='M0 20 Q 250 0 500 20 T 1000 20'/%3E%3Cpath d='M0 40 Q 250 20 500 40 T 1000 40'/%3E%3Cpath d='M0 60 Q 250 40 500 60 T 1000 60'/%3E%3Cpath d='M0 80 Q 250 60 500 80 T 1000 80'/%3E%3Cpath d='M0 100 Q 250 80 500 100 T 1000 100'/%3E%3Cpath d='M0 120 Q 250 100 500 120 T 1000 120'/%3E%3Cpath d='M0 140 Q 250 120 500 140 T 1000 140'/%3E%3Cpath d='M0 160 Q 250 140 500 160 T 1000 160'/%3E%3Cpath d='M0 180 Q 250 160 500 180 T 1000 180'/%3E%3Cpath d='M0 200 Q 250 180 500 200 T 1000 200'/%3E%3Cpath d='M0 220 Q 250 200 500 220 T 1000 220'/%3E%3Cpath d='M0 240 Q 250 220 500 240 T 1000 240'/%3E%3Cpath d='M0 260 Q 250 240 500 260 T 1000 260'/%3E%3Cpath d='M0 280 Q 250 260 500 280 T 1000 280'/%3E%3Cpath d='M0 300 Q 250 280 500 300 T 1000 300'/%3E%3Cpath d='M0 320 Q 250 300 500 320 T 1000 320'/%3E%3Cpath d='M0 340 Q 250 320 500 340 T 1000 340'/%3E%3Cpath d='M0 360 Q 250 340 500 360 T 1000 360'/%3E%3Cpath d='M0 380 Q 250 360 500 380 T 1000 380'/%3E%3Cpath d='M0 400 Q 250 380 500 400 T 1000 400'/%3E%3C/g%3E%3C/svg%3E");
-        background-size: 100% auto; /* Key for mobile visibility: stretches to width */
+        background-size: 100% auto;
         background-repeat: repeat;
         opacity: 0.55;
-        mix-blend-mode: soft-light; /* Soft-light is more consistent than overlay on mobile */
+        mix-blend-mode: soft-light;
         animation: topography-drift 120s linear infinite;
         transform: translate3d(0,0,0);
         pointer-events: none;

@@ -1,5 +1,11 @@
-export type TabType = 'Home' | 'Profile & Roadmap' | 'Resume Scorer' | 'Career Path' | 'Outreach Architect' | 'Interview Lab' | 'History' | 'Pricing' | 'Credit System';
+export type TabType = 'Home' | 'Profile & Roadmap' | 'Resume Scorer' | 'Career Path' | 'Outreach Architect' | 'Interview Lab' | 'History' | 'Pricing' | 'Credit System' | 'Simulation';
 export type PlanId = 'free' | 'starter' | 'pro' | 'ultra-pro';
+
+export interface SimulationMessage {
+  role: 'interviewer' | 'candidate';
+  content: string;
+  timestamp: number;
+}
 
 export interface ProfileMetadata {
   avatarUrl?: string;
@@ -32,7 +38,7 @@ export interface ProfileTasks {
 
 export interface HistoryItem {
   id: string;
-  type: 'strategy' | 'market-insight' | 'outreach' | 'interview-prep' | 'resume-audit' | 'worthiness-review';
+  type: 'strategy' | 'market-insight' | 'outreach' | 'interview-prep' | 'resume-audit' | 'worthiness-review' | 'interview-simulation';
   title: string;
   date: string;
   inputs: Record<string, string>;
@@ -166,7 +172,6 @@ export interface WorthinessReviewResponse {
   refused?: boolean;
 }
 
-// Moved from Dashboard.tsx to be shared
 export interface Message {
   role: 'user' | 'model';
   content: string;
@@ -178,7 +183,6 @@ export interface Message {
   suggestions?: string[];
 }
 
-// New type for storing chat sessions
 export interface ChatHistoryItem {
   id: string;
   title: string;

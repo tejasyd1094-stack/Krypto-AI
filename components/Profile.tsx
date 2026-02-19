@@ -11,7 +11,7 @@ interface ProfileProps {
 
 const TASK_CREDITS = {
   profilePic: 5,
-  resumeAdded: 10, // Updated from 20 to 10 credits
+  resumeAdded: 20,
   compAdded: 10,
   noticeAdded: 5,
   scorerUsed: 5,
@@ -19,6 +19,17 @@ const TASK_CREDITS = {
   outreachUsed: 5,
   interviewUsed: 5
 };
+
+const CURRENCIES = [
+  { code: 'USD', symbol: '$', label: 'US Dollar ($)' },
+  { code: 'INR', symbol: '₹', label: 'Indian Rupee (₹)' },
+  { code: 'EUR', symbol: '€', label: 'Euro (€)' },
+  { code: 'GBP', symbol: '£', label: 'British Pound (£)' },
+  { code: 'JPY', symbol: '¥', label: 'Japanese Yen (¥)' },
+  { code: 'AUD', symbol: '$', label: 'Australian Dollar ($)' },
+  { code: 'CAD', symbol: '$', label: 'Canadian Dollar ($)' },
+  { code: 'SGD', symbol: '$', label: 'Singapore Dollar ($)' },
+];
 
 const Profile: React.FC<ProfileProps> = ({ user, onUpdateUser, onAwardCredits }) => {
   const [loading, setLoading] = useState(false);
@@ -203,7 +214,16 @@ const Profile: React.FC<ProfileProps> = ({ user, onUpdateUser, onAwardCredits })
     alert("Notice period calibrated.");
   };
 
-  const TaskItem = ({ num, label, credits, completed, intro, attributes }: { num: number, label: string, credits: number, completed: boolean, intro?: React.ReactNode, attributes?: string[] }) => (
+  const handleCurrencyChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
+    const selected = CURRENCIES.find(c => c.code === e.target.value);
+    if (selected) {
+      // Logic: Selecting INR switches plan to INR environment. 
+      // Selecting anything else defaults payment plan to USD, regardless of compensation currency.
+      onUpdateUser({ currency: selected.code, symbol: selected.symbol });
+    }
+  };
+
+  const TaskItem = ({ num, label, credits, completed, intro, attributes }: { num: number, label: string, credits: number, completed: boolean, intro?: string, attributes?: string[] }) => (
     <div className={`p-6 bg-zinc-900/50 border border-zinc-800 rounded-[32px] group hover:border-yellow-500/30 transition-all ${intro ? 'flex flex-col gap-6' : 'flex items-center justify-between'}`}>
       <div className="flex items-center gap-4">
         <div className={`w-10 h-10 rounded-2xl flex items-center justify-center border transition-all ${completed ? 'bg-green-500/10 border-green-500/50 text-green-500' : 'bg-zinc-950 border-zinc-800 text-zinc-600 group-hover:border-yellow-500/30'}`}>
@@ -224,7 +244,7 @@ const Profile: React.FC<ProfileProps> = ({ user, onUpdateUser, onAwardCredits })
       
       {intro && (
         <div className="space-y-4 ml-14 border-l border-zinc-800 pl-6 relative">
-          <div className="text-xs text-zinc-400 font-medium leading-relaxed italic">{intro}</div>
+          <p className="text-xs text-zinc-400 font-medium leading-relaxed italic">{intro}</p>
           {attributes && (
             <div className="flex flex-wrap gap-2">
               {attributes.map(attr => (
@@ -259,10 +279,10 @@ const Profile: React.FC<ProfileProps> = ({ user, onUpdateUser, onAwardCredits })
 
       {/* SECTION 1: PROFESSIONAL DATA INPUTS */}
       <div className="space-y-16">
-        <div className="max-w-4xl mx-auto">
+        <div className="max-w-4xl mx-auto grid grid-cols-1 md:grid-cols-2 gap-8 items-end">
           <div className="space-y-4">
             <div className="flex justify-between items-end px-2">
-              <span className="text-[9px] font-black text-yellow-500 uppercase tracking-[0.3em]">Profile Completion Index</span>
+              <span className="text-[9px] font-black text-yellow-500 uppercase tracking-[0.3em]">Profile Completion</span>
               <span className="text-lg font-black text-zinc-100">{profileProgress}%</span>
             </div>
             <div className="h-3 bg-zinc-900/50 rounded-full border border-zinc-800 p-0.5 overflow-hidden shadow-inner">
@@ -271,6 +291,10 @@ const Profile: React.FC<ProfileProps> = ({ user, onUpdateUser, onAwardCredits })
                 style={{ width: `${profileProgress}%` }}
               />
             </div>
+          </div>
+          <div className="px-6 py-4 bg-zinc-900/40 border border-zinc-800 rounded-3xl flex items-center justify-between">
+            <span className="text-[9px] font-black text-zinc-500 uppercase tracking-[0.3em]">Profile Rewards Accrued</span>
+            <span className="text-xl font-black text-yellow-500">{profileRewards} <span className="text-[10px] text-zinc-600">CR</span></span>
           </div>
         </div>
 
@@ -331,7 +355,23 @@ const Profile: React.FC<ProfileProps> = ({ user, onUpdateUser, onAwardCredits })
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-8">
                <div className="bg-[#0c0c0e] border border-zinc-800 rounded-[48px] p-8 shadow-3xl space-y-8 flex flex-col justify-between">
                   <div className="space-y-6">
-                    <h4 className="text-lg font-black text-zinc-100 uppercase tracking-tight">Compensation</h4>
+                    <div className="flex items-center justify-between">
+                      <h4 className="text-lg font-black text-zinc-100 uppercase tracking-tight">Compensation</h4>
+                      <div className="relative group">
+                         <select 
+                           value={user.currency} 
+                           onChange={handleCurrencyChange}
+                           className="bg-zinc-900 border border-zinc-800 rounded-lg px-3 py-1.5 text-[9px] font-black text-yellow-500 uppercase tracking-widest outline-none focus:border-yellow-500/50 transition-all appearance-none cursor-pointer"
+                         >
+                           {CURRENCIES.map(c => (
+                             <option key={c.code} value={c.code}>{c.code} {c.symbol}</option>
+                           ))}
+                         </select>
+                         <div className="absolute right-2 top-1/2 -translate-y-1/2 pointer-events-none text-zinc-600 group-hover:text-yellow-500">
+                           <svg className="w-2.5 h-2.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M19 9l-7 7-7-7" /></svg>
+                         </div>
+                      </div>
+                    </div>
                     <div className="space-y-4">
                        <input value={tempProfile.compensation?.fixed || ''} onChange={e => setTempProfile({...tempProfile, compensation: {...(tempProfile.compensation || {fixed: '', variable: ''}), fixed: e.target.value}})} className="w-full bg-zinc-950 border border-zinc-900 rounded-2xl px-5 py-3 text-sm font-bold text-zinc-100 outline-none focus:border-yellow-500/50" placeholder={`FIXED (${user.symbol})`} />
                        <input value={tempProfile.compensation?.variable || ''} onChange={e => setTempProfile({...tempProfile, compensation: {...(tempProfile.compensation || {fixed: '', variable: ''}), variable: e.target.value}})} className="w-full bg-zinc-950 border border-zinc-900 rounded-2xl px-5 py-3 text-sm font-bold text-zinc-100 outline-none focus:border-yellow-500/50" placeholder={`VARIABLE (${user.symbol})`} />
@@ -344,7 +384,7 @@ const Profile: React.FC<ProfileProps> = ({ user, onUpdateUser, onAwardCredits })
                   <div className="space-y-6">
                     <h4 className="text-lg font-black text-zinc-100 uppercase tracking-tight">Availability</h4>
                     <select value={tempProfile.noticePeriod || ''} onChange={e => setTempProfile({...tempProfile, noticePeriod: e.target.value})} className="w-full bg-zinc-950 border border-zinc-800 rounded-2xl px-5 py-4 text-sm font-bold uppercase text-zinc-100 outline-none focus:border-yellow-500/50">
-                       <option value="">SELECT</option>
+                       <option value="">SELECT PROTOCOL...</option>
                        <option value="Immediate">IMMEDIATE AVAILABILITY</option>
                        <option value="30 Days">30 DAYS PROTOCOL</option>
                        <option value="60 Days">60 DAYS PROTOCOL</option>
@@ -356,21 +396,14 @@ const Profile: React.FC<ProfileProps> = ({ user, onUpdateUser, onAwardCredits })
             </div>
           </div>
 
-          {/* Identity Missions Summary - Rearranged as per user request */}
-          <div className="lg:col-span-4 space-y-8">
-            <div className="px-6 py-4 bg-zinc-900/40 border border-zinc-800 rounded-3xl flex items-center justify-between">
-              <span className="text-[9px] font-black text-zinc-500 uppercase tracking-[0.3em]">Profile Rewards Accrued</span>
-              <span className="text-xl font-black text-yellow-500">{profileRewards} <span className="text-[10px] text-zinc-600">CR</span></span>
-            </div>
-
-            <div className="space-y-6">
-              <h3 className="text-[11px] font-black text-zinc-600 uppercase tracking-[0.5em] px-4">Identity Missions</h3>
-              <div className="space-y-3">
-                 <TaskItem num={1} label="Add Profile Picture" credits={TASK_CREDITS.profilePic} completed={user.tasks.profilePic} />
-                 <TaskItem num={2} label="Add Profile Details" credits={TASK_CREDITS.resumeAdded} completed={user.tasks.resumeAdded} />
-                 <TaskItem num={3} label="Calibrate Compensation" credits={TASK_CREDITS.compAdded} completed={user.tasks.compAdded} />
-                 <TaskItem num={4} label="Define Availability" credits={TASK_CREDITS.noticeAdded} completed={user.tasks.noticeAdded} />
-              </div>
+          {/* Static Missions Summary */}
+          <div className="lg:col-span-4 space-y-6">
+            <h3 className="text-[11px] font-black text-zinc-600 uppercase tracking-[0.5em] px-4">Identity Missions</h3>
+            <div className="space-y-3">
+               <TaskItem num={1} label="Add Profile Picture" credits={TASK_CREDITS.profilePic} completed={user.tasks.profilePic} />
+               <TaskItem num={2} label="Integrate Resume DNA" credits={TASK_CREDITS.resumeAdded} completed={user.tasks.resumeAdded} />
+               <TaskItem num={3} label="Calibrate Compensation" credits={TASK_CREDITS.compAdded} completed={user.tasks.compAdded} />
+               <TaskItem num={4} label="Define Availability" credits={TASK_CREDITS.noticeAdded} completed={user.tasks.noticeAdded} />
             </div>
           </div>
         </div>
@@ -380,8 +413,8 @@ const Profile: React.FC<ProfileProps> = ({ user, onUpdateUser, onAwardCredits })
       <div className="space-y-16 pt-16 border-t border-zinc-900">
         <div className="max-w-4xl mx-auto space-y-8">
           <div className="text-center space-y-2">
-            <h3 className="text-4xl sm:text-7xl font-black uppercase text-zinc-100 tracking-tighter">Career <span className="text-blue-500">Roadmap</span></h3>
-            <p className="text-zinc-500 text-lg font-medium">Stepwise strategic deployment for professional market entry.</p>
+            <h3 className="text-3xl font-black uppercase text-zinc-100 tracking-tighter">Career <span className="text-blue-500">Roadmap</span></h3>
+            <p className="text-zinc-500 text-sm font-medium">Stepwise strategic deployment for professional market entry.</p>
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-8 items-end">
@@ -411,11 +444,7 @@ const Profile: React.FC<ProfileProps> = ({ user, onUpdateUser, onAwardCredits })
               label="Step 1: Execute First Resume Audit" 
               credits={TASK_CREDITS.scorerUsed} 
               completed={user.tasks.scorerUsed}
-              intro={
-                <>
-                  Start by establishing your technical dominance. You need an asset that clears automated filters. The <span className="font-bold text-zinc-500">Semantic Gap Analysis</span> identifies missing industry markers, while the <span className="font-bold text-zinc-500">ATS Parsability Audit</span> ensures structural compliance. Finalize your foundation with <span className="font-bold text-zinc-500">Google XYZ Optimization</span> to prove your ROI instantly.
-                </>
-              }
+              intro="The foundational validation layer. Our audit identifies semantic gaps and technical rejection triggers before a human ever sees your application. Upgrading to a **Fully Optimized Resume** applies the elite Google XYZ formula, providing a blueprint engineered for 100% ATS compatibility and recruiter impact."
               attributes={['Semantic Gap Analysis', 'ATS Parsability Audit', 'Google XYZ Optimization']}
             />
             <TaskItem 
@@ -423,11 +452,7 @@ const Profile: React.FC<ProfileProps> = ({ user, onUpdateUser, onAwardCredits })
               label="Step 2: Generate Career Intelligence" 
               credits={TASK_CREDITS.careerUsed} 
               completed={user.tasks.careerUsed}
-              intro={
-                <>
-                  Transition into high-yield opportunity zones. Use intelligence to stop guessing your worth. <span className="font-bold text-zinc-500">Tactical Strategy Blueprints</span> provide your technical roadmap, <span className="font-bold text-zinc-500">Localized Market Insights</span> reveal where the capital is flowing, and <span className="font-bold text-zinc-500">Hub Signal Analysis</span> identifies the specific city corridors hiring your archetype.
-                </>
-              }
+              intro="Strategic positioning is critical for long-term yield. **Strategy Blueprints** provide an actionable technical track and course roadmap, while **Market Insights** utilize real-time search intelligence to identify hiring hubs and localized salary benchmarks—ensuring you pivot into high-velocity opportunity zones."
               attributes={['Tactical Strategy Blueprints', 'Localized Market Insights', 'Hub Signal Analysis']}
             />
             <TaskItem 
@@ -435,11 +460,7 @@ const Profile: React.FC<ProfileProps> = ({ user, onUpdateUser, onAwardCredits })
               label="Step 3: Deploy Outreach Protocol" 
               credits={TASK_CREDITS.outreachUsed} 
               completed={user.tasks.outreachUsed}
-              intro={
-                <>
-                  Initiate direct engagement. Standard networking is low-yield; you need architectural precision. The <span className="font-bold text-zinc-500">Conversation Forge</span> builds a high-status narrative, while <span className="font-bold text-zinc-500">Hyper-Personalized Hooks</span> use real-time company data to bypass gatekeepers. Refine your delivery with <span className="font-bold text-zinc-500">Vision Tone Modulation</span> to align with executive leadership.
-                </>
-              }
+              intro="Direct engagement with high-status decision-makers. The **Conversation Forge** re-architects standard networking into a high-conversion protocol by using real-time company trajectory signals and personalized hook logic that virtually guarantees a stakeholder response."
               attributes={['Conversation Forge', 'Hyper-Personalized Hooks', 'Vision Tone Modulation']}
             />
             <TaskItem 
@@ -447,11 +468,7 @@ const Profile: React.FC<ProfileProps> = ({ user, onUpdateUser, onAwardCredits })
               label="Step 4: Final Interview Validation" 
               credits={TASK_CREDITS.interviewUsed} 
               completed={user.tasks.interviewUsed}
-              intro={
-                <>
-                  Secure the final offer through stress-testing. Validate your readiness before the actual meeting. The <span className="font-bold text-zinc-500">Personalized Worthiness Index</span> predicts your cultural longevity, <span className="font-bold text-zinc-500">Behavioral Stress Vectors</span> expose your resilience gaps, and the <span className="font-bold text-zinc-500">Technical Readiness Lab</span> ensures your core competencies meet the organizational bar.
-                </>
-              }
+              intro="The final hurdle. Our simulation uses organization-specific data to stress-test your technical and behavioral responses. The proprietary **Personalized Worthiness Index** is our definitive signal, predicting your attitudinal resilience and long-term cultural alignment within the target organizational structure."
               attributes={['Worthiness Index', 'Behavioral Stress Vectors', 'Technical Readiness Lab']}
             />
           </div>
