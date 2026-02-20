@@ -1,4 +1,4 @@
-export type TabType = 'Home' | 'Profile & Roadmap' | 'Resume Scorer' | 'Career Path' | 'Outreach Architect' | 'Interview Lab' | 'History' | 'Pricing' | 'Credit System' | 'Simulation';
+export type TabType = 'Home' | 'Profile & Roadmap' | 'Resume Scorer' | 'Career Path' | 'Outreach Architect' | 'Interview Lab' | 'History' | 'Pricing' | 'Credit System' | 'Simulation' | 'Lab-ATS' | 'Lab-Career' | 'Lab-Outreach' | 'Lab-Interview';
 export type PlanId = 'free' | 'starter' | 'pro' | 'ultra-pro';
 
 export interface SimulationMessage {

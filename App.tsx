@@ -11,6 +11,10 @@ import History from './components/History';
 import Pricing from './components/Pricing';
 import UnitLedger from './components/UnitLedger';
 import Login from './components/Login';
+import AtsLabAttributes from './components/labs/AtsLabAttributes';
+import CareerLabAttributes from './components/labs/CareerLabAttributes';
+import OutreachLabAttributes from './components/labs/OutreachLabAttributes';
+import InterviewLabAttributes from './components/labs/InterviewLabAttributes';
 import { supabase } from './lib/supabase';
 import { TabType, UserStatus, PricingPlan, PlanId, FeatureAccess, HistoryItem, ResumeScoreResponse, CareerPathResponse, PersonalityTraitScores, Message, ChatHistoryItem } from './types';
 
@@ -100,6 +104,13 @@ const App: React.FC = () => {
       }]);
     }
   }, []);
+
+  useEffect(() => {
+    // Reset scroll when switching tabs
+    if (scrollRef.current) {
+      scrollRef.current.scrollTop = 0;
+    }
+  }, [activeTab]);
 
   const handleVerifyLocation = async () => {
     setIsVerifyingLocation(true);
@@ -249,6 +260,13 @@ const App: React.FC = () => {
               case 'History': return <History history={user.history} chatHistory={chatHistory} onDeleteHistory={(id) => setUser(prev => ({...prev, history: prev.history.filter(h => h.id !== id)}))} onDeleteChat={(id) => setChatHistory(prev => prev.filter(c => c.id !== id))} />;
               case 'Pricing': return <Pricing user={user} onUpgrade={(p) => setUser(prev => ({...prev, planId: p.id, credits: prev.credits + (p.credits as number)}))} />;
               case 'Credit System': return <UnitLedger />;
+              
+              /* Attribute Deep Dive Pages */
+              case 'Lab-ATS': return <AtsLabAttributes />;
+              case 'Lab-Career': return <CareerLabAttributes />;
+              case 'Lab-Outreach': return <OutreachLabAttributes />;
+              case 'Lab-Interview': return <InterviewLabAttributes />;
+
               default: return <Dashboard onUse={deductCredits} onNavigatePricing={() => setActiveTab('Pricing')} userCredits={user.credits} messages={chatMessages} setMessages={setChatMessages} onNewChat={handleNewChat} />;
             }
           })()}
