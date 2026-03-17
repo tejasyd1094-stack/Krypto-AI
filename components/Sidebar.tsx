@@ -86,7 +86,7 @@ const Sidebar: React.FC<SidebarProps> = ({ activeTab, setActiveTab, isOpen, setI
       case 'ultra-pro': return 'Ultra Pro';
       case 'pro': return 'Professional';
       case 'starter': return 'Starter';
-      default: return 'Free Architect';
+      default: return 'Free Aspirant';
     }
   };
 
@@ -132,7 +132,7 @@ const Sidebar: React.FC<SidebarProps> = ({ activeTab, setActiveTab, isOpen, setI
         <div className="p-6 space-y-4">
           <div className="bg-zinc-900/50 border border-zinc-800 rounded-[32px] p-6 space-y-6">
             <div className="flex items-center justify-between">
-              <span className="text-[9px] font-black uppercase text-zinc-600 tracking-widest">Architect Plan</span>
+              <span className="text-[9px] font-black uppercase text-zinc-600 tracking-widest">Aspirants Plan</span>
               <span className="text-[8px] font-black uppercase text-yellow-500/80 bg-yellow-500/10 px-2 py-0.5 rounded border border-yellow-500/20 tracking-widest">
                 {getPlanName(user.planId)}
               </span>

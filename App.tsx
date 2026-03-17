@@ -51,6 +51,7 @@ const App: React.FC = () => {
 
   const [chatHistory, setChatHistory] = useState<ChatHistoryItem[]>([]);
   const [chatMessages, setChatMessages] = useState<Message[]>([]);
+  const [showCreditPopup, setShowCreditPopup] = useState(false);
 
   const [user, setUser] = useState<UserStatus>({
     isPro: false,
@@ -87,11 +88,19 @@ const App: React.FC = () => {
   useEffect(() => {
     supabase.auth.getSession().then(({ data: { session } }) => {
       setSession(session);
-      if (session) setActiveTab('Profile & Roadmap');
+      if (session) {
+        setActiveTab('Home');
+        setShowCreditPopup(true);
+        if (scrollRef.current) scrollRef.current.scrollTop = 0;
+      }
     });
     const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
       setSession(session);
-      if (session) setActiveTab('Profile & Roadmap');
+      if (session) {
+        setActiveTab('Home');
+        setShowCreditPopup(true);
+        if (scrollRef.current) scrollRef.current.scrollTop = 0;
+      }
     });
     return () => subscription.unsubscribe();
   }, []);
@@ -100,7 +109,7 @@ const App: React.FC = () => {
     if (chatMessages.length === 0) {
       setChatMessages([{
         role: 'model',
-        content: "Welcome, Career Architect! I'm your personal AI Career Coach. How can I assist your mission today?"
+        content: "Welcome, Career Aspirant! I'm your personal AI Career Coach. How can I assist your mission today?"
       }]);
     }
   }, []);
@@ -110,6 +119,7 @@ const App: React.FC = () => {
     if (scrollRef.current) {
       scrollRef.current.scrollTop = 0;
     }
+    window.scrollTo(0, 0);
   }, [activeTab]);
 
   const handleVerifyLocation = async () => {
@@ -196,13 +206,13 @@ const App: React.FC = () => {
   const handleNewChat = () => {
     setChatMessages([{
         role: 'model',
-        content: "Welcome, Career Architect! I'm your personal AI Career Coach. How can I assist your mission today?"
+        content: "Welcome, Career Aspirant! I'm your personal AI Career Coach. How can I assist your mission today?"
     }]);
   };
 
   const currentSession = session || guestUser;
 
-  if (!currentSession) return <Login onGuestLogin={() => { setGuestUser({ user: { email: 'architect@krypto.ai' } }); setActiveTab('Profile & Roadmap'); }} />;
+  if (!currentSession) return <Login onGuestLogin={() => { setGuestUser({ user: { email: 'aspirant@krypto.ai' } }); setActiveTab('Home'); setShowCreditPopup(true); }} />;
 
   return (
     <div className="flex min-h-screen bg-transparent text-zinc-100">
@@ -221,7 +231,36 @@ const App: React.FC = () => {
             <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16m-7 6h7" /></svg>
           </button>
           
-          <div className="flex items-center gap-4 ml-auto">
+          <div className="flex items-center gap-4 ml-auto relative">
+            {showCreditPopup && (
+              <div className="absolute top-full right-0 mt-4 w-64 bg-zinc-900 border border-yellow-500/50 p-4 rounded-2xl shadow-[0_0_30px_rgba(234,179,8,0.2)] animate-in fade-in slide-in-from-top-4 duration-500 z-50">
+                <div className="flex flex-col gap-3">
+                  <div className="flex items-center gap-2">
+                    <div className="w-2 h-2 bg-yellow-500 rounded-full animate-pulse"></div>
+                    <span className="text-[10px] font-black text-yellow-500 uppercase tracking-widest">Free Credits</span>
+                  </div>
+                  <p className="text-xs text-zinc-300 font-medium leading-relaxed">
+                    Complete your profile to claim your <span className="text-yellow-500 font-bold">Free Credits</span>.
+                  </p>
+                  <button 
+                    onClick={() => {
+                      setActiveTab('Profile & Roadmap');
+                      setShowCreditPopup(false);
+                    }}
+                    className="w-full py-2 bg-yellow-500 text-zinc-950 rounded-xl text-[9px] font-black uppercase tracking-widest hover:bg-yellow-400 transition-all shadow-lg"
+                  >
+                    Claim Now
+                  </button>
+                  <button 
+                    onClick={() => setShowCreditPopup(false)}
+                    className="absolute -top-2 -right-2 w-6 h-6 bg-zinc-800 border border-zinc-700 rounded-full flex items-center justify-center text-zinc-500 hover:text-white transition-colors"
+                  >
+                    <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" /></svg>
+                  </button>
+                </div>
+                <div className="absolute -top-2 right-12 w-4 h-4 bg-zinc-900 border-t border-l border-yellow-500/50 rotate-45"></div>
+              </div>
+            )}
             <div className="flex items-center gap-2 px-3 py-1.5 bg-zinc-900 border border-zinc-800 rounded-full shadow-lg group hover:border-yellow-500/30 transition-all">
               <div className="w-4 h-4 bg-yellow-500 rounded-full flex items-center justify-center shadow-[0_0_8px_rgba(234,179,8,0.5)]">
                 <svg className="w-2.5 h-2.5 text-zinc-950" fill="currentColor" viewBox="0 0 24 24">

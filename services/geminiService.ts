@@ -310,7 +310,11 @@ export const predictCareerPaths = async (
         }
       }
     });
-    return JSON.parse(response.text || '{}');
+    const parsed = JSON.parse(response.text || '{}');
+    return {
+      personaSummary: parsed.personaSummary || 'Analysis complete.',
+      careers: parsed.careers || []
+    };
   } catch (e: any) {
     return { personaSummary: "Error.", careers: [] };
   }

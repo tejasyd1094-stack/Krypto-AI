@@ -250,6 +250,82 @@ const RadarChart = ({ scores }: { scores: PersonalityTraitScores }) => {
 };
 
 
+const CollapsibleSection: React.FC<{ title: string; children: React.ReactNode; defaultOpen?: boolean; color?: string }> = ({ 
+  title, children, defaultOpen = false, color = 'yellow' 
+}) => {
+  const [isOpen, setIsOpen] = useState(defaultOpen);
+  const colorClass = color === 'yellow' ? 'text-yellow-500' : 'text-blue-400';
+  const borderClass = color === 'yellow' ? 'border-yellow-500/10' : 'border-blue-500/10';
+  const hoverClass = color === 'yellow' ? 'hover:border-yellow-500/30' : 'hover:border-blue-500/30';
+
+  return (
+    <div className={`border border-zinc-800 rounded-2xl overflow-hidden bg-zinc-950/30 transition-all duration-300 ${hoverClass} ${isOpen ? borderClass : ''}`}>
+      <button 
+        onClick={() => setIsOpen(!isOpen)}
+        className="w-full flex items-center justify-between p-4 text-left hover:bg-zinc-900/40 transition-colors group"
+      >
+        <span className={`text-[10px] font-black uppercase tracking-[0.2em] ${isOpen ? colorClass : 'text-zinc-400'} group-hover:${colorClass} transition-colors`}>
+          {title}
+        </span>
+        <div className={`w-6 h-6 rounded-full border border-zinc-800 flex items-center justify-center transition-all duration-300 ${isOpen ? 'rotate-180 border-zinc-700 bg-zinc-900' : ''}`}>
+           <svg className={`w-3 h-3 ${isOpen ? colorClass : 'text-zinc-600'}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M19 9l-7 7-7-7" />
+           </svg>
+        </div>
+      </button>
+      <div className={`transition-all duration-500 ease-in-out ${isOpen ? 'max-h-[5000px] opacity-100' : 'max-h-0 opacity-0 overflow-hidden'}`}>
+        <div className="p-5 pt-0 border-t border-zinc-900/50">
+          <div className="prose-krypto prose-sm text-zinc-400 leading-relaxed">
+            {children}
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+const CollapsibleMarkdown: React.FC<{ text: string; color?: string }> = ({ text, color = 'yellow' }) => {
+  if (!text || text.trim() === '') return null;
+
+  const sections: { title: string; content: string }[] = [];
+  const parts = text.split(/^((?:#{1,4}\s+.*|(?:\d+\.\s*)?\*\*.*?\*\*.*|(?:\d+\.\s*)Month\s+\d+.*|(?:\d+\.\s*)Phase\s+\d+.*))$/im);
+  
+  let currentTitle = "Overview";
+  let currentContent = "";
+
+  for (const part of parts) {
+    if (/^(?:#{1,4}\s+|(?:\d+\.\s*)?\*\*|(?:\d+\.\s*)Month\s+\d+|(?:\d+\.\s*)Phase\s+\d+)/i.test(part)) {
+      if (currentContent.trim()) {
+        sections.push({ title: currentTitle, content: currentContent.trim() });
+      }
+      currentTitle = part
+        .replace(/^#{1,4}\s+/, '')
+        .replace(/^(?:\d+\.\s*)?\*\*(.*?)\*\*(.*)$/, '$1$2')
+        .replace(/\*\*/g, '')
+        .replace(/^:\s*/, '')
+        .replace(/:\s*$/, '')
+        .trim();
+      currentContent = "";
+    } else {
+      currentContent += part;
+    }
+  }
+  
+  if (currentContent.trim()) {
+    sections.push({ title: currentTitle, content: currentContent.trim() });
+  }
+
+  return (
+    <div className="space-y-3">
+      {sections.map((sec, i) => (
+        <CollapsibleSection key={i} title={sec.title} color={color} defaultOpen={i === 0}>
+          <ReactMarkdown>{sec.content}</ReactMarkdown>
+        </CollapsibleSection>
+      ))}
+    </div>
+  );
+};
+
 interface CareerPathProps {
   userCredits: number;
   userLocation: string;
@@ -296,6 +372,8 @@ const CareerPath: React.FC<CareerPathProps> = ({
   const [insightResults, setInsightResults] = useState<Record<number, string>>({});
   const [subLoading, setSubLoading] = useState<Record<string, boolean>>({});
   const [subLoadingProgress, setSubLoadingProgress] = useState<Record<string, number>>({});
+  const [jobSelectorModal, setJobSelectorModal] = useState<{isOpen: boolean, type: 'strategy' | 'market' | null}>({isOpen: false, type: null});
+  const [selectedJobIdx, setSelectedJobIdx] = useState<number | null>(null);
 
   const resultRef = useRef<HTMLDivElement>(null);
   const loaderRef = useRef<HTMLDivElement>(null);
@@ -340,7 +418,7 @@ const CareerPath: React.FC<CareerPathProps> = ({
 
     try {
       const response = await predictCareerPaths(scores, locationToUse, userType || 'fresher', resumeData as any);
-      if (!response.refused) onUse(cost);
+      if (!response.refused && response.personaSummary !== "Error.") onUse(cost);
       setLoadingProgress(100);
       setResult(response);
       setCurrentStep(6);
@@ -382,7 +460,7 @@ const CareerPath: React.FC<CareerPathProps> = ({
   };
 
   const unlockStrategy = async (idx: number, role: string) => {
-    if (userCredits < 10) { onNavigatePricing(); return; }
+    if (userCredits < 25) { onNavigatePricing(); return; }
     const key = `strat-${idx}`;
     setSubLoading(prev => ({ ...prev, [key]: true }));
     setSubLoadingProgress(prev => ({ ...prev, [key]: 0 }));
@@ -396,7 +474,7 @@ const CareerPath: React.FC<CareerPathProps> = ({
 
     try {
       const strategy = await generateCareerStrategy(role, strategyInputs, userSymbol, resumeData as any);
-      onUse(10);
+      if (strategy && !strategy.startsWith('⚠️') && strategy !== "Failed.") onUse(25);
       setSubLoadingProgress(prev => ({ ...prev, [key]: 100 }));
       setStrategyResults(prev => ({ ...prev, [idx]: strategy }));
       setActiveStrategyIdx(null);
@@ -413,7 +491,7 @@ const CareerPath: React.FC<CareerPathProps> = ({
   };
 
   const unlockInsights = async (idx: number, role: string) => {
-    if (userCredits < 10) { onNavigatePricing(); return; }
+    if (userCredits < 25) { onNavigatePricing(); return; }
     const key = `insight-${idx}`;
     setSubLoading(prev => ({ ...prev, [key]: true }));
     setSubLoadingProgress(prev => ({ ...prev, [key]: 0 }));
@@ -427,7 +505,7 @@ const CareerPath: React.FC<CareerPathProps> = ({
 
     try {
       const insight = await generateMarketIntelligence(role, userLocation || 'GLOBAL', userSymbol, resumeData as any);
-      onUse(10);
+      if (insight && !insight.startsWith('⚠️') && insight !== "Failed.") onUse(25);
       setSubLoadingProgress(prev => ({ ...prev, [key]: 100 }));
       setInsightResults(prev => ({ ...prev, [idx]: insight }));
 
@@ -612,12 +690,15 @@ const CareerPath: React.FC<CareerPathProps> = ({
                 <div className="space-y-2">
                    <span className="text-[11px] font-black text-blue-500 uppercase tracking-[0.4em]">Ideal Role Alignment</span>
                    <h3 className="text-4xl font-black uppercase tracking-tighter text-zinc-100">Market <span className="gold-text-gradient">Recommendations</span></h3>
+                   <p className="text-[10px] font-black text-zinc-500 uppercase tracking-widest lg:hidden flex items-center gap-2 pt-2">
+                      Swipe to explore <span className="animate-pulse text-yellow-500">→</span>
+                   </p>
                 </div>
                 
-                <div className="space-y-4">
-                   {result.careers.map((career, i) => (
-                     <div key={i} className="bg-zinc-950 border border-zinc-900 rounded-[32px] p-8 space-y-6 hover:border-yellow-500/30 transition-all group">
-                        <div className="flex items-start justify-between">
+                <div className="flex overflow-x-auto snap-x snap-mandatory gap-4 pb-4 lg:flex-col lg:overflow-visible lg:space-y-4 lg:gap-0">
+                   {(result.careers || []).map((career, i) => (
+                     <div key={i} className="w-[85vw] sm:w-[400px] lg:w-auto shrink-0 lg:shrink snap-center bg-zinc-950 border border-zinc-900 rounded-[32px] p-8 space-y-6 hover:border-yellow-500/30 transition-all group">
+                        <div className="space-y-4">
                            <div className="space-y-1">
                               <h4 className="text-xl font-black text-zinc-100 uppercase tracking-tight">{career.title}</h4>
                               <div className="flex items-center gap-2">
@@ -625,72 +706,184 @@ const CareerPath: React.FC<CareerPathProps> = ({
                                  <span className="text-[10px] font-black text-green-500 uppercase tracking-widest">{career.matchPercentage}% Alignment</span>
                               </div>
                            </div>
-                           <div className="text-right">
-                              <p className="text-[9px] font-black text-zinc-600 uppercase tracking-widest">Est. Comp</p>
-                              <p className="text-sm font-black text-zinc-100">{career.salaryExpectation}</p>
+                           <div className="inline-block bg-green-500/10 border border-green-500/20 px-4 py-2 rounded-xl">
+                              <p className="text-[9px] font-black text-green-600 uppercase tracking-widest mb-1">Est. Comp</p>
+                              <p className="text-lg font-black text-green-400">{career.salaryExpectation}</p>
                            </div>
                         </div>
                         
                         <p className="text-xs text-zinc-500 font-medium leading-relaxed">{career.reason}</p>
-                        
-                        <div className="grid grid-cols-2 gap-4">
-                           <button onClick={() => { setActiveStrategyIdx(i); setStrategyResults({}); }} className="py-3 bg-zinc-900 border border-zinc-800 rounded-xl text-[9px] font-black uppercase tracking-widest text-zinc-400 hover:text-white hover:border-yellow-500/30 transition-all">Strategic Roadmap</button>
-                           <button onClick={() => unlockInsights(i, career.title)} className="py-3 bg-zinc-900 border border-zinc-800 rounded-xl text-[9px] font-black uppercase tracking-widest text-zinc-400 hover:text-white hover:border-blue-500/30 transition-all">Market Intel</button>
-                        </div>
 
-                        {/* Strategy Selection Overlay */}
-                        {activeStrategyIdx === i && (
-                          <div className="mt-6 p-6 bg-zinc-900/50 border border-yellow-500/20 rounded-2xl space-y-4 animate-in slide-in-from-top-4">
-                             <div className="flex justify-between items-center">
-                                <h5 className="text-[10px] font-black text-yellow-500 uppercase tracking-widest">Blueprint Parameters</h5>
-                                <button onClick={() => setActiveStrategyIdx(null)} className="text-zinc-600 hover:text-white"><svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M6 18L18 6M6 6l12 12" /></svg></button>
-                             </div>
-                             <div className="grid grid-cols-3 gap-3">
-                                <input type="number" placeholder="BUDGET" value={strategyInputs.budget} onChange={e => setStrategyInputs({...strategyInputs, budget: e.target.value})} className="bg-zinc-950 border border-zinc-800 rounded-lg p-3 text-[10px] font-black text-zinc-100 text-center outline-none focus:border-yellow-500/40" />
-                                <input type="number" placeholder="MONTHS" value={strategyInputs.months} onChange={e => setStrategyInputs({...strategyInputs, months: e.target.value})} className="bg-zinc-950 border border-zinc-800 rounded-lg p-3 text-[10px] font-black text-zinc-100 text-center outline-none focus:border-yellow-500/40" />
-                                <input type="number" placeholder="HRS/DAY" value={strategyInputs.hours} onChange={e => setStrategyInputs({...strategyInputs, hours: e.target.value})} className="bg-zinc-950 border border-zinc-800 rounded-lg p-3 text-[10px] font-black text-zinc-100 text-center outline-none focus:border-yellow-500/40" />
-                             </div>
-                             <button onClick={() => unlockStrategy(i, career.title)} className="w-full py-4 bg-yellow-500 text-zinc-950 rounded-xl text-[10px] font-black uppercase tracking-[0.2em] hover:bg-yellow-400">Unlock Strategy (10 Cr.)</button>
-                          </div>
-                        )}
-
-                        {/* Strategy Result */}
-                        {strategyResults[i] && (
-                           <div id={`strat-result-${i}`} className="mt-6 p-8 bg-zinc-900/50 border border-yellow-500/20 rounded-3xl space-y-6 animate-in fade-in">
-                              <div className="flex items-center justify-between">
-                                 <h5 className="text-[10px] font-black text-yellow-500 uppercase tracking-widest">Strategic Execution Blueprint</h5>
-                                 <button onClick={() => handleSaveToVault('strategy', i, career.title)} className="text-[9px] font-black text-zinc-500 hover:text-yellow-500 uppercase">Save to Vault</button>
+                        {career.requiredSkills && career.requiredSkills.length > 0 && (
+                           <div className="space-y-2 pt-4 border-t border-zinc-900">
+                              <p className="text-[10px] font-black text-zinc-600 uppercase tracking-widest">Primary Skills</p>
+                              <div className="flex flex-wrap gap-2">
+                                 {career.requiredSkills.map((skill, idx) => (
+                                    <span key={idx} className="px-2.5 py-1 bg-zinc-900 border border-zinc-800 rounded-md text-[10px] font-bold text-zinc-400">{skill}</span>
+                                 ))}
                               </div>
-                              <div className="prose-krypto prose-sm text-zinc-300"><ReactMarkdown>{strategyResults[i]}</ReactMarkdown></div>
                            </div>
                         )}
 
-                        {/* Market Intel Result */}
-                        {insightResults[i] && (
-                           <div id={`insight-result-${i}`} className="mt-6 p-8 bg-zinc-900/50 border border-blue-500/20 rounded-3xl space-y-6 animate-in fade-in">
-                              <div className="flex items-center justify-between">
-                                 <h5 className="text-[10px] font-black text-blue-400 uppercase tracking-widest">Market Topography Insights</h5>
-                                 <button onClick={() => handleSaveToVault('market-insight', i, career.title)} className="text-[9px] font-black text-zinc-500 hover:text-blue-400 uppercase">Save to Vault</button>
-                              </div>
-                              <div className="prose-krypto prose-sm text-zinc-300"><ReactMarkdown>{insightResults[i]}</ReactMarkdown></div>
-                           </div>
-                        )}
-
-                        {/* Sub-loading state */}
-                        {(subLoading[`strat-${i}`] || subLoading[`insight-${i}`]) && (
-                           <div className="mt-6 p-8 bg-zinc-900/40 border border-zinc-800 rounded-3xl flex flex-col items-center gap-4 animate-in fade-in">
-                              <div className="w-12 h-12 border-4 border-zinc-800 border-t-yellow-500 rounded-full animate-spin"></div>
-                              <p className="text-[9px] font-black text-zinc-500 uppercase tracking-widest">Synthesizing Protocol: {Math.round(subLoading[`strat-${i}`] ? subLoadingProgress[`strat-${i}`] : subLoadingProgress[`insight-${i}`])}%</p>
+                        {career.certifications && career.certifications.length > 0 && (
+                           <div className="space-y-2 pt-4 border-t border-zinc-900">
+                              <p className="text-[10px] font-black text-zinc-600 uppercase tracking-widest">Free Courses & Platforms</p>
+                              <ul className="space-y-1.5">
+                                 {career.certifications.map((cert, idx) => (
+                                    <li key={idx} className="text-xs text-zinc-400 font-medium flex items-start gap-2">
+                                       <span className="text-yellow-500 mt-0.5">✦</span>
+                                       <span className="leading-snug">{cert}</span>
+                                    </li>
+                                 ))}
+                              </ul>
                            </div>
                         )}
                      </div>
                    ))}
+                </div>
+                
+                {/* New Common Buttons Section */}
+                <div className="mt-12 space-y-8">
+                   <div className="space-y-2">
+                      <span className="text-[11px] font-black text-blue-500 uppercase tracking-[0.4em]">Deep Dive Analysis</span>
+                      <h3 className="text-2xl font-black uppercase tracking-tighter text-zinc-100">Unlock <span className="gold-text-gradient">Premium Insights</span></h3>
+                      <p className="text-xs text-zinc-500 font-medium">Select a role above and generate a personalized strategic roadmap or market intelligence report.</p>
+                   </div>
+                   
+                   <div className="space-y-4">
+                      <button onClick={() => setJobSelectorModal({isOpen: true, type: 'strategy'})} className="w-full py-6 bg-zinc-900 border-2 border-zinc-800 rounded-2xl text-xs font-black uppercase tracking-widest text-zinc-300 hover:text-white hover:border-yellow-500/50 hover:bg-zinc-800/50 transition-all shadow-lg flex flex-col items-center justify-center gap-2">
+                         <span>Strategic Roadmap</span>
+                         <span className="text-[10px] text-yellow-500">(25 Credits)</span>
+                      </button>
+                      
+                      {/* Strategy Results */}
+                      {Object.entries(strategyResults).map(([idxStr, resultText]) => {
+                         const i = parseInt(idxStr);
+                         const career = result?.careers[i];
+                         if (!career) return null;
+                         return (
+                            <div key={`strat-${i}`} id={`strat-result-${i}`} className="p-8 bg-zinc-900/50 border border-yellow-500/20 rounded-3xl space-y-6 animate-in fade-in">
+                               <div className="flex items-center justify-between">
+                                  <h5 className="text-[10px] font-black text-yellow-500 uppercase tracking-widest">Strategic Execution Blueprint: {career.title}</h5>
+                                  <button onClick={() => handleSaveToVault('strategy', i, career.title)} className="text-[9px] font-black text-zinc-500 hover:text-yellow-500 uppercase">Save to Vault</button>
+                               </div>
+                               <CollapsibleMarkdown text={resultText} color="yellow" />
+                            </div>
+                         );
+                      })}
+                      
+                      {/* Strategy Loaders */}
+                      {Object.entries(subLoading).filter(([key, isLoading]) => key.startsWith('strat-') && isLoading).map(([key]) => {
+                         const progress = subLoadingProgress[key] || 0;
+                         return (
+                            <div key={`loading-${key}`} className="p-8 bg-zinc-900/40 border border-zinc-800 rounded-3xl flex flex-col items-center gap-4 animate-in fade-in">
+                               <div className="w-12 h-12 border-4 border-zinc-800 border-t-yellow-500 rounded-full animate-spin"></div>
+                               <p className="text-[9px] font-black text-zinc-500 uppercase tracking-widest">Synthesizing Protocol: {Math.round(progress)}%</p>
+                            </div>
+                         );
+                      })}
+                   </div>
+
+                   <div className="space-y-4">
+                      <button onClick={() => setJobSelectorModal({isOpen: true, type: 'market'})} className="w-full py-6 bg-zinc-900 border-2 border-zinc-800 rounded-2xl text-xs font-black uppercase tracking-widest text-zinc-300 hover:text-white hover:border-blue-500/50 hover:bg-zinc-800/50 transition-all shadow-lg flex flex-col items-center justify-center gap-2">
+                         <span>Market Intel</span>
+                         <span className="text-[10px] text-blue-500">(25 Credits)</span>
+                      </button>
+                      
+                      {/* Market Intel Results */}
+                      {Object.entries(insightResults).map(([idxStr, resultText]) => {
+                         const i = parseInt(idxStr);
+                         const career = result?.careers[i];
+                         if (!career) return null;
+                         return (
+                            <div key={`insight-${i}`} id={`insight-result-${i}`} className="p-8 bg-zinc-900/50 border border-blue-500/20 rounded-3xl space-y-6 animate-in fade-in">
+                               <div className="flex items-center justify-between">
+                                  <h5 className="text-[10px] font-black text-blue-400 uppercase tracking-widest">Market Topography Insights: {career.title}</h5>
+                                  <button onClick={() => handleSaveToVault('market-insight', i, career.title)} className="text-[9px] font-black text-zinc-500 hover:text-blue-400 uppercase">Save to Vault</button>
+                               </div>
+                               <CollapsibleMarkdown text={resultText} color="blue" />
+                            </div>
+                         );
+                      })}
+                      
+                      {/* Market Intel Loaders */}
+                      {Object.entries(subLoading).filter(([key, isLoading]) => key.startsWith('insight-') && isLoading).map(([key]) => {
+                         const progress = subLoadingProgress[key] || 0;
+                         return (
+                            <div key={`loading-${key}`} className="p-8 bg-zinc-900/40 border border-zinc-800 rounded-3xl flex flex-col items-center gap-4 animate-in fade-in">
+                               <div className="w-12 h-12 border-4 border-zinc-800 border-t-blue-500 rounded-full animate-spin"></div>
+                               <p className="text-[9px] font-black text-zinc-500 uppercase tracking-widest">Synthesizing Protocol: {Math.round(progress)}%</p>
+                            </div>
+                         );
+                      })}
+                   </div>
                 </div>
              </div>
           </div>
 
           <div className="pt-20 text-center">
              <button onClick={handleReset} className="px-10 py-5 bg-zinc-900 border border-zinc-800 text-zinc-500 rounded-2xl text-[10px] font-black uppercase tracking-[0.4em] hover:text-zinc-100 transition-all">New DNA Sequence</button>
+          </div>
+        </div>
+      )}
+      {jobSelectorModal.isOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm">
+          <div className="bg-zinc-950 border border-zinc-800 rounded-3xl p-6 w-full max-w-lg space-y-6">
+             <div className="flex justify-between items-center">
+                <h3 className="text-xl font-black uppercase tracking-tight text-zinc-100">Select Target Role</h3>
+                <button onClick={() => { setJobSelectorModal({isOpen: false, type: null}); setSelectedJobIdx(null); }} className="text-zinc-500 hover:text-white">✕</button>
+             </div>
+             
+             <div className="space-y-3 max-h-[40vh] overflow-y-auto pr-2">
+                {(result?.careers || []).map((career, i) => (
+                   <button 
+                      key={i}
+                      onClick={() => setSelectedJobIdx(i)}
+                      className={`w-full text-left p-4 rounded-2xl border transition-all ${selectedJobIdx === i ? 'border-yellow-500 bg-yellow-500/10' : 'border-zinc-800 bg-zinc-900 hover:border-zinc-700'}`}
+                   >
+                      <div className="flex justify-between items-center">
+                         <span className="font-black text-zinc-100">{career.title}</span>
+                         <span className="text-[10px] font-black text-green-500">{career.matchPercentage}% Match</span>
+                      </div>
+                   </button>
+                ))}
+             </div>
+
+             {selectedJobIdx !== null && jobSelectorModal.type === 'strategy' && (
+                <div className="space-y-4 pt-4 border-t border-zinc-800">
+                   <h5 className="text-[10px] font-black text-yellow-500 uppercase tracking-widest">Blueprint Parameters</h5>
+                   <div className="grid grid-cols-3 gap-3">
+                      <input type="number" placeholder="BUDGET" value={strategyInputs.budget} onChange={e => setStrategyInputs({...strategyInputs, budget: e.target.value})} className="bg-zinc-900 border border-zinc-800 rounded-lg p-3 text-[10px] font-black text-zinc-100 text-center outline-none focus:border-yellow-500/40" />
+                      <input type="number" placeholder="MONTHS" value={strategyInputs.months} onChange={e => setStrategyInputs({...strategyInputs, months: e.target.value})} className="bg-zinc-900 border border-zinc-800 rounded-lg p-3 text-[10px] font-black text-zinc-100 text-center outline-none focus:border-yellow-500/40" />
+                      <input type="number" placeholder="HRS/DAY" value={strategyInputs.hours} onChange={e => setStrategyInputs({...strategyInputs, hours: e.target.value})} className="bg-zinc-900 border border-zinc-800 rounded-lg p-3 text-[10px] font-black text-zinc-100 text-center outline-none focus:border-yellow-500/40" />
+                   </div>
+                   <button 
+                      onClick={() => {
+                         unlockStrategy(selectedJobIdx, result!.careers[selectedJobIdx].title);
+                         setJobSelectorModal({isOpen: false, type: null});
+                         setSelectedJobIdx(null);
+                      }} 
+                      className="w-full py-4 bg-yellow-500 text-zinc-950 rounded-xl text-[10px] font-black uppercase tracking-[0.2em] hover:bg-yellow-400"
+                   >
+                      Generate Strategic Roadmap
+                   </button>
+                </div>
+             )}
+
+             {selectedJobIdx !== null && jobSelectorModal.type === 'market' && (
+                <div className="pt-4 border-t border-zinc-800">
+                   <button 
+                      onClick={() => {
+                         unlockInsights(selectedJobIdx, result!.careers[selectedJobIdx].title);
+                         setJobSelectorModal({isOpen: false, type: null});
+                         setSelectedJobIdx(null);
+                      }} 
+                      className="w-full py-4 bg-blue-500 text-zinc-950 rounded-xl text-[10px] font-black uppercase tracking-[0.2em] hover:bg-blue-400"
+                   >
+                      Generate Market Intel
+                   </button>
+                </div>
+             )}
           </div>
         </div>
       )}

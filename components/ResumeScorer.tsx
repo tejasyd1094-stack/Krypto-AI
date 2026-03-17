@@ -185,7 +185,7 @@ const ResumeScorer: React.FC<ResumeScorerProps> = ({
       setFormattedResume(architected);
 
       const newScore = Math.min(99, Math.round(result.score + (100 - result.score) * 0.85));
-      setResult(prev => prev ? { ...prev, score: newScore } : null);
+      setPersistedData.setResult({ ...result, score: newScore });
 
       setTimeout(() => architectRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' }), 100);
     } catch (err) {
@@ -500,15 +500,15 @@ const ResumeScorer: React.FC<ResumeScorerProps> = ({
                       <div className={`absolute inset-0 bg-zinc-950/90 rounded-full flex flex-col items-center justify-center p-6 text-center transition-all duration-300 ${isHoveringScore ? 'opacity-100 scale-100' : 'opacity-0 scale-90 pointer-events-none'}`}>
                         <p className="text-[10px] font-black uppercase text-yellow-500 mb-4 tracking-widest border-b border-yellow-500/20 pb-2">Contribution Matrix</p>
                         <div className="grid grid-cols-2 gap-x-6 gap-y-3 w-full max-w-[160px]">
-                           <div className="text-left"><p className="text-[8px] text-zinc-500 uppercase font-black">Impact</p><p className="text-xs text-zinc-100 font-black">25%</p></div>
-                           <div className="text-left"><p className="text-[8px] text-zinc-500 uppercase font-black">ATS</p><p className="text-xs text-zinc-100 font-black">25%</p></div>
-                           <div className="text-left"><p className="text-[8px] text-zinc-500 uppercase font-black">Semantic</p><p className="text-xs text-zinc-100 font-black">25%</p></div>
-                           <div className="text-left"><p className="text-[8px] text-zinc-500 uppercase font-black">Readability</p><p className="text-xs text-zinc-100 font-black">25%</p></div>
+                           <div className="text-left"><p className="text-[8px] text-zinc-500 uppercase font-black">Impact</p><p className="text-xs text-zinc-100 font-black">{result.breakdown.impact}%</p></div>
+                           <div className="text-left"><p className="text-[8px] text-zinc-500 uppercase font-black">ATS</p><p className="text-xs text-zinc-100 font-black">{result.breakdown.ats}%</p></div>
+                           <div className="text-left"><p className="text-[8px] text-zinc-500 uppercase font-black">Semantic</p><p className="text-xs text-zinc-100 font-black">{result.breakdown.keywords}%</p></div>
+                           <div className="text-left"><p className="text-[8px] text-zinc-500 uppercase font-black">Readability</p><p className="text-xs text-zinc-100 font-black">{result.breakdown.readability}%</p></div>
                         </div>
                       </div>
 
                       <div className={`absolute inset-0 flex flex-col items-center justify-center text-center p-4 transition-opacity duration-300 ${isHoveringScore ? 'opacity-0' : 'opacity-100'}`}>
-                         <span className={`text-6xl sm:text-7xl font-black tracking-tighter leading-none mb-1 ${getScoreColors(result.score).text}`}>{result.score}%</span>
+                         <span className={`text-5xl sm:text-6xl font-black tracking-tighter leading-none mb-1 ${getScoreColors(result.score).text}`}>{result.score}%</span>
                       </div>
                     </div>
 
