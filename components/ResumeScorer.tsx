@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import mammoth from 'mammoth';
 import { analyzeResume, generateFormattedResume } from '../services/geminiService';
-import { ResumeScoreResponse, HistoryItem } from '../types';
+import { ResumeScoreResponse, HistoryItem, ProfileMetadata } from '../types';
 import ReactMarkdown from 'react-markdown';
 import { KryptoLogo } from './Branding';
 
@@ -24,6 +24,7 @@ const EXTERNAL_TEMPLATES = [
 ];
 
 interface ResumeScorerProps {
+  userProfile?: ProfileMetadata;
   userCredits: number;
   onUse: (amount: number) => boolean;
   maxImprovements: number;
@@ -44,6 +45,7 @@ interface ResumeScorerProps {
 }
 
 const ResumeScorer: React.FC<ResumeScorerProps> = ({ 
+  userProfile,
   userCredits, 
   onUse, 
   maxImprovements, 
@@ -425,7 +427,27 @@ const ResumeScorer: React.FC<ResumeScorerProps> = ({
                   </div>
                   <h4 className="text-zinc-100 text-2xl font-black mb-2 uppercase tracking-tight">Upload Resume Portfolio</h4>
                   <p className="text-[10px] font-black text-zinc-600 uppercase tracking-[0.3em] mb-8">MAX SIZE: 15MB • PDF, DOCX, IMG</p>
-                  <button onClick={() => fileInputRef.current?.click()} className="px-10 py-5 bg-zinc-900 border border-zinc-800 text-zinc-300 rounded-2xl text-[10px] font-black uppercase tracking-widest hover:bg-zinc-800 hover:text-white transition-all shadow-xl">Select Local Asset</button>
+                  <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
+                    <button onClick={() => fileInputRef.current?.click()} className="px-10 py-5 bg-zinc-900 border border-zinc-800 text-zinc-300 rounded-2xl text-[10px] font-black uppercase tracking-widest hover:bg-zinc-800 hover:text-white transition-all shadow-xl">Select Local Asset</button>
+                    {userProfile?.resumeData && (
+                      <button 
+                        onClick={() => {
+                          setError(null);
+                          setResumeData(userProfile.resumeData!);
+                          const fileName = userProfile.resumeFileName || "Profile_Resume.pdf";
+                          try {
+                            const fakeFile = new File([new Blob()], fileName, { type: 'application/pdf' });
+                            setFile(fakeFile);
+                          } catch(e) {
+                            // ignore
+                          }
+                        }}
+                        className="px-10 py-5 bg-yellow-500/10 border border-yellow-500/20 text-yellow-500 rounded-2xl text-[10px] font-black uppercase tracking-widest hover:bg-yellow-500/20 transition-all shadow-xl"
+                      >
+                        Use Profile Resume
+                      </button>
+                    )}
+                  </div>
                 </div>
               )}
               <input type="file" ref={fileInputRef} onChange={(e) => e.target.files?.[0] && validateAndSetFile(e.target.files[0])} className="hidden" accept=".pdf,.docx,image/*" />

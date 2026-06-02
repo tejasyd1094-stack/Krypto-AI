@@ -11,8 +11,8 @@ interface ProfileProps {
 
 const TASK_CREDITS = {
   profilePic: 5,
-  resumeAdded: 20,
-  compAdded: 10,
+  resumeAdded: 10,
+  compAdded: 5,
   noticeAdded: 5,
   scorerUsed: 5,
   careerUsed: 10,
@@ -129,7 +129,9 @@ const Profile: React.FC<ProfileProps> = ({ user, onUpdateUser, onAwardCredits })
           education: {
             graduate: data.educationGraduate,
             masters: data.educationMasters
-          }
+          },
+          resumeData: { data: base64, mimeType: file.type },
+          resumeFileName: file.name
         };
         setTempProfile(updatedProfile);
         return;
@@ -169,7 +171,9 @@ const Profile: React.FC<ProfileProps> = ({ user, onUpdateUser, onAwardCredits })
         education: {
           graduate: data.educationGraduate,
           masters: data.educationMasters
-        }
+        },
+        resumeData: text,
+        resumeFileName: file.name
       };
       setTempProfile(updatedProfile);
     } catch (err) {

@@ -18,6 +18,8 @@ export interface ProfileMetadata {
     graduate?: string;
     masters?: string;
   };
+  resumeData?: string | { data: string; mimeType: string };
+  resumeFileName?: string;
   compensation?: {
     fixed: string;
     variable: string;
@@ -123,6 +125,7 @@ export interface CareerPathRecommendation {
   reason: string;
   matchPercentage: number;
   salaryExpectation: string;
+  percentageIncrease?: string;
   localSalaryAnalysis: string;
   localMarketInsights: string; 
   hubAnalysis: string;         

@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { predictCareerPaths, generateCareerStrategy, generateMarketIntelligence } from '../services/geminiService';
-import { CareerPathResponse, PersonalityTraitScores, QuizQuestion, HistoryItem } from '../types';
+import { CareerPathResponse, PersonalityTraitScores, QuizQuestion, HistoryItem, ProfileMetadata } from '../types';
 import ReactMarkdown from 'react-markdown';
 import { KryptoLogo } from './Branding';
 import mammoth from 'mammoth';
@@ -327,6 +327,7 @@ const CollapsibleMarkdown: React.FC<{ text: string; color?: string }> = ({ text,
 };
 
 interface CareerPathProps {
+  userProfile?: ProfileMetadata;
   userCredits: number;
   userLocation: string;
   userSymbol?: string;
@@ -354,7 +355,7 @@ interface CareerPathProps {
 }
 
 const CareerPath: React.FC<CareerPathProps> = ({ 
-  userCredits, userLocation, userSymbol = '$', onUse, onNavigatePricing, onSaveHistory, onVerifyLocation, isVerifyingLocation, onSetManualLocation, onNavigateResumeScorer,
+  userProfile, userCredits, userLocation, userSymbol = '$', onUse, onNavigatePricing, onSaveHistory, onVerifyLocation, isVerifyingLocation, onSetManualLocation, onNavigateResumeScorer,
   persistedData, setPersistedData
 }) => {
   const { result, scores, dnaCode, userType, resumeData } = persistedData;
@@ -417,7 +418,11 @@ const CareerPath: React.FC<CareerPathProps> = ({
     }, 100);
 
     try {
-      const response = await predictCareerPaths(scores, locationToUse, userType || 'fresher', resumeData as any);
+      const currentCompensationMsg = userProfile?.compensation 
+        ? `Fixed: ${userProfile.compensation.fixed || 'N/A'}${userProfile.compensation.variable ? `, Variable: ${userProfile.compensation.variable}` : ''}`
+        : undefined;
+
+      const response = await predictCareerPaths(scores, locationToUse, userType || 'fresher', resumeData as any, currentCompensationMsg);
       if (!response.refused && response.personaSummary !== "Error.") onUse(cost);
       setLoadingProgress(100);
       setResult(response);
@@ -602,7 +607,7 @@ const CareerPath: React.FC<CareerPathProps> = ({
                    <p className="text-zinc-600 text-[9px] font-black uppercase tracking-[0.4em]">Strategic Pivot • Growth Mapping</p>
                    <div className="mt-8 px-6 py-2 bg-yellow-500/10 border border-yellow-500/20 rounded-full text-yellow-500 text-[8px] font-black uppercase tracking-widest">35 Credits</div>
                 </button>
-                <button onClick={() => { setUserType('fresher'); setCurrentStep(1); }} className="bg-[#0c0c0e] border border-zinc-800 p-10 rounded-[48px] text-center hover:border-blue-500/50 hover:bg-zinc-900/50 transition-all group relative overflow-hidden">
+                <button onClick={() => { setUserType('fresher'); setCurrentStep(0); }} className="bg-[#0c0c0e] border border-zinc-800 p-10 rounded-[48px] text-center hover:border-blue-500/50 hover:bg-zinc-900/50 transition-all group relative overflow-hidden">
                    <div className="absolute inset-0 bg-blue-500/[0.02] opacity-0 group-hover:opacity-100 transition-opacity"></div>
                    <FresherIllustration />
                    <h3 className="text-2xl font-black text-zinc-100 uppercase tracking-tighter mb-2">Fresher</h3>
@@ -610,18 +615,29 @@ const CareerPath: React.FC<CareerPathProps> = ({
                    <div className="mt-8 px-6 py-2 bg-blue-500/10 border border-blue-500/20 rounded-full text-blue-500 text-[8px] font-black uppercase tracking-widest">25 Credits</div>
                 </button>
              </div>
-          ) : userType === 'experienced' && currentStep === 0 ? (
+          ) : currentStep === 0 ? (
             <div className="max-w-2xl mx-auto p-10 bg-[#0c0c0e] border-2 border-dashed border-zinc-800 rounded-[48px] text-center space-y-8">
                <div className="w-16 h-16 bg-zinc-900 rounded-2xl flex items-center justify-center mx-auto mb-6">
                  <svg className="w-8 h-8 text-zinc-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" /></svg>
                </div>
                <h3 className="text-2xl font-black text-zinc-100 uppercase tracking-tighter">Asset Integration</h3>
                <p className="text-zinc-500 text-xs font-bold uppercase tracking-widest">Upload your resume to enrich the sequence.</p>
-               <input type="file" id="resume-dna" className="hidden" onChange={(e) => e.target.files?.[0] && handleResumeUpload(e.target.files[0])} accept=".pdf,.docx" />
-               <div className="flex flex-col gap-3">
-                 <button onClick={() => document.getElementById('resume-dna')?.click()} className="px-10 py-4 bg-zinc-100 text-zinc-950 rounded-[20px] font-black text-[10px] uppercase tracking-widest hover:bg-yellow-500 transition-all">Upload Document</button>
-                 <button onClick={() => setCurrentStep(1)} className="text-zinc-600 text-[9px] font-black uppercase tracking-[0.3em] hover:text-zinc-400">Skip Integration</button>
+               <input type="file" id="resume-dna" className="hidden" onChange={(e) => e.target.files?.[0] && handleResumeUpload(e.target.files[0])} accept=".pdf,.docx,.txt" />
+               <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
+                 <button onClick={() => document.getElementById('resume-dna')?.click()} className="px-10 py-5 bg-zinc-100 text-zinc-950 rounded-[20px] font-black text-[10px] uppercase tracking-widest hover:bg-yellow-500 transition-all">Upload Document</button>
+                 {userProfile?.resumeData && (
+                   <button 
+                     onClick={() => {
+                       setResumeData(userProfile.resumeData!);
+                       setCurrentStep(1);
+                     }}
+                     className="px-10 py-5 bg-yellow-500/10 border border-yellow-500/20 text-yellow-500 rounded-[20px] text-[10px] font-black uppercase tracking-widest hover:bg-yellow-500/20 transition-all"
+                   >
+                     Use Profile Resume
+                   </button>
+                 )}
                </div>
+               <button onClick={() => setCurrentStep(1)} className="text-zinc-600 text-[9px] font-black uppercase tracking-[0.3em] hover:text-zinc-400 mt-2 block mx-auto">Skip Integration</button>
             </div>
           ) : (
             <div className="max-w-2xl mx-auto space-y-10">
@@ -706,9 +722,17 @@ const CareerPath: React.FC<CareerPathProps> = ({
                                  <span className="text-[10px] font-black text-green-500 uppercase tracking-widest">{career.matchPercentage}% Alignment</span>
                               </div>
                            </div>
-                           <div className="inline-block bg-green-500/10 border border-green-500/20 px-4 py-2 rounded-xl">
-                              <p className="text-[9px] font-black text-green-600 uppercase tracking-widest mb-1">Est. Comp</p>
-                              <p className="text-lg font-black text-green-400">{career.salaryExpectation}</p>
+                           <div className="flex gap-4">
+                              <div className="inline-block bg-green-500/10 border border-green-500/20 px-4 py-2 rounded-xl">
+                                 <p className="text-[9px] font-black text-green-600 uppercase tracking-widest mb-1">Est. Comp</p>
+                                 <p className="text-lg font-black text-green-400">{career.salaryExpectation}</p>
+                              </div>
+                              {career.percentageIncrease && (
+                                 <div className="inline-block bg-yellow-500/10 border border-yellow-500/20 px-4 py-2 rounded-xl">
+                                    <p className="text-[9px] font-black text-yellow-600 uppercase tracking-widest mb-1">Bump</p>
+                                    <p className="text-lg font-black text-yellow-500">{career.percentageIncrease}</p>
+                                 </div>
+                              )}
                            </div>
                         </div>
                         

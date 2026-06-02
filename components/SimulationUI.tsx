@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import ReactMarkdown from 'react-markdown';
 import { SimulationMessage, UserStatus } from '../types';
-import { getStreamingInterviewQuestion, getInterviewSummary, auditFullInterview } from '../services/geminiService';
+import { getStreamingInterviewQuestion, getInterviewSummary, auditFullInterview, generateTTS } from '../services/geminiService';
 import { KryptoLogo } from './Branding';
 import { GoogleGenAI } from "@google/genai";
 
@@ -33,6 +33,8 @@ const SimulationUI: React.FC<SimulationUIProps> = ({ inputs, jdData, onComplete,
   const [isComplete, setIsComplete] = useState(false);
   const [auditLoading, setAuditLoading] = useState(false);
   const [questionCount, setQuestionCount] = useState(0);
+  const [silentAttempts, setSilentAttempts] = useState(0);
+  const [showQuitDialog, setShowQuitDialog] = useState(false);
   
   // Audio/Video Controls
   const [micEnabled, setMicEnabled] = useState(true);
@@ -52,13 +54,20 @@ const SimulationUI: React.FC<SimulationUIProps> = ({ inputs, jdData, onComplete,
   const canvasRef = useRef<HTMLCanvasElement>(document.createElement('canvas'));
   const idleTimerRef = useRef<number | null>(null);
   const visualAnalysisInterval = useRef<number | null>(null);
+  const activeAudioRef = useRef<{ stop: () => void } | null>(null);
+  const currentSpeechIdRef = useRef<number>(0);
 
   const isIndia = (inputs.location?.toUpperCase().includes('INDIA') || user.location?.toUpperCase().includes('INDIA') || user.currency === 'INR');
   const region = isIndia ? 'INDIA' : 'US';
   const personaName = isIndia ? "Ananya" : "Marcus";
   const voiceLang = isIndia ? "en-IN" : "en-US";
 
+  const hasInitializedRef = useRef(false);
+
   useEffect(() => {
+    if (hasInitializedRef.current) return;
+    hasInitializedRef.current = true;
+
     const initSession = async () => {
       try {
         const stream = await navigator.mediaDevices.getUserMedia({ video: true, audio: true });
@@ -92,6 +101,12 @@ const SimulationUI: React.FC<SimulationUIProps> = ({ inputs, jdData, onComplete,
       if (visualAnalysisInterval.current) clearInterval(visualAnalysisInterval.current);
       if (idleTimerRef.current) clearInterval(idleTimerRef.current);
       window.speechSynthesis.cancel();
+      if (activeAudioRef.current) activeAudioRef.current.stop();
+      if (recognitionRef.current) {
+        try {
+          recognitionRef.current.stop();
+        } catch(e) {}
+      }
       if (streamRef.current) {
         streamRef.current.getTracks().forEach(track => track.stop());
       }
@@ -168,6 +183,24 @@ const SimulationUI: React.FC<SimulationUIProps> = ({ inputs, jdData, onComplete,
     };
   }, [mode, isComplete, cameraEnabled]);
 
+  const handleNoResponse = () => {
+    setSilentAttempts(prev => {
+      const next = prev + 1;
+      if (next >= 3) {
+        setShowQuitDialog(true);
+        if (idleTimerRef.current) clearInterval(idleTimerRef.current);
+        return next;
+      }
+      // Re-read the last question instead of asking a new one
+      const lastMsg = messages.filter(m => m.role === 'interviewer').pop();
+      if (lastMsg) {
+        setMode('thinking');
+        speakText(lastMsg.content);
+      }
+      return next;
+    });
+  };
+
   const resetIdleTimer = () => {
     if (idleTimerRef.current) clearInterval(idleTimerRef.current);
     setTimerCount(10);
@@ -175,7 +208,7 @@ const SimulationUI: React.FC<SimulationUIProps> = ({ inputs, jdData, onComplete,
       setTimerCount(prev => {
         if (prev <= 1) {
           clearInterval(idleTimerRef.current!);
-          handleNextTurn("... (No response detected) ...");
+          handleNoResponse();
           return 10;
         }
         return prev - 1;
@@ -183,31 +216,118 @@ const SimulationUI: React.FC<SimulationUIProps> = ({ inputs, jdData, onComplete,
     }, 1000);
   };
 
-  const speakText = (text: string) => {
+  const speakText = async (text: string) => {
     window.speechSynthesis.cancel();
-    const utterance = new SpeechSynthesisUtterance(text);
-    const voices = window.speechSynthesis.getVoices();
-    const preferredVoice = voices.find(v => (v.lang === voiceLang && (isIndia ? v.name.includes("Female") : v.name.includes("Male")))) || voices[0];
+    if (activeAudioRef.current) activeAudioRef.current.stop();
     
-    utterance.voice = preferredVoice;
-    utterance.rate = 0.95;
+    currentSpeechIdRef.current += 1;
+    const mySpeechId = currentSpeechIdRef.current;
     
-    utterance.onstart = () => {
-      setMode('speaking');
-      if (idleTimerRef.current) clearInterval(idleTimerRef.current);
-      recognitionRef.current?.stop();
-    };
+    // We strictly use the generated TTS directly from Gemini now.
+    const ttsData = await generateTTS(text);
+    
+    // If a new speech request was made while we were generating TTS, abort this one
+    if (currentSpeechIdRef.current !== mySpeechId) return;
 
-    utterance.onend = () => {
+    if (ttsData && ttsData.data) {
+      if (ttsData.mimeType.includes("pcm") || ttsData.mimeType.includes("l16")) {
+        try {
+          const audioCtx = new (window.AudioContext || (window as any).webkitAudioContext)({ sampleRate: 24000 });
+          const binaryStr = atob(ttsData.data);
+          const audioBuffer = audioCtx.createBuffer(1, binaryStr.length / 2, 24000);
+          const channelData = audioBuffer.getChannelData(0);
+          for (let i = 0; i < binaryStr.length / 2; i++) {
+            let ls = binaryStr.charCodeAt(i * 2);
+            let ms = binaryStr.charCodeAt(i * 2 + 1);
+            let val = (ms << 8) | ls;
+            if (val >= 0x8000) val -= 0x10000;
+            channelData[i] = val / 0x8000;
+          }
+          const source = audioCtx.createBufferSource();
+          source.buffer = audioBuffer;
+          source.connect(audioCtx.destination);
+          
+          activeAudioRef.current = {
+            stop: () => source.stop()
+          };
+          
+          setMode('speaking');
+          if (idleTimerRef.current) clearInterval(idleTimerRef.current);
+          recognitionRef.current?.stop();
+          
+          source.onended = () => {
+            if (currentSpeechIdRef.current !== mySpeechId) return;
+            setMode('waiting');
+            if (micEnabled) recognitionRef.current?.start();
+            resetIdleTimer();
+          };
+          source.start();
+          return;
+        } catch (e) {
+          console.error("Audio Context Error", e);
+        }
+      } else {
+        try {
+          const binaryStr = atob(ttsData.data);
+          const bytes = new Uint8Array(binaryStr.length);
+          for (let i = 0; i < binaryStr.length; i++) {
+            bytes[i] = binaryStr.charCodeAt(i);
+          }
+          const blob = new Blob([bytes], { type: ttsData.mimeType });
+          const url = URL.createObjectURL(blob);
+          const audio = new Audio(url);
+          
+          activeAudioRef.current = {
+            stop: () => {
+              audio.pause();
+              audio.currentTime = 0;
+            }
+          };
+
+          setMode('speaking');
+          if (idleTimerRef.current) clearInterval(idleTimerRef.current);
+          recognitionRef.current?.stop();
+          
+          audio.onended = () => {
+            if (currentSpeechIdRef.current !== mySpeechId) return;
+            setMode('waiting');
+            if (micEnabled) recognitionRef.current?.start();
+            resetIdleTimer();
+            URL.revokeObjectURL(url);
+          };
+          audio.play();
+          return;
+        } catch (e) {
+          console.error("HTML Audio Error", e);
+        }
+      }
+    }
+    
+    // Fallback if TTS fails: just advance state
+    setTimeout(() => {
+      if (currentSpeechIdRef.current !== mySpeechId) return;
       setMode('waiting');
       if (micEnabled) recognitionRef.current?.start();
       resetIdleTimer();
-    };
-
-    window.speechSynthesis.speak(utterance);
+    }, 2000);
   };
 
+  const isProcessingTurnRef = useRef(false);
+
   const handleNextTurn = async (userAnswer: string) => {
+    if (isProcessingTurnRef.current) return;
+    isProcessingTurnRef.current = true;
+    
+    // Clear idle timer explicitly so it doesn't fire while AI is generating
+    if (idleTimerRef.current) clearInterval(idleTimerRef.current);
+    recognitionRef.current?.stop();
+    
+    // Reset silent attempts if user responded
+    if (userAnswer && userAnswer !== "... (No response detected) ...") {
+      setSilentAttempts(0);
+      setCurrentInput(''); // Clear the input field immediately
+    }
+    
     if (userAnswer) {
       setMessages(prev => [...prev, { role: 'candidate', content: userAnswer, timestamp: Date.now() }]);
     }
@@ -252,6 +372,7 @@ const SimulationUI: React.FC<SimulationUIProps> = ({ inputs, jdData, onComplete,
       setMode('waiting');
     } finally {
       setIsAiTyping(false);
+      isProcessingTurnRef.current = false;
     }
   };
 
@@ -271,28 +392,30 @@ const SimulationUI: React.FC<SimulationUIProps> = ({ inputs, jdData, onComplete,
     }
   };
 
-  const visibleMessages = messages.slice(-2);
+  const visibleMessages = messages.slice(-1);
 
   return (
     <div className="fixed inset-0 z-[100] bg-black flex flex-col overflow-hidden animate-in fade-in duration-500 font-sans">
       
-      {/* 1. INTERVIEWER LAYER (FULL SCREEN STATIC VIDEO) */}
-      <div className="absolute inset-0 z-0 flex items-center justify-center bg-zinc-950">
-        {mode === 'speaking' && speakVideo ? (
-          <video key="vid-s" src={speakVideo} autoPlay loop muted playsInline className="w-full h-full object-cover brightness-[0.7] transition-all duration-1000" />
-        ) : waitVideo ? (
-          <video key="vid-w" src={waitVideo} autoPlay loop muted playsInline className="w-full h-full object-cover brightness-[0.7] transition-all duration-1000" />
-        ) : (
-          <div className="flex flex-col items-center gap-6 opacity-30">
-            <KryptoLogo size={120} className="animate-pulse" />
-            <p className="text-[10px] font-black uppercase tracking-[0.6em] text-white">Neural Handshake Active...</p>
-          </div>
-        )}
-        <div className="absolute inset-0 bg-gradient-to-t from-black via-transparent to-black/30"></div>
+      {/* 1. INTERVIEWER LAYER (TEAMS BG) */}
+      <div className="absolute inset-0 z-0 flex flex-col items-center justify-center bg-gradient-to-br from-[#121212] to-black">
+        <div className={`relative flex items-center justify-center w-48 h-48 sm:w-64 sm:h-64 rounded-full bg-zinc-900 border-4 border-zinc-800 transition-all duration-700 ${mode === 'speaking' ? 'shadow-[0_0_80px_rgba(234,179,8,0.15)] border-yellow-500/50' : ''}`}>
+          <div className="absolute inset-0 rounded-full bg-gradient-to-tr from-yellow-500/5 to-transparent"></div>
+          <KryptoLogo size={80} className={`text-zinc-500 transition-all duration-500 ${mode === 'speaking' ? 'text-yellow-500 scale-110' : ''}`} />
+          {mode === 'speaking' && (
+            <>
+              <div className="absolute inset-0 rounded-full border-2 border-yellow-500/30 animate-ping" style={{ animationDuration: '2s' }} />
+              <div className="absolute inset-0 rounded-full border-2 border-yellow-500/10 animate-ping delay-500" style={{ animationDuration: '2s' }} />
+            </>
+          )}
+        </div>
+        <p className="mt-8 text-zinc-500 text-[10px] sm:text-xs font-black uppercase tracking-[0.5em]">
+          {mode === 'speaking' ? 'AI Interviewer • Speaking' : 'AI Interviewer • Listening'}
+        </p>
       </div>
 
       {/* 2. USER PIP WEBCAM (Teams Style Overlay) */}
-      <div className="absolute bottom-36 sm:bottom-44 left-1/2 -translate-x-1/2 sm:translate-x-0 sm:left-auto sm:right-8 w-[90%] sm:w-72 aspect-video rounded-3xl overflow-hidden border-2 border-white/10 shadow-2xl z-40 bg-zinc-900 animate-in slide-in-from-bottom-8 sm:slide-in-from-right-8 duration-1000">
+      <div className="absolute top-24 right-4 sm:top-auto sm:bottom-44 sm:right-8 w-28 sm:w-72 aspect-[3/4] sm:aspect-video rounded-2xl sm:rounded-3xl overflow-hidden border-2 border-white/10 shadow-2xl z-40 bg-zinc-900 animate-in slide-in-from-top-8 sm:slide-in-from-right-8 duration-1000">
          {cameraEnabled ? (
            <video ref={userVideoRef} autoPlay muted playsInline className="w-full h-full object-cover scale-x-[-1]" />
          ) : (
@@ -366,20 +489,20 @@ const SimulationUI: React.FC<SimulationUIProps> = ({ inputs, jdData, onComplete,
       )}
 
       {/* 5. FLOATING HUD: CHAT (Font optimized for mobile) */}
-      <div className="relative z-20 flex-1 flex flex-col justify-end p-6 sm:p-24 pb-64 sm:pb-48">
-         <div className="max-w-4xl mx-auto w-full space-y-6 sm:space-y-8">
+      <div className="relative z-20 flex-1 flex flex-col justify-end p-4 sm:p-24 pb-48 sm:pb-48 pointer-events-none">
+         <div className="max-w-4xl mx-auto w-full space-y-4 sm:space-y-8 pointer-events-auto">
             {visibleMessages.map((msg, i) => (
-               <div key={i} className={`flex ${msg.role === 'interviewer' ? 'justify-start' : 'justify-end'} animate-in slide-in-from-bottom-8 sm:slide-in-from-bottom-12 duration-1000`}>
-                  <div className={`max-w-[90%] sm:max-w-xl p-6 sm:p-14 rounded-[40px] sm:rounded-[72px] backdrop-blur-[40px] border shadow-3xl ${msg.role === 'interviewer' ? 'bg-black/25 border-white/5 text-white rounded-tl-none' : 'bg-yellow-500/85 border-yellow-400 text-zinc-950 rounded-br-none shadow-yellow-500/10'}`}>
-                     <div className="prose-krypto prose-sm text-inherit font-bold leading-relaxed text-lg sm:text-3xl drop-shadow-xl">
+               <div key={i} className={`flex ${msg.role === 'interviewer' ? 'justify-center sm:justify-start' : 'justify-center sm:justify-end'} animate-in fade-in slide-in-from-bottom-4 sm:slide-in-from-bottom-12 duration-700`}>
+                  <div className={`w-full sm:w-auto max-w-[95%] sm:max-w-xl p-4 sm:p-14 rounded-2xl sm:rounded-[72px] backdrop-blur-[20px] sm:backdrop-blur-[40px] sm:border shadow-2xl sm:shadow-3xl ${msg.role === 'interviewer' ? 'bg-black/60 sm:bg-black/25 text-white sm:border-white/5 sm:rounded-tl-none text-center sm:text-left' : 'bg-yellow-500/90 sm:bg-yellow-500/85 sm:border-yellow-400 text-zinc-950 sm:rounded-br-none shadow-yellow-500/10 text-center sm:text-left'}`}>
+                     <div className="prose-krypto prose-sm sm:prose-lg text-inherit font-bold leading-relaxed text-[15px] sm:text-3xl drop-shadow-xl">
                         <ReactMarkdown>{msg.content}</ReactMarkdown>
                      </div>
                   </div>
                </div>
             ))}
             {isAiTyping && (
-               <div className="flex justify-start">
-                  <div className="px-6 py-3 sm:px-10 sm:py-6 bg-black/40 backdrop-blur-3xl border border-white/10 rounded-full flex gap-3 sm:gap-4 shadow-2xl">
+               <div className="flex justify-center sm:justify-start">
+                  <div className="px-5 py-3 sm:px-10 sm:py-6 bg-black/60 sm:bg-black/40 backdrop-blur-3xl border border-white/10 rounded-full flex gap-3 sm:gap-4 shadow-2xl">
                     <span className="w-2 h-2 sm:w-3 sm:h-3 rounded-full bg-yellow-500 animate-bounce delay-0" />
                     <span className="w-2 h-2 sm:w-3 sm:h-3 rounded-full bg-yellow-500 animate-bounce delay-150" />
                     <span className="w-2 h-2 sm:w-3 sm:h-3 rounded-full bg-yellow-500 animate-bounce delay-300" />
@@ -432,6 +555,36 @@ const SimulationUI: React.FC<SimulationUIProps> = ({ inputs, jdData, onComplete,
               <h3 className="text-3xl sm:text-6xl font-black text-white uppercase tracking-tighter leading-none">Compiling Regional Audit</h3>
               <p className="text-zinc-600 text-[10px] sm:text-sm font-black uppercase tracking-[0.5em] sm:tracking-[1em] animate-pulse">Synthesizing performance DNA...</p>
            </div>
+        </div>
+      )}
+
+      {/* 8. QUIT DIALOG */}
+      {showQuitDialog && (
+        <div className="absolute inset-0 z-[200] bg-black/80 backdrop-blur flex items-center justify-center p-6 animate-in fade-in">
+          <div className="bg-[#0c0c0e] border border-white/10 rounded-[32px] p-8 max-w-md w-full text-center space-y-6 shadow-2xl animate-in zoom-in-95">
+            <h3 className="text-2xl font-black text-white uppercase tracking-tight">Response Not Recorded</h3>
+            <p className="text-zinc-500 font-medium pb-2 text-sm leading-relaxed">We haven't detected a response after multiple attempts. Do you want to quit the session?</p>
+            <div className="flex gap-4">
+              <button 
+                onClick={onExit}
+                className="flex-1 py-4 bg-red-500/10 text-red-500 hover:bg-red-500/20 rounded-xl font-bold uppercase tracking-widest text-xs transition-all border border-red-500/20"
+              >
+                Yes, Quit
+              </button>
+              <button 
+                onClick={() => {
+                  setShowQuitDialog(false);
+                  setSilentAttempts(0);
+                  const lastMsg = messages.filter(m => m.role === 'interviewer').pop();
+                  if (lastMsg) speakText(lastMsg.content);
+                  else resetIdleTimer();
+                }}
+                className="flex-1 py-4 bg-yellow-500 text-zinc-950 hover:bg-yellow-400 rounded-xl font-bold uppercase tracking-widest text-xs transition-all"
+              >
+                Resume
+              </button>
+            </div>
+          </div>
         </div>
       )}
     </div>

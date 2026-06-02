@@ -272,10 +272,15 @@ export const predictCareerPaths = async (
   location: string,
   userType: 'experienced' | 'fresher',
   resumeData?: string | { data: string; mimeType: string },
+  currentCompensation?: string
 ): Promise<CareerPathResponse> => {
   try {
     const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
-    const parts: any[] = [{ text: `CONTEXT: ${userType}, ${location}, Scores: ${JSON.stringify(scores)}` }];
+    let promptText = `CONTEXT: ${userType}, ${location}, Scores: ${JSON.stringify(scores)}`;
+    if (currentCompensation) {
+      promptText += `\nUSER CURRENT COMPENSATION: ${currentCompensation}. IMPORTANT: Please suggest job roles where the compensation bracket is ALWAYS HIGHER than this current compensation. Include the percentage increase they might get if they choose the respective job role.`;
+    }
+    const parts: any[] = [{ text: promptText }];
     if (resumeData) {
       if (typeof resumeData === 'string') parts.push({ text: `RESUME: ${resumeData}` });
       else parts.push({ inlineData: { data: resumeData.data, mimeType: resumeData.mimeType } });
@@ -298,11 +303,24 @@ export const predictCareerPaths = async (
                   reason: { type: Type.STRING },
                   matchPercentage: { type: Type.NUMBER },
                   salaryExpectation: { type: Type.STRING },
+                  percentageIncrease: { type: Type.STRING },
                   localSalaryAnalysis: { type: Type.STRING },
                   localMarketInsights: { type: Type.STRING },
                   hubAnalysis: { type: Type.STRING },
                   requiredSkills: { type: Type.ARRAY, items: { type: Type.STRING } },
-                  certifications: { type: Type.ARRAY, items: { type: Type.STRING } }
+                  certifications: { type: Type.ARRAY, items: { type: Type.STRING } },
+                  higherEducation: { type: Type.ARRAY, items: { type: Type.STRING } },
+                  costEffectiveCourses: {
+                    type: Type.ARRAY,
+                    items: {
+                      type: Type.OBJECT,
+                      properties: {
+                        name: { type: Type.STRING },
+                        platform: { type: Type.STRING },
+                        impact: { type: Type.STRING }
+                      }
+                    }
+                  }
                 }
               }
             }
@@ -399,5 +417,31 @@ export const generatePersonalizedWorthinessReview = async (inputs: any, painPoin
     return JSON.parse(response.text || '{}');
   } catch (e) {
     return { worthinessScore: 0, reviewDetails: "Error." };
+  }
+};
+
+export const generateTTS = async (text: string): Promise<{ data: string; mimeType: string } | null> => {
+  try {
+    const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
+    const response = await ai.models.generateContent({
+      model: "gemini-3.1-flash-tts-preview",
+      contents: [{ parts: [{ text }] }],
+      config: {
+        responseModalities: ["AUDIO"],
+        speechConfig: {
+          voiceConfig: {
+            prebuiltVoiceConfig: { voiceName: "Puck" },
+          },
+        },
+      },
+    });
+    const inlineData = response.candidates?.[0]?.content?.parts?.[0]?.inlineData;
+    if (inlineData) {
+      return { data: inlineData.data, mimeType: inlineData.mimeType };
+    }
+    return null;
+  } catch (e) {
+    console.error("TTS Error", e);
+    return null;
   }
 };
