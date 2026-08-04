@@ -141,38 +141,58 @@ export default function KryptonPath({ onLaunchKrypto }: KryptonPathProps) {
                 {/* Main Interactive Stage */}
                 <div className="relative z-10 grid grid-cols-1 md:grid-cols-3 gap-4 items-center">
                   
-                  {/* Left Card: AI Executive Interviewer */}
-                  <div className="bg-black/70 border border-yellow-500/40 rounded-xl p-4 shadow-xl backdrop-blur-md relative overflow-hidden flex flex-col justify-between h-48">
+                  {/* Left Card: Interview Simulation & Executive Feedback Audit */}
+                  <div className="bg-black/75 border border-yellow-500/40 rounded-xl p-3.5 shadow-2xl backdrop-blur-md relative overflow-hidden flex flex-col justify-between h-48 group/card">
                     <div className="absolute top-0 right-0 bg-yellow-500/20 text-yellow-400 text-[9px] font-black px-2.5 py-0.5 rounded-bl uppercase tracking-widest flex items-center gap-1.5 border-b border-l border-yellow-500/30">
                       <span className="w-1.5 h-1.5 rounded-full bg-yellow-400 animate-ping" />
-                      AI Interviewer
+                      Interview Feedback
                     </div>
                     
-                    <div className="flex items-center gap-3 pt-1">
-                      <div className="relative w-12 h-12 rounded-full overflow-hidden border-2 border-yellow-500 shadow-[0_0_15px_rgba(234,179,8,0.5)] shrink-0">
-                        <img src="https://images.unsplash.com/photo-1560250097-0b93528c311a?auto=format&fit=crop&w=300&q=80" alt="Neal Vance - AI Interviewer" className="w-full h-full object-cover" />
-                        <div className="absolute inset-0 bg-gradient-to-t from-yellow-500/30 to-transparent" />
+                    {/* Header & Feature Mention */}
+                    <div className="pt-0.5">
+                      <p className="text-white font-black text-xs uppercase tracking-wider flex items-center gap-1.5">
+                        <svg className="w-3.5 h-3.5 text-yellow-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                        </svg>
+                        Executive AI Feedback
+                      </p>
+                      <p className="text-zinc-400 text-[9.5px] font-semibold mt-0.5">
+                        Live Executive Interview Audit Report
+                      </p>
+                    </div>
+
+                    {/* Live Screenshot / Mockup of Actual Feedback Output Users Receive */}
+                    <div className="my-1 bg-zinc-950/95 p-2 rounded-lg border border-yellow-500/30 relative overflow-hidden shadow-inner">
+                      <div className="flex items-center justify-between mb-1 pb-1 border-b border-zinc-800">
+                        <div className="flex items-center gap-1.5">
+                          <span className="px-1.5 py-0.5 bg-emerald-500/20 text-emerald-400 text-[8px] font-black rounded uppercase">STRONG HIRE</span>
+                          <span className="text-[9px] text-zinc-300 font-bold">Audit Score</span>
+                        </div>
+                        <span className="text-yellow-400 font-mono font-black text-xs">92 / 100</span>
                       </div>
-                      <div>
-                        <p className="text-white font-black text-xs uppercase tracking-wider">Neal Vance</p>
-                        <p className="text-zinc-400 text-[10px] font-semibold">Head of HR</p>
+
+                      {/* Metric Bar & Strengths Preview */}
+                      <div className="space-y-1 text-[8.5px]">
+                        <div className="flex justify-between text-zinc-300 font-medium">
+                          <span>STAR Impact & Metrics</span>
+                          <span className="text-emerald-400 font-bold">95%</span>
+                        </div>
+                        <div className="w-full bg-zinc-800 h-1 rounded-full overflow-hidden">
+                          <div className="bg-gradient-to-r from-yellow-500 to-emerald-400 h-full w-[95%]" />
+                        </div>
+                        <p className="text-[8.5px] text-zinc-300 font-mono truncate pt-0.5 italic">
+                          "✓ Quantified STAR metric results verified."
+                        </p>
                       </div>
                     </div>
 
-                    {/* Equalizer Audio Waves */}
-                    <div className="my-2 bg-zinc-950/90 p-2 rounded-lg border border-zinc-800">
-                      <p className="text-[10px] text-zinc-300 font-mono italic truncate mb-1">
-                        "Tell me how you handled key HR challenges..."
-                      </p>
-                      <div className="flex items-end gap-1 h-5 pt-1">
-                        {[40, 70, 100, 60, 90, 30, 85, 95, 50, 75, 100, 40, 80, 60, 30].map((h, i) => (
-                          <div 
-                            key={i} 
-                            className="flex-1 bg-gradient-to-t from-yellow-600 to-yellow-300 rounded-t transition-all duration-300 animate-pulse" 
-                            style={{ height: `${h}%`, animationDelay: `${i * 80}ms` }} 
-                          />
-                        ))}
-                      </div>
+                    {/* Footer Attributes Tagline */}
+                    <div className="flex items-center justify-between text-[8.5px] font-bold text-yellow-400 uppercase tracking-wider pt-0.5">
+                      <span className="text-zinc-400 font-semibold flex items-center gap-1">
+                        <span className="w-1.5 h-1.5 rounded-full bg-emerald-400" />
+                        Actual Report Users Get
+                      </span>
+                      <span className="animate-pulse text-yellow-400 font-black">Full AI Audit</span>
                     </div>
                   </div>
 
@@ -199,36 +219,41 @@ export default function KryptonPath({ onLaunchKrypto }: KryptonPathProps) {
                     </div>
                   </div>
 
-                  {/* Right Card: Candidate Live Response */}
-                  <div className="bg-black/70 border border-cyan-500/40 rounded-xl p-4 shadow-xl backdrop-blur-md relative overflow-hidden flex flex-col justify-between h-48">
-                    <div className="absolute top-0 right-0 bg-cyan-500/20 text-cyan-400 text-[9px] font-black px-2.5 py-0.5 rounded-bl uppercase tracking-widest flex items-center gap-1 border-b border-l border-cyan-500/30">
-                      Candidate Profile
+                  {/* Right Card: Outreach Architect & Cold Pitch Engine */}
+                  <div className="bg-black/70 border border-yellow-500/30 rounded-xl p-4 shadow-xl backdrop-blur-md relative overflow-hidden flex flex-col justify-between h-48">
+                    <div className="absolute top-0 right-0 bg-yellow-500/20 text-yellow-400 text-[9px] font-black px-2.5 py-0.5 rounded-bl uppercase tracking-widest flex items-center gap-1.5 border-b border-l border-yellow-500/30">
+                      <span className="w-1.5 h-1.5 rounded-full bg-yellow-400 animate-ping" />
+                      Outreach Architect
                     </div>
 
-                    <div className="flex items-center gap-3 pt-1">
-                      <div className="relative w-12 h-12 rounded-full overflow-hidden border-2 border-cyan-500 shadow-[0_0_15px_rgba(6,182,212,0.5)] shrink-0">
-                        <img src="https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=300&q=80" alt="Candidate" className="w-full h-full object-cover" />
-                        <div className="absolute inset-0 bg-gradient-to-t from-cyan-500/30 to-transparent" />
-                      </div>
-                      <div>
-                        <p className="text-white font-black text-xs uppercase tracking-wider">Alex Chen</p>
-                        <p className="text-zinc-400 text-[10px] font-semibold">Senior Tech Lead</p>
-                      </div>
-                    </div>
-
-                    <div className="my-2 bg-zinc-950/90 p-2 rounded-lg border border-zinc-800">
-                      <p className="text-[10px] text-cyan-300/90 font-mono italic truncate">
-                        "Accomplished 45% speed improvement by..."
+                    <div className="pt-1">
+                      <p className="text-white font-black text-xs uppercase tracking-wider flex items-center gap-1.5">
+                        <svg className="w-3.5 h-3.5 text-yellow-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 002-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+                        </svg>
+                        Cold Email & LinkedIn Pitch
                       </p>
-                      <div className="mt-1 flex items-center justify-between text-[9px]">
-                        <span className="text-emerald-400 font-bold">✓ Google XYZ Format</span>
-                        <span className="text-yellow-400 font-bold">Score 96%</span>
+                      <p className="text-zinc-400 text-[10px] font-semibold mt-0.5">High-Response Recruiter Campaign</p>
+                    </div>
+
+                    <div className="space-y-1.5 my-1 bg-zinc-950/90 p-2.5 rounded-lg border border-zinc-800">
+                      <p className="text-[10px] text-zinc-300 font-mono italic truncate">
+                        "Hi Sarah, scaled backend throughput by 320% at..."
+                      </p>
+                      <div className="flex items-center justify-between text-[9px] pt-1 border-t border-zinc-800/80">
+                        <span className="text-emerald-400 font-bold flex items-center gap-1">
+                          <span className="w-1.5 h-1.5 rounded-full bg-emerald-400" />
+                          +340% Response Rate
+                        </span>
+                        <span className="text-cyan-400 font-mono font-bold">Google XYZ Verified</span>
                       </div>
                     </div>
 
-                    <div className="flex items-center justify-between text-[9px] font-bold text-cyan-400 uppercase tracking-wider">
-                      <span>Mic Speech Auto-Type</span>
-                      <span className="animate-pulse text-yellow-400">Live Active</span>
+                    <div className="flex items-center justify-between text-[9px] font-bold text-yellow-400 uppercase tracking-wider">
+                      <span className="flex items-center gap-1 text-zinc-300">
+                        Target: <strong className="text-white">Tech Recruiters</strong>
+                      </span>
+                      <span className="animate-pulse text-emerald-400">1-Click Auto Pitch</span>
                     </div>
                   </div>
 
