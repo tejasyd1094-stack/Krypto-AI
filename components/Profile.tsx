@@ -1,10 +1,12 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { UserStatus, ProfileMetadata, ProfileTasks } from '../types';
-import { GoogleGenAI, Type } from "@google/genai";
+import { parseResumeDetails } from '../services/geminiService';
+import { getReferralCode, isValidReferralCode } from './Refer';
 import mammoth from 'mammoth';
 
 interface ProfileProps {
   user: UserStatus;
+  userEmail?: string;
   onUpdateUser: (update: Partial<UserStatus>) => void;
   onAwardCredits: (amount: number) => void;
 }
@@ -31,15 +33,130 @@ const CURRENCIES = [
   { code: 'SGD', symbol: '$', label: 'Singapore Dollar ($)' },
 ];
 
-const Profile: React.FC<ProfileProps> = ({ user, onUpdateUser, onAwardCredits }) => {
+const Profile: React.FC<ProfileProps> = ({ user, userEmail, onUpdateUser, onAwardCredits }) => {
   const [loading, setLoading] = useState(false);
   const [parsing, setParsing] = useState(false);
   const [tempProfile, setTempProfile] = useState<ProfileMetadata>(user.profile || {
     compensation: { fixed: '', variable: '' }
   });
+  const [referralInput, setReferralInput] = useState('');
   
+  // Anti-bot state variables
+  const [securityNum1, setSecurityNum1] = useState(0);
+  const [securityNum2, setSecurityNum2] = useState(0);
+  const [securityAnswer, setSecurityAnswer] = useState('');
+  const [failedAttempts, setFailedAttempts] = useState(() => {
+    return parseInt(localStorage.getItem('krypto-ref-fails') || '0', 10);
+  });
+  const [lockoutTime, setLockoutTime] = useState(() => {
+    return parseInt(localStorage.getItem('krypto-ref-lockout') || '0', 10);
+  });
+  const [verifyingCode, setVerifyingCode] = useState(false);
+
+  const getRemainingLockoutTime = () => {
+    if (!lockoutTime) return 0;
+    const remaining = Math.ceil((lockoutTime - Date.now()) / 1000);
+    return remaining > 0 ? remaining : 0;
+  };
+
+  const [remainingSeconds, setRemainingSeconds] = useState(getRemainingLockoutTime());
+
+  const generateNewChallenge = () => {
+    setSecurityNum1(Math.floor(Math.random() * 9) + 1);
+    setSecurityNum2(Math.floor(Math.random() * 9) + 1);
+    setSecurityAnswer('');
+  };
+
+  useEffect(() => {
+    generateNewChallenge();
+  }, []);
+
+  useEffect(() => {
+    if (lockoutTime > 0) {
+      const interval = setInterval(() => {
+        const rem = getRemainingLockoutTime();
+        setRemainingSeconds(rem);
+        if (rem <= 0) {
+          setLockoutTime(0);
+          setFailedAttempts(0);
+          localStorage.removeItem('krypto-ref-fails');
+          localStorage.removeItem('krypto-ref-lockout');
+          clearInterval(interval);
+        }
+      }, 1000);
+      return () => clearInterval(interval);
+    }
+  }, [lockoutTime]);
+
   const fileInputRef = useRef<HTMLInputElement>(null);
   const resumeInputRef = useRef<HTMLInputElement>(null);
+
+  const recordFailure = () => {
+    const nextFails = failedAttempts + 1;
+    setFailedAttempts(nextFails);
+    localStorage.setItem('krypto-ref-fails', nextFails.toString());
+
+    if (nextFails >= 3) {
+      const lockUntil = Date.now() + 5 * 60 * 1000; // 5 mins lockout
+      setLockoutTime(lockUntil);
+      localStorage.setItem('krypto-ref-lockout', lockUntil.toString());
+      alert("Excessive verification failures. Referral redemption has been locked for 5 minutes.");
+    }
+  };
+
+  const handleRedeemCode = () => {
+    if (lockoutTime && getRemainingLockoutTime() > 0) {
+      alert(`Security protocol active. Submissions locked for ${getRemainingLockoutTime()} seconds.`);
+      return;
+    }
+
+    if (!referralInput.trim()) return;
+    const cleanInput = referralInput.trim().toUpperCase();
+
+    // 1. Structural check
+    const formatRegex = /^KRYP-[A-Z0-9]{1,5}\d+$/;
+    if (!formatRegex.test(cleanInput)) {
+      alert("Security alert: Alphanumeric format is incorrect. Referral codes must match 'KRYP-XXXXX000'.");
+      recordFailure();
+      return;
+    }
+
+    // 1.5. Registration Check
+    if (!isValidReferralCode(cleanInput)) {
+      alert("Error: The entered referral code is invalid or unregistered in our user directory.");
+      recordFailure();
+      return;
+    }
+    
+    // 2. Check if redeeming their own code
+    const myCode = getReferralCode(userEmail);
+    if (cleanInput === myCode) {
+      alert("Security rule: You cannot redeem your own referral code.");
+      return;
+    }
+
+    // 3. Human Challenge verification
+    const expected = securityNum1 + securityNum2;
+    if (parseInt(securityAnswer, 10) !== expected) {
+      alert("Integrity verification failed. Please enter the correct sum to prove humanity.");
+      recordFailure();
+      generateNewChallenge();
+      return;
+    }
+
+    // 4. Rate throttle simulation
+    setVerifyingCode(true);
+    setTimeout(() => {
+      setVerifyingCode(false);
+      onAwardCredits(30);
+      onUpdateUser({ redeemedCode: cleanInput });
+      alert("Security clearance granted! 30 free credits have been added to your ledger.");
+      setReferralInput('');
+      setSecurityAnswer('');
+      setFailedAttempts(0);
+      localStorage.removeItem('krypto-ref-fails');
+    }, 1200);
+  };
 
   // Profile Missions logic
   const profileTaskKeys: (keyof ProfileTasks)[] = ['profilePic', 'resumeAdded', 'compAdded', 'noticeAdded'];
@@ -92,33 +209,8 @@ const Profile: React.FC<ProfileProps> = ({ user, onUpdateUser, onAwardCredits })
         });
         const base64 = await base64Promise;
         
-        const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
-        const response = await ai.models.generateContent({
-          model: 'gemini-3-flash-preview',
-          contents: [{
-            parts: [
-              { inlineData: { data: base64, mimeType: file.type } },
-              { text: "Extract the following details from this resume into a JSON object: name, email, phone, currentCompany, currentDesignation, educationGraduate (degree and school), educationMasters (degree and school, if exists). If a field is missing, use an empty string." }
-            ]
-          }],
-          config: {
-            responseMimeType: "application/json",
-            responseSchema: {
-              type: Type.OBJECT,
-              properties: {
-                name: { type: Type.STRING },
-                email: { type: Type.STRING },
-                phone: { type: Type.STRING },
-                currentCompany: { type: Type.STRING },
-                currentDesignation: { type: Type.STRING },
-                educationGraduate: { type: Type.STRING },
-                educationMasters: { type: Type.STRING }
-              }
-            }
-          }
-        });
+        const data = await parseResumeDetails(base64, file.type);
         
-        const data = JSON.parse(response.text || '{}');
         const updatedProfile: ProfileMetadata = {
           ...tempProfile,
           name: data.name,
@@ -139,28 +231,8 @@ const Profile: React.FC<ProfileProps> = ({ user, onUpdateUser, onAwardCredits })
         text = await file.text();
       }
 
-      const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
-      const response = await ai.models.generateContent({
-        model: 'gemini-3-flash-preview',
-        contents: `Extract info from this resume text into JSON: name, email, phone, currentCompany, currentDesignation, educationGraduate, educationMasters.\n\n${text}`,
-        config: {
-          responseMimeType: "application/json",
-          responseSchema: {
-            type: Type.OBJECT,
-            properties: {
-              name: { type: Type.STRING },
-              email: { type: Type.STRING },
-              phone: { type: Type.STRING },
-              currentCompany: { type: Type.STRING },
-              currentDesignation: { type: Type.STRING },
-              educationGraduate: { type: Type.STRING },
-              educationMasters: { type: Type.STRING }
-            }
-          }
-        }
-      });
+      const data = await parseResumeDetails(undefined, undefined, text);
 
-      const data = JSON.parse(response.text || '{}');
       const updatedProfile: ProfileMetadata = {
         ...tempProfile,
         name: data.name,
@@ -274,7 +346,7 @@ const Profile: React.FC<ProfileProps> = ({ user, onUpdateUser, onAwardCredits })
       {/* Profile Header */}
       <div className="text-center space-y-4">
         <h2 className="text-4xl sm:text-7xl font-black tracking-tight uppercase text-zinc-100">
-          Architect <span className="gold-text-gradient">Profile</span>
+          Candidate <span className="gold-text-gradient">Profile</span>
         </h2>
         <p className="text-zinc-500 font-medium text-lg max-w-2xl mx-auto leading-relaxed">
           Engineer your professional footprint. Complete tasks to unlock high-performance recruitment credits.
@@ -338,7 +410,7 @@ const Profile: React.FC<ProfileProps> = ({ user, onUpdateUser, onAwardCredits })
                  </div>
                  <div className="space-y-2">
                    <label className="text-[9px] font-black text-zinc-600 uppercase tracking-widest">Secure Email</label>
-                   <input value={tempProfile.email || ''} onChange={e => setTempProfile({...tempProfile, email: e.target.value})} className="w-full bg-zinc-950 border border-zinc-900 rounded-2xl px-5 py-4 text-sm font-bold text-zinc-100 outline-none focus:border-yellow-500/50" placeholder="leo@krypto.ai" />
+                   <input value={tempProfile.email || ''} onChange={e => setTempProfile({...tempProfile, email: e.target.value})} className="w-full bg-zinc-950 border border-zinc-900 rounded-2xl px-5 py-4 text-sm font-bold text-zinc-100 outline-none focus:border-yellow-500/50" placeholder="support@kryptonpath.co" />
                  </div>
               </div>
 
@@ -397,6 +469,72 @@ const Profile: React.FC<ProfileProps> = ({ user, onUpdateUser, onAwardCredits })
                   </div>
                   <button onClick={handleNoticeSave} className="w-full py-4 bg-zinc-900 border border-zinc-800 text-zinc-400 rounded-2xl text-[9px] font-black uppercase tracking-widest hover:text-white hover:border-yellow-500/30 transition-all active:scale-95">Update Availability</button>
                </div>
+            </div>
+
+            {/* Referral Code Redemption */}
+            <div className="bg-[#0c0c0e] border border-zinc-800 rounded-[48px] p-8 sm:p-10 shadow-3xl space-y-6">
+               <div>
+                 <h4 className="text-lg font-black text-zinc-100 uppercase tracking-tight">Referral Redemption</h4>
+                 <p className="text-[11px] text-zinc-500 font-medium leading-relaxed mt-1 uppercase tracking-wider">
+                   Claim 30 free computational recruitment credits by redeeming a colleague's referral code.
+                 </p>
+               </div>
+
+               {user.redeemedCode ? (
+                 <div className="bg-green-500/5 border border-green-500/10 p-5 rounded-2xl flex items-center justify-between">
+                   <div className="flex items-center gap-3">
+                     <span className="w-2 h-2 rounded-full bg-green-500 shadow-[0_0_8px_#22c55e]" />
+                     <span className="text-[10px] font-black uppercase text-green-400 tracking-wider font-sans">Code Applied: {user.redeemedCode}</span>
+                   </div>
+                   <span className="text-[10px] font-black text-green-500 uppercase tracking-widest bg-green-500/15 px-3.5 py-1.5 rounded-xl border border-green-500/20">30 CR Applied</span>
+                 </div>
+               ) : (
+                 <div className="space-y-4">
+                   <div className="flex flex-col sm:flex-row gap-4">
+                     <input 
+                       type="text" 
+                       value={referralInput} 
+                       onChange={e => setReferralInput(e.target.value.toUpperCase())}
+                       disabled={getRemainingLockoutTime() > 0 || verifyingCode}
+                       className="flex-1 bg-zinc-950 border border-zinc-900 rounded-2xl px-5 py-4 text-xs font-bold text-zinc-100 outline-none focus:border-yellow-500/50 uppercase tracking-wider font-sans disabled:opacity-40" 
+                       placeholder={getRemainingLockoutTime() > 0 ? `LOCKED: TRY IN ${remainingSeconds}S` : "ENTER REFERRAL CODE (e.g. KRYP-...)"}
+                     />
+                   </div>
+
+                   {getRemainingLockoutTime() <= 0 && referralInput.trim().length > 0 && (
+                     <div className="p-5 bg-zinc-950 border border-zinc-900 rounded-2xl space-y-3 animate-in slide-in-from-top-2 duration-200">
+                       <div className="flex items-center justify-between">
+                         <span className="text-[9px] font-black uppercase tracking-wider text-yellow-500/80">Integrity Check Required</span>
+                         <span className="text-[8px] font-bold uppercase tracking-wider text-zinc-650">Failed attempts: {failedAttempts}/3</span>
+                       </div>
+                       <p className="text-[11px] text-zinc-400 font-medium">To mitigate automated sybil or bot attacks, please solve this challenge:</p>
+                       <div className="flex items-center gap-4">
+                         <span className="font-mono text-xs font-black text-white bg-zinc-900 px-4 py-2.5 rounded-xl border border-zinc-850">
+                           {securityNum1} + {securityNum2} = ?
+                         </span>
+                         <input 
+                           type="number"
+                           value={securityAnswer}
+                           onChange={e => setSecurityAnswer(e.target.value)}
+                           className="w-24 bg-zinc-905 border border-zinc-850 rounded-xl px-3.5 py-2.5 text-xs font-bold text-zinc-100 outline-none focus:border-yellow-500/30 text-center"
+                           placeholder="Answer"
+                           disabled={verifyingCode}
+                         />
+                       </div>
+                     </div>
+                   )}
+
+                   <div className="flex justify-end pt-2">
+                     <button 
+                       onClick={handleRedeemCode}
+                       disabled={!referralInput.trim() || verifyingCode || getRemainingLockoutTime() > 0}
+                       className="w-full px-8 py-4 bg-yellow-500 hover:bg-yellow-400 text-zinc-950 rounded-2xl text-[10px] font-black uppercase tracking-widest transition-all hover:scale-[1.02] active:scale-98 border-b-4 border-yellow-700 cursor-pointer disabled:opacity-50 disabled:scale-100 disabled:pointer-events-none"
+                     >
+                       {verifyingCode ? 'Cryptographic Check...' : 'Verify & Redeem Code'}
+                     </button>
+                   </div>
+                 </div>
+               )}
             </div>
           </div>
 

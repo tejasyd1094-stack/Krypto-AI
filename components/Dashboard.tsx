@@ -1,11 +1,12 @@
 import React, { useState, useRef, useEffect } from 'react';
 import ReactMarkdown from 'react-markdown';
 import mammoth from 'mammoth';
-import { GoogleGenAI, Chat } from "@google/genai";
+import { getChatResponse } from '../services/geminiService';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Cell, Legend } from 'recharts';
 import { CheckCircle2, XCircle, Zap, Shield, Target, TrendingUp, Users, FileText, Briefcase, Cpu } from 'lucide-react';
 import { KryptoLogo } from './Branding';
 import { TabType, Message } from '../types';
+import ConsultationBooking from './ConsultationBooking';
 
 const AnimatedCounter: React.FC<{ target: number, duration?: number, suffix?: string }> = ({ target, duration = 2000, suffix = "" }) => {
   const [count, setCount] = useState(0);
@@ -132,6 +133,8 @@ interface DashboardProps {
   onNewChat: () => void;
   onVerifyLocation?: () => void;
   onUpdateLocation?: (loc: string) => void;
+  isLoggedIn?: boolean;
+  onRequireLogin?: () => void;
 }
 
 const PLACEHOLDERS = [
@@ -188,18 +191,18 @@ Krypto AI adheres to the leading global standards in AI ethics and data protecti
 - **IP Protection**: All brand assets, including the "KryptonPath" identity, "Krypto AI" neural engine, and "Executive Blueprint" templates, are the exclusive intellectual property of KryptonPath. Unauthorized reproduction or commercial resale of our platform's logic is strictly prohibited.
 - **AI Ethics Framework**: Our models are audited monthly for socioeconomic bias to ensure that our "Recruitment Index" provides meritocratic assessments regardless of geography or background.
 - **Regulatory Alignment**: Fully aligned with GDPR (EU), CCPA (USA), and emerging global AI safety frameworks.
-- **Attribution**: "Crafted by KryptonPath" represents our commitment to strategic excellence in career technology. All AI-generated outputs for users are licensed for personal professional development.
+- **Attribution & Support**: "Crafted by KryptonPath" represents our commitment to strategic excellence in career technology. For official support and privacy inquiries, reach us at support@kryptonpath.co.
   `
 };
 
-const Dashboard: React.FC<DashboardProps> = ({ setActiveTab, messages, setMessages, onNewChat, onVerifyLocation, onUpdateLocation }) => {
-  const [chatSession, setChatSession] = useState<Chat | null>(null);
+const Dashboard: React.FC<DashboardProps> = ({ setActiveTab, messages, setMessages, onNewChat, onVerifyLocation, onUpdateLocation, isLoggedIn, onRequireLogin }) => {
   const [currentInput, setCurrentInput] = useState('');
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(false);
   const [placeholderIdx, setPlaceholderIdx] = useState(0);
   const [attachedFile, setAttachedFile] = useState<File | null>(null);
   const [fileData, setFileData] = useState<any>(null);
   const [activePolicy, setActivePolicy] = useState<keyof typeof POLICY_CONTENT | null>(null);
+  const [expandedDashboardFaq, setExpandedDashboardFaq] = useState<number | null>(null);
   
   const fileInputRef = useRef<HTMLInputElement>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
@@ -209,26 +212,6 @@ const Dashboard: React.FC<DashboardProps> = ({ setActiveTab, messages, setMessag
     if (document.querySelector('section.overflow-y-auto')) {
       document.querySelector('section.overflow-y-auto')!.scrollTop = 0;
     }
-  }, []);
-
-  useEffect(() => {
-    const initChatSession = async () => {
-      try {
-        const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
-        const session = ai.chats.create({
-          model: 'gemini-3-flash-preview',
-          config: {
-            systemInstruction: SYSTEM_INSTRUCTION
-          }
-        });
-        setChatSession(session);
-      } catch (error) {
-        console.error("Chat session initialization failed:", error);
-      } finally {
-        setLoading(false);
-      }
-    };
-    initChatSession();
   }, []);
 
   useEffect(() => {
@@ -279,12 +262,6 @@ const Dashboard: React.FC<DashboardProps> = ({ setActiveTab, messages, setMessag
     onNewChat();
     removeFile();
     setCurrentInput('');
-    const initChatSession = async () => {
-        const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
-        const session = ai.chats.create({ model: 'gemini-3-flash-preview', config: { systemInstruction: SYSTEM_INSTRUCTION }});
-        setChatSession(session);
-    };
-    initChatSession();
   };
 
   const analyzeAndIntercept = (prompt: string): Message | null => {
@@ -339,19 +316,23 @@ const Dashboard: React.FC<DashboardProps> = ({ setActiveTab, messages, setMessag
   };
 
   const handleSuggestionClick = async (suggestion: string) => {
-    if (!chatSession) return;
+    if (!isLoggedIn && onRequireLogin) {
+      onRequireLogin();
+      return;
+    }
     
     const userMessage: Message = {
       role: 'user',
       content: suggestion,
     };
-    setMessages(prev => [...prev, userMessage]);
+    const newMessages = [...messages, userMessage];
+    setMessages(newMessages);
     
     setLoading(true);
   
     try {
-      const response = await chatSession.sendMessage({ message: suggestion });
-      let responseText = response.text || "Sorry, I couldn't generate a response.";
+      const responseTextWithSuggestions = await getChatResponse(newMessages, SYSTEM_INSTRUCTION);
+      let responseText = responseTextWithSuggestions || "Sorry, I couldn't generate a response.";
       let suggestions: string[] = [];
   
       const suggestionSeparator = /%+\s*Suggestions:/i;
@@ -371,14 +352,19 @@ const Dashboard: React.FC<DashboardProps> = ({ setActiveTab, messages, setMessag
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if ((!currentInput.trim() && !attachedFile) || !chatSession) return;
+    if (!isLoggedIn && onRequireLogin) {
+      onRequireLogin();
+      return;
+    }
+    if ((!currentInput.trim() && !attachedFile)) return;
     
     const userMessage: Message = {
       role: 'user',
       content: currentInput,
       file: attachedFile ? { name: attachedFile.name } : undefined
     };
-    setMessages(prev => [...prev, userMessage]);
+    const newMessages = [...messages, userMessage];
+    setMessages(newMessages);
 
     const interceptMessage = analyzeAndIntercept(currentInput);
     if (interceptMessage) {
@@ -393,18 +379,8 @@ const Dashboard: React.FC<DashboardProps> = ({ setActiveTab, messages, setMessag
     setAttachedFile(null);
 
     try {
-      const contents: any[] = [];
-      if (fileData) {
-        if (typeof fileData === 'string') {
-          contents.push({ text: `Attached Document Content:\n${fileData}` });
-        } else {
-          contents.push({ inlineData: fileData });
-        }
-      }
-      contents.push({ text: currentInput });
-      
-      const response = await chatSession.sendMessage({ message: currentInput });
-      let responseText = response.text || "Sorry, I couldn't generate a response.";
+      const responseTextWithSuggestions = await getChatResponse(newMessages, SYSTEM_INSTRUCTION);
+      let responseText = responseTextWithSuggestions || "Sorry, I couldn't generate a response.";
       let suggestions: string[] = [];
 
       const suggestionSeparator = /%+\s*Suggestions:/i;
@@ -843,6 +819,93 @@ const Dashboard: React.FC<DashboardProps> = ({ setActiveTab, messages, setMessag
         </div>
       </div>
 
+      {/* Book an Expert Consultation Section */}
+      <div className="pt-32 border-t border-zinc-900 relative z-10">
+        <ConsultationBooking />
+      </div>
+
+      {/* FAQ Section */}
+      <div className="pt-32 border-t border-zinc-900 max-w-5xl mx-auto px-6 relative z-10">
+        <div className="text-center mb-20 animate-in fade-in duration-500">
+          <span className="text-[10px] font-black uppercase tracking-[0.5em] text-zinc-600 block mb-4">Strategic Intelligence FAQs</span>
+          <h3 className="text-3xl sm:text-5xl font-black tracking-tight uppercase leading-tight text-white">
+            Frequently Asked <span className="gold-text-gradient">Questions</span>
+          </h3>
+          <p className="text-xs text-zinc-500 font-medium leading-relaxed max-w-md mx-auto mt-4 uppercase tracking-wider">
+            Demystifying elite recruitment AI, platform guardrails, and compliance vectors.
+          </p>
+        </div>
+
+        <div className="space-y-4">
+          {[
+            {
+              q: "What is Krypto AI?",
+              a: "Krypto AI is an elite recruitment intelligence engine and career architect developed by HR industry veterans. It converts your career profiles into ATS-optimized templates using the highly celebrated Google XYZ formula, builds structural 12-month career path blueprints, and hosts interactive conversational assessment simulators."
+            },
+            {
+              q: "Why is Krypto AI better than traditional candidate assist AI available in the market?",
+              a: "Most candidate-assist tools rely on simple keyword stuffing or generic LLM prompts that produce robotic, repetitive statements. This is easily flagged by modern ATS scanners and recruiters. Krypto AI uses high-precision alignment models, incorporating cognitive-spectrum diversity mapping and real recruitment metrics, to craft highly unique, human-sounding experiences with genuine quantifiable outcomes (%, $ values)."
+            },
+            {
+              q: "What is a Career Path?",
+              a: "A Career Path is an advanced strategic blueprint mapping your current skills, notice period, and industry trends to compute high-probability future roles. Rather than suggesting simple linear promotions, it maps out a comprehensive 12-month timeline detailing precise skills to acquire, trajectory-pivot milestones, and professional compensation growth."
+            },
+            {
+              q: "How can enterprises use Career Path to look for their valuable employee careers?",
+              a: "Enterprises utilize our tracking framework to design customized internal mobility plans, identify silent top talent before competitor outreach occurs, and structuralize role successions. Our RIASEC-driven diagnostic engine correlates existing talent profiles with target responsibilities to minimize expensive attrition."
+            },
+            {
+              q: "Why is interview simulation better on Krypto AI?",
+              a: "Unlike standard static lists of interview questions, our Interview Lab uses dedicated real-time agents loaded with authentic sector profiles. The engine challenges you with unexpected situational pushback, follow-ups on shallow answers, and dynamic behavioral scoring modeled on physical panel panels."
+            },
+            {
+              q: "Why not use interview AI extensions as right now the trends in the market?",
+              a: "Modern HR departments and technical recruiters are equipped with biometric latency and speech pattern identification tools. Real-time overlay extensions that offer prompt assists create unnatural speech pacing, synthetic vocabularies, and fixed gaze patterns that are immediately flagged for permanent blacklisting. Krypto AI focuses on authentic, asynchronous practice sandboxes to build absolute muscle memory which carries over naturally."
+            },
+            {
+              q: "Why Krypto AI?",
+              a: "Every optimization rule, prompt template, and feedback weight within Krypto AI is crafted exclusively by a specialized board of global HR directors, veteran recruiters, and talent coaches with deep expertise at top-tier firms like McKinsey, SAP, and EY. Our system matches authentic high-impact recruiter expectations perfectly."
+            }
+          ].map((item, idx) => {
+            const isExpanded = expandedDashboardFaq === idx;
+            return (
+              <div 
+                key={idx}
+                className={`bg-zinc-950/40 border transition-all duration-300 rounded-[24px] overflow-hidden ${
+                  isExpanded ? 'border-yellow-500/20 bg-zinc-950/80 shadow-[0_0_20px_rgba(234,179,8,0.02)]' : 'border-zinc-900/60 hover:border-zinc-800'
+                }`}
+              >
+                <button
+                  type="button"
+                  onClick={() => setExpandedDashboardFaq(isExpanded ? null : idx)}
+                  className="w-full flex items-center justify-between p-6 sm:p-8 text-left gap-4 cursor-pointer"
+                >
+                  <h4 className={`text-sm sm:text-base font-bold transition-colors uppercase tracking-tight ${
+                    isExpanded ? 'text-yellow-500' : 'text-zinc-200'
+                  }`}>
+                    {item.q}
+                  </h4>
+                  <div className={`w-8 h-8 rounded-full border flex items-center justify-center shrink-0 transition-all duration-300 ${
+                    isExpanded ? 'border-yellow-500/30 bg-yellow-500/5 text-yellow-500 rotate-180' : 'border-zinc-800 text-zinc-500'
+                  }`}>
+                    <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M19 9l-7 7-7-7" />
+                    </svg>
+                  </div>
+                </button>
+                <div className={`transition-all duration-300 ease-in-out overflow-hidden ${
+                  isExpanded ? 'max-h-[300px] border-t border-zinc-900 opacity-100' : 'max-h-0 opacity-0'
+                }`}>
+                  <p className="p-6 sm:p-8 pt-4 pb-8 text-zinc-400 font-medium text-xs sm:text-sm leading-relaxed">
+                    {item.a}
+                  </p>
+                </div>
+              </div>
+            );
+          })}
+        </div>
+      </div>
+
       <footer className="pt-48 pb-24 border-t border-zinc-900/50 relative overflow-hidden bg-gradient-to-b from-transparent to-zinc-950/80">
         <div className="max-w-7xl mx-auto px-6 relative z-10">
           <div className="grid grid-cols-1 md:grid-cols-12 gap-16 md:gap-8 items-start">
@@ -870,8 +933,8 @@ const Dashboard: React.FC<DashboardProps> = ({ setActiveTab, messages, setMessag
               <div className="space-y-6">
                 <h5 className="text-[10px] font-black text-zinc-100 uppercase tracking-[0.3em] border-b border-zinc-800 pb-3">Products</h5>
                 <nav className="flex flex-col gap-4">
-                  {(['Home', 'Resume Scorer', 'Career Path', 'Outreach Architect', 'Interview Lab'] as TabType[]).map(item => (
-                    <button key={item} onClick={() => { if (item === 'Home') window.scrollTo({ top: 0, behavior: 'smooth' }); else setActiveTab?.(item); }} className="text-left text-xs font-bold text-zinc-500 hover:text-yellow-500 transition-colors uppercase tracking-widest">{item}</button>
+                  {(['Home', 'Resume Scorer', 'Career Path', 'Outreach Architect', 'Interview Lab', 'FAQ'] as TabType[]).map(item => (
+                    <button key={item} onClick={() => { if (item === 'Home') window.scrollTo({ top: 0, behavior: 'smooth' }); else setActiveTab?.(item); }} className="text-left text-xs font-bold text-zinc-500 hover:text-yellow-500 transition-colors uppercase tracking-widest">{item ?? 'FAQ'}</button>
                   ))}
                 </nav>
               </div>

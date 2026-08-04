@@ -233,11 +233,15 @@ const ResumeScorer: React.FC<ResumeScorerProps> = ({
         </html>
       `;
 
-      const blob = new Blob(['\ufeff', fullHtml], { type: 'application/vnd.ms-word' });
+      // Use standard application/msword encoding and pass UTF-8 byte order mark
+      const blob = new Blob(['\ufeff', fullHtml], { type: 'application/msword;charset=utf-8' });
       const url = URL.createObjectURL(blob);
       
       const link = document.createElement('a');
       link.href = url;
+      // Force blank target to safely bypass iframe sandbox policies in modern browsers
+      link.target = '_blank';
+      link.rel = 'noopener noreferrer';
       
       const fileName = file?.name || 'Optimized_Resume';
       const safeTitle = fileName.replace(/\.[^/.]+$/, "").replace(/[^a-zA-Z0-9]/g, '_');
@@ -250,7 +254,7 @@ const ResumeScorer: React.FC<ResumeScorerProps> = ({
       setTimeout(() => {
         document.body.removeChild(link);
         URL.revokeObjectURL(url);
-      }, 500);
+      }, 1000);
       
     } catch (err) {
       console.error("Download Error:", err);
@@ -640,8 +644,35 @@ const ResumeScorer: React.FC<ResumeScorerProps> = ({
               <div className="flex flex-col gap-6 max-w-4xl mx-auto pt-10">
                  <div className="space-y-6 bg-[#0c0c0e] border border-zinc-800 rounded-[40px] p-8 shadow-inner">
                     {!isOverseasVisible ? (
-                        <button type="button" onClick={() => setIsOverseasVisible(true)} className="w-full text-center group py-4">
-                            <h4 className="text-sm font-black text-yellow-500 uppercase tracking-[0.3em] group-hover:text-yellow-400 transition-colors">Applying Overseas?</h4>
+                        <button 
+                          type="button" 
+                          onClick={() => setIsOverseasVisible(true)} 
+                          className="w-full p-6 sm:p-8 bg-[#09090c] hover:bg-[#0e0e12] border-2 border-yellow-500/10 hover:border-yellow-500/40 rounded-[32px] text-left transition-all duration-300 flex flex-col sm:flex-row sm:items-center justify-between gap-6 group relative overflow-hidden"
+                        >
+                          <div className="absolute top-0 right-0 w-32 h-32 bg-yellow-500/[0.02] rounded-bl-full pointer-events-none group-hover:bg-yellow-500/[0.04] transition-all duration-300 animate-pulse" />
+                          <div className="space-y-1.5 relative z-10 max-w-xl">
+                            <div className="flex items-center gap-2.5">
+                              <span className="px-2.5 py-0.5 rounded-full bg-yellow-500/10 text-yellow-500 text-[9px] font-black uppercase tracking-[0.15em] border border-yellow-500/20">
+                                Advanced Feature
+                              </span>
+                              <span className="text-[10px] text-zinc-500 uppercase font-black tracking-widest">
+                                Global Path
+                              </span>
+                            </div>
+                            <h4 className="text-lg font-black text-zinc-100 uppercase tracking-tight group-hover:text-yellow-500 transition-colors">
+                              Applying Overseas?
+                            </h4>
+                            <p className="text-xs text-zinc-500 font-medium leading-relaxed font-sans">
+                              Enable regional targeting to tailor your resume's visa statements, sponsorship options, and local market terms.
+                            </p>
+                          </div>
+                          
+                          <div className="flex items-center gap-2.5 text-yellow-500 font-black text-[10px] uppercase tracking-widest bg-yellow-500/10 hover:bg-yellow-500/20 px-4 py-2.5 rounded-2xl transition-all border border-yellow-500/20 shrink-0 self-start sm:self-auto">
+                            <span>Target Settings</span>
+                            <svg className="w-3.5 h-3.5 transform group-hover:translate-x-0.5 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M9 5l7 7-7 7" />
+                            </svg>
+                          </div>
                         </button>
                     ) : (
                         <div className="animate-in fade-in space-y-6">
@@ -696,12 +727,62 @@ const ResumeScorer: React.FC<ResumeScorerProps> = ({
                         </div>
                     )}
                 </div>
+                 
+                 <div className="relative mt-8 mb-8 bg-white p-8 sm:p-12 rounded-[40px] shadow-2xl border border-zinc-200 pointer-events-none select-none overflow-hidden max-h-[380px]">
+                    <div className="space-y-5 text-left">
+                      {/* Premium Header */}
+                      <div className="text-center space-y-1 mb-2">
+                        <h3 className="text-xl font-black text-zinc-900 tracking-tight uppercase">Alex Mercer</h3>
+                        <p className="text-[10px] text-zinc-500 font-semibold tracking-wider">alex.mercer@cloudcorp.com • LinkedIn/in/alexmercer • San Francisco, CA</p>
+                      </div>
+                      
+                      <div className="h-px bg-zinc-200 my-2" />
+                      
+                      {/* Clear, visible first half of the resume representing "Google XYZ" formula */}
+                      <div className="space-y-3">
+                        <h4 className="text-[10px] font-black text-zinc-900 uppercase tracking-widest border-b border-zinc-100 pb-1">Professional Experience</h4>
+                        <div className="space-y-1.5">
+                          <div className="flex justify-between items-baseline">
+                            <span className="text-xs font-black text-zinc-800">Senior Staff Engineer — CloudCorp</span>
+                            <span className="text-[9px] text-zinc-400 font-bold uppercase tracking-wider">2022 — Present</span>
+                          </div>
+                          <p className="text-[10px] text-zinc-500 italic">Led the migration of global microservices infrastructure into decentralized networks.</p>
+                          <ul className="list-disc pl-4 text-[11px] text-zinc-600 space-y-1 font-medium">
+                            <li>Optimized cloud response cycles as measured by a <strong className="text-zinc-950 font-bold">35% latency reduction</strong>, by engineering high-performance REST pipelines.</li>
+                            <li>Engineered key infrastructure protocols, securing <strong className="text-zinc-950 font-bold">$12M</strong> in enterprise retention revenue.</li>
+                            <li>Accomplished seamless container deployment scaling, achieving the Google XYZ metric criteria.</li>
+                          </ul>
+                        </div>
+                      </div>
+
+                      {/* Second half which will be heavily blurred */}
+                      <div className="space-y-3 pt-2">
+                        <h4 className="text-[10px] font-black text-zinc-900 uppercase tracking-widest border-b border-zinc-100 pb-1">Technical Skills</h4>
+                        <div className="flex flex-wrap gap-1.5 text-[9px] font-bold text-zinc-700">
+                          <span className="bg-zinc-100 px-2.5 py-1 rounded">React</span>
+                          <span className="bg-zinc-100 px-2.5 py-1 rounded">TypeScript</span>
+                          <span className="bg-zinc-100 px-2.5 py-1 rounded">Next.js</span>
+                          <span className="bg-zinc-100 px-2.5 py-1 rounded">Node.js</span>
+                          <span className="bg-zinc-100 px-2.5 py-1 rounded">GraphQL</span>
+                          <span className="bg-zinc-100 px-2.5 py-1 rounded">AWS</span>
+                        </div>
+                      </div>
+                    </div>
+                    
+                    {/* Graded blur overlay covering the bottom half with native style safety */}
+                    <div className="absolute inset-x-0 bottom-0 top-[75%] pointer-events-none overflow-hidden rounded-b-[40px] flex flex-col justify-end">
+                      <div className="absolute inset-0 backdrop-blur-[6px] bg-gradient-to-t from-white via-white/80 to-transparent" />
+                      <div className="absolute inset-x-0 bottom-0 h-full bg-gradient-to-t from-white via-white/90 to-transparent" />
+                    </div>
+                 </div>
+
                  <button 
                   onClick={handleArchitectResume} 
                   className="w-full py-7 px-4 bg-yellow-500 text-zinc-950 rounded-[28px] hover:bg-yellow-400 active:scale-95 transition-all shadow-2xl border-b-4 border-yellow-700 flex flex-col items-center justify-center group"
                  >
-                   <span className="text-[11px] font-black uppercase tracking-[0.2em] leading-tight text-center">
-                     Execute High-Fidelity Optimization
+                   <span className="text-[11px] font-black uppercase tracking-[0.2em] leading-tight text-center flex items-center gap-2">
+                     <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20"><path fillRule="evenodd" d="M5 9V7a5 5 0 0110 0v2a2 2 0 012 2v5a2 2 0 01-2 2H5a2 2 0 01-2-2v-5a2 2 0 012-2zm8-2v2H7V7a3 3 0 016 0z" clipRule="evenodd" /></svg>
+                     Unlock High Fidelity Optimisation
                    </span>
                    <span className="text-[8px] font-black uppercase tracking-widest opacity-60 mt-1">Transform Blueprint • {optimizationCostText} Credits</span>
                  </button>
@@ -736,7 +817,39 @@ const ResumeScorer: React.FC<ResumeScorerProps> = ({
             </div>
             <div className="flex flex-col items-center">
               <div className="bg-white text-zinc-900 p-12 sm:p-24 rounded-[80px] shadow-3xl border border-zinc-200 overflow-hidden relative w-full max-w-4xl min-h-[600px] animate-in zoom-in-95 duration-1000">
-                 <div id="scorer-resume-preview" className="prose prose-slate max-w-none prose-headings:text-zinc-950 prose-headings:font-black prose-p:font-medium prose-p:text-zinc-700">
+                 <div id="scorer-resume-preview" className="prose prose-slate max-w-none prose-headings:text-zinc-950 prose-headings:font-black prose-p:font-medium prose-p:text-zinc-700 prose-h1:text-center prose-h1:mt-2 prose-h1:mb-4 prose-h2:mt-8 prose-h2:mb-4 prose-h2:border-b prose-h2:border-zinc-300 prose-h2:pb-1 prose-h3:mt-5 prose-h3:mb-2 prose-p:mb-3 prose-p:mt-0 prose-li:my-1.5 prose-ul:my-3">
+                    <style>{`
+                      #scorer-resume-preview h1 {
+                        text-align: center !important;
+                        margin-top: 10px !important;
+                        margin-bottom: 16px !important;
+                        font-size: 24pt !important;
+                        font-weight: bold !important;
+                      }
+                      #scorer-resume-preview h2 {
+                        margin-top: 24pt !important;
+                        margin-bottom: 12pt !important;
+                        font-size: 16pt !important;
+                        font-weight: bold !important;
+                        border-bottom: 1px solid #94a3b8 !important;
+                        padding-bottom: 3px !important;
+                      }
+                      #scorer-resume-preview h3 {
+                        margin-top: 14pt !important;
+                        margin-bottom: 6pt !important;
+                        font-size: 13pt !important;
+                        font-weight: bold !important;
+                      }
+                      #scorer-resume-preview p, #scorer-resume-preview li {
+                        font-size: 11pt !important;
+                        margin-bottom: 4pt !important;
+                        line-height: 1.4 !important;
+                      }
+                      #scorer-resume-preview ul {
+                        margin-top: 4pt !important;
+                        margin-bottom: 8pt !important;
+                      }
+                    `}</style>
                     <ReactMarkdown>{formattedResume}</ReactMarkdown>
                  </div>
               </div>
@@ -806,32 +919,32 @@ const ResumeScorer: React.FC<ResumeScorerProps> = ({
       {/* User Acceptance Policy Modal */}
       {showConsentModal && (
         <div className="fixed inset-0 z-[110] flex items-center justify-center p-4 bg-black/90 backdrop-blur-md animate-in fade-in duration-300">
-          <div className="bg-zinc-900 border border-zinc-800 w-full max-w-2xl rounded-[48px] shadow-[0_0_80px_rgba(0,0,0,1)] overflow-hidden flex flex-col animate-in zoom-in-95 duration-400">
-            <div className="p-10 sm:p-14 space-y-8">
+          <div className="bg-zinc-900 border border-zinc-800 w-full max-w-2xl rounded-[32px] sm:rounded-[48px] shadow-[0_0_80px_rgba(0,0,0,1)] overflow-hidden flex flex-col max-h-[90vh] animate-in zoom-in-95 duration-400">
+            <div className="p-6 sm:p-10 overflow-y-auto space-y-6 flex-1 max-h-[calc(90vh-60px)]">
               <div className="flex items-center gap-5">
-                <div className="w-14 h-14 bg-yellow-500/10 rounded-2xl flex items-center justify-center border border-yellow-500/30 text-yellow-500">
+                <div className="w-14 h-14 bg-yellow-500/10 rounded-2xl flex items-center justify-center border border-yellow-500/30 text-yellow-500 shrink-0">
                   <svg className="w-7 h-7" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" /></svg>
                 </div>
-                <h3 className="text-2xl font-black uppercase tracking-tight text-zinc-100 leading-tight">Architectural Consent <span className="gold-text-gradient">Protocol</span></h3>
+                <h3 className="text-xl sm:text-2xl font-black uppercase tracking-tight text-zinc-100 leading-tight">Architectural Consent <span className="gold-text-gradient">Protocol</span></h3>
               </div>
               
               <div className="space-y-6">
-                <p className="text-sm font-bold text-zinc-400 leading-relaxed">
+                <p className="text-xs sm:text-sm font-bold text-zinc-400 leading-relaxed">
                   By proceeding with this action, you acknowledge and consent to the structural re-engineering of your professional identity. Krypto AI provides an optimization service designed to maximize visibility within ATS systems and human recruitment networks.
                 </p>
                 
-                <div className="bg-zinc-950 border border-zinc-800 rounded-3xl p-6 space-y-4">
+                <div className="bg-zinc-950 border border-zinc-800 rounded-3xl p-5 sm:p-6 space-y-4">
                   <div className="flex items-start gap-4">
                     <div className="w-5 h-5 rounded-full bg-yellow-500/20 flex items-center justify-center flex-shrink-0 mt-0.5"><span className="text-[10px] font-black text-yellow-500">1</span></div>
-                    <p className="text-xs text-zinc-500 font-medium"><strong>No Guarantee:</strong> This optimization does not guarantee job interviews, placement, or specific career outcomes.</p>
+                    <p className="text-[11px] sm:text-xs text-zinc-500 font-medium leading-relaxed"><strong>No Guarantee:</strong> This optimization does not guarantee job interviews, placement, or specific career outcomes.</p>
                   </div>
                   <div className="flex items-start gap-4">
                     <div className="w-5 h-5 rounded-full bg-yellow-500/20 flex items-center justify-center flex-shrink-0 mt-0.5"><span className="text-[10px] font-black text-yellow-500">2</span></div>
-                    <p className="text-xs text-zinc-500 font-medium"><strong>Final Responsibility:</strong> You are the sole curator of your identity. You must verify all generated content for factual accuracy before submission.</p>
+                    <p className="text-[11px] sm:text-xs text-zinc-500 font-medium leading-relaxed"><strong>Final Responsibility:</strong> You are the sole curator of your identity. You must verify all generated content for factual accuracy before submission.</p>
                   </div>
                   <div className="flex items-start gap-4">
                     <div className="w-5 h-5 rounded-full bg-yellow-500/20 flex items-center justify-center flex-shrink-0 mt-0.5"><span className="text-[10px] font-black text-yellow-500">3</span></div>
-                    <p className="text-xs text-zinc-500 font-medium"><strong>Liability Release:</strong> Krypto AI and KryptonPath are not liable for professional rejections or consequences arising from the usage of this asset.</p>
+                    <p className="text-[11px] sm:text-xs text-zinc-500 font-medium leading-relaxed"><strong>Liability Release:</strong> Krypto AI and KryptonPath are not liable for professional rejections or consequences arising from the usage of this asset.</p>
                   </div>
                 </div>
               </div>
@@ -839,19 +952,19 @@ const ResumeScorer: React.FC<ResumeScorerProps> = ({
               <div className="flex flex-col sm:flex-row gap-4 pt-4">
                 <button 
                   onClick={onConfirmConsent}
-                  className="flex-1 py-5 bg-yellow-500 text-zinc-950 rounded-2xl text-[11px] font-black uppercase tracking-[0.3em] hover:bg-yellow-400 active:scale-95 transition-all shadow-xl shadow-yellow-500/10 border-b-4 border-yellow-700"
+                  className="flex-1 py-4 sm:py-5 bg-yellow-500 text-zinc-950 rounded-2xl text-[11px] font-black uppercase tracking-[0.3em] hover:bg-yellow-400 active:scale-95 transition-all shadow-xl shadow-yellow-500/10 border-b-4 border-yellow-700 cursor-pointer"
                 >
                   Accept & Continue
                 </button>
                 <button 
                   onClick={() => { setShowConsentModal(false); setPendingAction(null); }}
-                  className="px-10 py-5 bg-zinc-800 text-zinc-400 rounded-2xl text-[11px] font-black uppercase tracking-[0.3em] hover:bg-zinc-700 hover:text-zinc-100 transition-all"
+                  className="px-10 py-4 sm:py-5 bg-zinc-800 text-zinc-400 rounded-2xl text-[11px] font-black uppercase tracking-[0.3em] hover:bg-zinc-700 hover:text-zinc-100 transition-all cursor-pointer"
                 >
                   Decline
                 </button>
               </div>
             </div>
-            <div className="bg-zinc-800/20 py-4 px-10 border-t border-zinc-800 text-center">
+            <div className="bg-zinc-800/20 py-4 px-10 border-t border-zinc-800 text-center shrink-0">
               <p className="text-[9px] font-black text-zinc-600 uppercase tracking-[0.4em]">Secure Verification Node • Career Architect Compliance</p>
             </div>
           </div>

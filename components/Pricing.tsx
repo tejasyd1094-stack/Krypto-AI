@@ -12,7 +12,7 @@ const Pricing: React.FC<PricingProps> = ({ user, onUpgrade }) => {
   const isINR = user.currency === 'INR';
   const displaySymbol = isINR ? '₹' : '$';
 
-  const ultraProPrice = isINR ? 1499 : 25;
+  const ultraProPrice = isINR ? 1499 : 18;
   const proPrice = isINR ? 499 : 9;
   const starterPrice = isINR ? 199 : 3;
 
@@ -23,24 +23,24 @@ const Pricing: React.FC<PricingProps> = ({ user, onUpgrade }) => {
       price: starterPrice,
       credits: 50,
       features: ['50 Recruitment Credits', 'Full Platform Access', 'Basic Resume Scans'],
-      paymentLink: isINR ? 'https://rzp.io/rzp/2FNGo49' : 'https://rzp.io/rzp/FeYPVA9',
+      paymentLink: isINR ? 'https://rzp.io/rzp/oPEeLc56' : 'https://rzp.io/rzp/1QfIyvy',
     },
     {
       id: 'pro',
       name: 'Professional',
       price: proPrice,
       credits: 200,
-      features: ['200 Recruitment Credits', 'Deep Persona Mapping', 'Local Salary Analysis', 'Priority AI Coach'],
+      features: ['200 Recruitment Credits', 'Strategic Roadmap & Market Intel', 'Deep Persona Mapping', 'Local Salary Analysis', 'Priority AI Coach'],
       isPopular: true,
-      paymentLink: isINR ? 'https://rzp.io/rzp/I3CZdIuA' : 'https://rzp.io/rzp/YpZzvNR',
+      paymentLink: isINR ? 'https://rzp.io/rzp/FtWRYlaw' : 'https://rzp.io/rzp/AkTxA2Bn',
     },
     {
       id: 'ultra-pro',
       name: 'Ultra Pro',
       price: ultraProPrice,
-      credits: 1000,
-      features: ['1000 Recruitment Credits', 'Advanced Strategy Suite', 'Deep Market Insights', 'Direct Bank Settlement Support'],
-      paymentLink: isINR ? 'https://rzp.io/rzp/iP6Qt9K' : 'https://rzp.io/rzp/bLvBflX4',
+      credits: 500,
+      features: ['500 Recruitment Credits', 'Advanced Strategy Suite', 'Deep Market Insights', 'Direct Bank Settlement Support'],
+      paymentLink: isINR ? 'https://rzp.io/rzp/vUB5fbx' : 'https://rzp.io/rzp/7wPgaNk',
     }
   ];
 
@@ -49,7 +49,6 @@ const Pricing: React.FC<PricingProps> = ({ user, onUpgrade }) => {
     setIsProcessing(plan.id);
     try {
       await initiateRazorpayCheckout(plan.id, plan.price as number, displaySymbol, plan.paymentLink);
-      onUpgrade(plan);
     } catch (err) {
       console.error(err);
     } finally {

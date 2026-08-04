@@ -1,0 +1,49 @@
+{
+  "entities": {
+    "UserProfile": {
+      "title": "UserProfile",
+      "description": "User account status, subscription, and career profile details.",
+      "type": "object",
+      "properties": {
+        "isPro": { "type": "boolean" },
+        "planId": { "type": "string" },
+        "credits": { "type": "integer" },
+        "trialUsed": { "type": "boolean" },
+        "location": { "type": "string" },
+        "currency": { "type": "string" },
+        "symbol": { "type": "string" },
+        "tasks": { "type": "object" },
+        "profile": { "type": "object" }
+      },
+      "required": ["credits", "planId"]
+    },
+    "HistoryItem": {
+      "title": "HistoryItem",
+      "description": "A generated analysis or report item stored in user history.",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "type": { "type": "string" },
+        "title": { "type": "string" },
+        "date": { "type": "string" },
+        "inputs": { "type": "object" },
+        "result": { "type": "string" },
+        "score": { "type": "number" },
+        "breakdown": { "type": "object" },
+        "improvements": { "type": "array" },
+        "optimizedResult": { "type": "string" }
+      },
+      "required": ["id", "type", "title", "date", "result"]
+    }
+  },
+  "firestore": {
+    "users/{userId}": {
+      "schema": "UserProfile",
+      "description": "Primary user profile, state, and career metadata mapping."
+    },
+    "users/{userId}/history/{historyId}": {
+      "schema": "HistoryItem",
+      "description": "Historical re-engineered templates, simulations, and career calculations."
+    }
+  }
+}

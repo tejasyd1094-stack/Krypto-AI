@@ -1,4 +1,4 @@
-export type TabType = 'Home' | 'Profile & Roadmap' | 'Resume Scorer' | 'Career Path' | 'Outreach Architect' | 'Interview Lab' | 'History' | 'Pricing' | 'Credit System' | 'Simulation' | 'Lab-ATS' | 'Lab-Career' | 'Lab-Outreach' | 'Lab-Interview';
+export type TabType = 'Home' | 'Profile & Roadmap' | 'Resume Scorer' | 'Career Path' | 'Outreach Architect' | 'Interview Lab' | 'History' | 'Pricing' | 'Consultation' | 'Credit System' | 'Simulation' | 'Lab-ATS' | 'Lab-Career' | 'Lab-Outreach' | 'Lab-Interview' | 'FAQ' | 'Refer' | 'Feedback';
 export type PlanId = 'free' | 'starter' | 'pro' | 'ultra-pro';
 
 export interface SimulationMessage {
@@ -68,6 +68,7 @@ export interface UserStatus {
   history: HistoryItem[];
   profile?: ProfileMetadata;
   tasks: ProfileTasks;
+  redeemedCode?: string;
 }
 
 export interface FeatureAccess {

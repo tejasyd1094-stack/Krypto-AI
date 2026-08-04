@@ -1,6 +1,5 @@
 import React from 'react';
 import { TabType, UserStatus, PlanId } from '../types';
-import { supabase } from '../lib/supabase';
 import { KryptoLogo } from './Branding';
 
 interface SidebarProps {
@@ -79,6 +78,38 @@ const Sidebar: React.FC<SidebarProps> = ({ activeTab, setActiveTab, isOpen, setI
         </svg>
       ) 
     },
+    { 
+      label: 'Consultation', 
+      icon: (
+        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+        </svg>
+      ) 
+    },
+    { 
+      label: 'Refer', 
+      icon: (
+        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z" />
+        </svg>
+      ) 
+    },
+    { 
+      label: 'Feedback', 
+      icon: (
+        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 8h10M7 12h4m1 8l-4-4H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-3l-4 4z" />
+        </svg>
+      ) 
+    },
+    { 
+      label: 'FAQ', 
+      icon: (
+        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8.228 9c.549-1.165 2.03-2 3.772-2 2.21 0 4 1.343 4 3 0 1.4-1.278 2.575-3.006 2.907-.542.104-.994.54-.994 1.093m0 3h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+        </svg>
+      ) 
+    },
   ];
 
   const getPlanName = (id: PlanId) => {
@@ -104,6 +135,15 @@ const Sidebar: React.FC<SidebarProps> = ({ activeTab, setActiveTab, isOpen, setI
           </div>
 
           <nav className="space-y-1">
+            <button
+              onClick={() => window.location.reload()}
+              className="w-full flex items-center gap-4 px-4 py-3.5 rounded-2xl text-[11px] font-black tracking-widest transition-all group uppercase whitespace-nowrap overflow-hidden relative text-zinc-500 hover:text-white hover:bg-zinc-900 border border-transparent mb-4"
+            >
+              <span className="flex-shrink-0 transition-transform duration-300 group-hover:scale-110 text-zinc-600">
+                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 19l-7-7m0 0l7-7m-7 7h18" /></svg>
+              </span>
+              <span className="truncate flex-1 text-left">KryptonPath Home</span>
+            </button>
             {navItems.map((item) => (
               <button
                 key={item.label}
@@ -117,7 +157,9 @@ const Sidebar: React.FC<SidebarProps> = ({ activeTab, setActiveTab, isOpen, setI
                 <span className={`flex-shrink-0 transition-transform duration-300 group-hover:scale-110 ${activeTab === item.label ? 'text-yellow-500' : 'text-zinc-600'}`}>
                   {item.icon}
                 </span>
-                <span className="truncate flex-1 text-left">{item.label}</span>
+                <span className="truncate flex-1 text-left">
+                  {item.label === 'Feedback' ? 'Feedback & Support' : item.label === 'Consultation' ? 'Expert Consultation' : item.label}
+                </span>
                 {item.label === 'History' && newHistoryCount > 0 && (
                   <span className="flex items-center justify-center min-w-[18px] h-[18px] px-1 bg-yellow-500 text-zinc-950 text-[10px] font-black rounded-full animate-in zoom-in">
                     {newHistoryCount}

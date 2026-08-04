@@ -3,7 +3,9 @@
   "description": "A professional AI-driven recruitment platform featuring a resume scorer, career path predictor, and an intelligent career coach interface.",
   "requestFramePermissions": [
     "camera",
-    "microphone",
-    "geolocation"
+    "microphone"
+  ],
+  "majorCapabilities": [
+    "MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"
   ]
 }

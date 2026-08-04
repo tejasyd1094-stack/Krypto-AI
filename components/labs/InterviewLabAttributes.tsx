@@ -1,10 +1,6 @@
 import React from 'react';
 
 const InterviewLabAttributes: React.FC = () => {
-  const radius = 60;
-  const circumference = 2 * Math.PI * radius;
-  const score = 88;
-
   return (
     <div className="max-w-6xl mx-auto py-12 px-6 space-y-24 pb-40 animate-in fade-in duration-1000 text-left">
       <div className="space-y-6 text-left">
@@ -52,42 +48,6 @@ const InterviewLabAttributes: React.FC = () => {
                  </div>
                  <p className="text-[10px] font-black text-zinc-600 uppercase tracking-[0.5em]">Neural Simulation Layer v3.0</p>
               </div>
-          </div>
-        </div>
-      </div>
-
-      <div className="space-y-12 text-left">
-        <div className="space-y-6 max-w-3xl text-left">
-          <span className="text-blue-400 text-[10px] font-black uppercase tracking-[0.5em]">Feature 02 • Predictive Fit Analysis</span>
-          <h3 className="text-3xl font-black text-zinc-100 uppercase tracking-tight text-left">Personalized <br /><span className="gold-text-gradient">Worthiness Score</span></h3>
-          <p className="text-zinc-400 text-base leading-relaxed font-medium text-left">
-            Quantify your cultural compatibility through attitudinal mapping. This score predicts your resilience within a specific organizational structure, providing a definitive signal on whether a company is a high-potential environment for your archetype.
-          </p>
-        </div>
-
-        <div className="bg-zinc-950 rounded-[80px] p-10 sm:p-20 text-left">
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-16 items-center text-left">
-             <div className="flex flex-col items-start space-y-6 text-left">
-                <div className="relative w-48 h-48">
-                  <svg className="w-full h-full transform -rotate-90">
-                    <circle cx="50%" cy="50%" r={radius} className="stroke-zinc-900 fill-none" strokeWidth="12" />
-                    <circle cx="50%" cy="50%" r={radius} className="stroke-green-500 fill-none" strokeWidth="12" strokeDasharray={circumference} strokeDashoffset={circumference - (score / 100) * circumference} strokeLinecap="round" />
-                  </svg>
-                  <div className="absolute inset-0 flex items-center justify-center">
-                      <span className="text-6xl font-black tracking-tighter text-green-500">{score}</span>
-                  </div>
-                </div>
-                <div className="text-left">
-                  <p className="text-lg font-black uppercase tracking-[0.3em] text-green-500 text-left">High Potential Alignment</p>
-                  <p className="text-zinc-600 text-[10px] font-black uppercase tracking-[0.5em] mt-2 text-left">Cultural Compatibility Index</p>
-                </div>
-             </div>
-             <div className="p-8 bg-zinc-900/50 rounded-[40px] space-y-6 text-left">
-                <h5 className="text-[10px] font-black text-zinc-100 uppercase tracking-widest border-b border-zinc-800 pb-4 text-left">Final Verdict Signal</h5>
-                <p className="text-zinc-400 text-sm leading-relaxed italic text-left">
-                  "Your profile shows a high probability of success and longevity within this specific organizational structure. Your responses to 'scope creep' scenarios perfectly align with the target firm's high-velocity delivery culture."
-                </p>
-             </div>
           </div>
         </div>
       </div>

@@ -1,0 +1,58 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // Global Safety Net
+    match /{document=**} {
+      allow read, write: if false;
+    }
+
+    // Common Helpers
+    function isSignedIn() {
+      return request.auth != null;
+    }
+    function isOwner(userId) {
+      return isSignedIn() && request.auth.uid == userId;
+    }
+    function incoming() {
+      return request.resource.data;
+    }
+    function existing() {
+      return resource.data;
+    }
+    function isValidId(id) {
+      return id is string && id.size() <= 128 && id.matches('^[a-zA-Z0-9_\\-]+$');
+    }
+
+    // Validation blueprints
+    function isValidUserProfile(data) {
+      return data.keys().hasAll(['credits', 'planId'])
+        && (data.get('isPro', false) is bool)
+        && (data.planId is string && data.planId.size() <= 32)
+        && (data.credits is int && data.credits >= 0)
+        && (resource != null || data.credits == 0)
+        && (data.get('trialUsed', false) is bool)
+        && (data.get('location', '') is string)
+        && (data.get('currency', '') is string)
+        && (data.get('symbol', '') is string);
+    }
+
+    function isValidHistoryItem(data) {
+      return data.keys().hasAll(['id', 'type', 'title', 'date', 'result'])
+        && (data.id is string && data.id.size() <= 128)
+        && (data.type is string && data.type.size() <= 64)
+        && (data.title is string && data.title.size() <= 256)
+        && (data.date is string && data.date.size() <= 64)
+        && (data.result is string && data.result.size() <= 1048576);
+    }
+
+    // Match blocks
+    match /users/{userId} {
+      allow get, write: if isOwner(userId) && (request.method != 'write' || isValidUserProfile(incoming()));
+      
+      match /history/{historyId} {
+        allow get, list, create, delete: if isOwner(userId) && (request.method != 'create' || (isValidId(historyId) && isValidHistoryItem(incoming())));
+        allow update: if isOwner(userId) && isValidHistoryItem(incoming());
+      }
+    }
+  }
+}

@@ -7,7 +7,7 @@ const CREDIT_BREAKDOWN = [
   { action: 'Advanced Strategy', cost: 10, description: 'Deep execution blueprint for career pivots.' },
   { action: 'Resume Audit', cost: 10, description: 'Deep ATS scan and Google XYZ optimization.' },
   { action: 'Resume Architect', cost: 15, description: 'Full optimized document rewrite (Full rewrite / Export).' },
-  { action: 'Interview Lab Session', cost: 15, description: 'Company-specific behavioral/technical simulation.' },
+  { action: 'Interview Lab Session', cost: 50, description: 'Company-specific behavioral/technical simulation.' },
   { action: 'DNA Mapping (Experienced)', cost: 35, description: 'Tenure-based strategic pivoting analysis.' },
   { action: 'DNA Mapping (Fresher)', cost: 25, description: 'Behavioral profiling for new entrants.' },
 ];

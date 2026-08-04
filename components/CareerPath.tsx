@@ -259,23 +259,23 @@ const CollapsibleSection: React.FC<{ title: string; children: React.ReactNode; d
   const hoverClass = color === 'yellow' ? 'hover:border-yellow-500/30' : 'hover:border-blue-500/30';
 
   return (
-    <div className={`border border-zinc-800 rounded-2xl overflow-hidden bg-zinc-950/30 transition-all duration-300 ${hoverClass} ${isOpen ? borderClass : ''}`}>
+    <div className={`border border-zinc-800 rounded-2xl overflow-hidden bg-zinc-950/30 transition-all duration-300 ${hoverClass} ${isOpen ? borderClass : ''} w-full max-w-full`}>
       <button 
         onClick={() => setIsOpen(!isOpen)}
-        className="w-full flex items-center justify-between p-4 text-left hover:bg-zinc-900/40 transition-colors group"
+        className="w-full flex items-center justify-between p-4 text-left hover:bg-zinc-900/40 transition-colors group gap-2"
       >
-        <span className={`text-[10px] font-black uppercase tracking-[0.2em] ${isOpen ? colorClass : 'text-zinc-400'} group-hover:${colorClass} transition-colors`}>
+        <span className={`text-[10px] font-black uppercase tracking-[0.2em] ${isOpen ? colorClass : 'text-zinc-400'} group-hover:${colorClass} transition-colors min-w-0 break-words pr-2`}>
           {title}
         </span>
-        <div className={`w-6 h-6 rounded-full border border-zinc-800 flex items-center justify-center transition-all duration-300 ${isOpen ? 'rotate-180 border-zinc-700 bg-zinc-900' : ''}`}>
+        <div className={`w-6 h-6 rounded-full border border-zinc-800 flex items-center justify-center transition-all duration-300 shrink-0 ${isOpen ? 'rotate-180 border-zinc-700 bg-zinc-900' : ''}`}>
            <svg className={`w-3 h-3 ${isOpen ? colorClass : 'text-zinc-600'}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M19 9l-7 7-7-7" />
            </svg>
         </div>
       </button>
       <div className={`transition-all duration-500 ease-in-out ${isOpen ? 'max-h-[5000px] opacity-100' : 'max-h-0 opacity-0 overflow-hidden'}`}>
-        <div className="p-5 pt-0 border-t border-zinc-900/50">
-          <div className="prose-krypto prose-sm text-zinc-400 leading-relaxed">
+        <div className="p-4 sm:p-5 pt-0 border-t border-zinc-900/50 max-w-full overflow-x-auto">
+          <div className="prose-krypto prose-sm text-zinc-400 leading-relaxed break-words [word-break:break-word] text-xs sm:text-sm space-y-2">
             {children}
           </div>
         </div>
@@ -287,37 +287,83 @@ const CollapsibleSection: React.FC<{ title: string; children: React.ReactNode; d
 const CollapsibleMarkdown: React.FC<{ text: string; color?: string }> = ({ text, color = 'yellow' }) => {
   if (!text || text.trim() === '') return null;
 
-  const sections: { title: string; content: string }[] = [];
-  const parts = text.split(/^((?:#{1,4}\s+.*|(?:\d+\.\s*)?\*\*.*?\*\*.*|(?:\d+\.\s*)Month\s+\d+.*|(?:\d+\.\s*)Phase\s+\d+.*))$/im);
-  
-  let currentTitle = "Overview";
+  // Split only on prominent markdown headers (# or ## or ###) or distinct section headers
+  const rawSections: { title: string; content: string }[] = [];
+  const parts = text.split(/^((?:#{1,3}\s+.*|(?:\d+\.\s*)?\*\*[^*]{3,40}\*\*:?\s*$))/gm);
+
+  let currentTitle = "Executive Summary";
   let currentContent = "";
 
   for (const part of parts) {
-    if (/^(?:#{1,4}\s+|(?:\d+\.\s*)?\*\*|(?:\d+\.\s*)Month\s+\d+|(?:\d+\.\s*)Phase\s+\d+)/i.test(part)) {
+    if (!part) continue;
+    if (/^(?:#{1,3}\s+|(?:\d+\.\s*)?\*\*[^*]{3,40}\*\*:?\s*$)/i.test(part.trim())) {
       if (currentContent.trim()) {
-        sections.push({ title: currentTitle, content: currentContent.trim() });
+        rawSections.push({ title: currentTitle, content: currentContent.trim() });
       }
       currentTitle = part
-        .replace(/^#{1,4}\s+/, '')
-        .replace(/^(?:\d+\.\s*)?\*\*(.*?)\*\*(.*)$/, '$1$2')
+        .replace(/^#{1,3}\s+/, '')
+        .replace(/^(?:\d+\.\s*)?\*\*(.*?)\*\*:?$/, '$1')
         .replace(/\*\*/g, '')
         .replace(/^:\s*/, '')
         .replace(/:\s*$/, '')
-        .trim();
+        .trim() || "Overview";
       currentContent = "";
     } else {
       currentContent += part;
     }
   }
-  
+
   if (currentContent.trim()) {
-    sections.push({ title: currentTitle, content: currentContent.trim() });
+    rawSections.push({ title: currentTitle, content: currentContent.trim() });
+  }
+
+  // Pass 1: Remove empty / near-empty sections and merge very short ones (< 50 chars of text) into adjacent sections
+  const firstPass: { title: string; content: string }[] = [];
+  for (const sec of rawSections) {
+    const plainText = sec.content.replace(/[#*`\-_~:]/g, '').trim();
+    
+    if (plainText.length < 50) {
+      if (firstPass.length > 0) {
+        // Append to previous dropdown
+        firstPass[firstPass.length - 1].content += `\n\n**${sec.title}**\n${sec.content}`;
+      } else {
+        firstPass.push({ title: sec.title || "Executive Summary", content: sec.content ? `**${sec.title}**\n${sec.content}` : "" });
+      }
+    } else {
+      firstPass.push({ title: sec.title, content: sec.content });
+    }
+  }
+
+  // Pass 2: Club adjacent short dropdowns (< 180 chars) so total dropdown count is reduced and content is rich
+  const finalSections: { title: string; content: string }[] = [];
+  for (const sec of firstPass) {
+    const plainText = sec.content.replace(/[#*`\-_~:]/g, '').trim();
+    if (!plainText) continue;
+
+    if (finalSections.length > 0) {
+      const prev = finalSections[finalSections.length - 1];
+      const prevLength = prev.content.replace(/[#*`\-_~:]/g, '').trim().length;
+
+      if (prevLength < 180 || plainText.length < 180) {
+        // Club short ones into one dropdown
+        if (!prev.title.toLowerCase().includes(sec.title.toLowerCase())) {
+          prev.title = `${prev.title} & ${sec.title}`.replace(/& Executive Summary|& Overview/g, '').trim();
+        }
+        prev.content += `\n\n### ${sec.title}\n${sec.content}`;
+        continue;
+      }
+    }
+    finalSections.push({ title: sec.title, content: sec.content });
+  }
+
+  // Fallback if no sections formed
+  if (finalSections.length === 0) {
+    finalSections.push({ title: "Strategic Overview", content: text });
   }
 
   return (
-    <div className="space-y-3">
-      {sections.map((sec, i) => (
+    <div className="space-y-3 w-full max-w-full overflow-hidden">
+      {finalSections.map((sec, i) => (
         <CollapsibleSection key={i} title={sec.title} color={color} defaultOpen={i === 0}>
           <ReactMarkdown>{sec.content}</ReactMarkdown>
         </CollapsibleSection>
@@ -326,11 +372,92 @@ const CollapsibleMarkdown: React.FC<{ text: string; color?: string }> = ({ text,
   );
 };
 
+const StrategicRoadmapMock: React.FC = () => (
+  <div className="relative w-full h-44 bg-[#09090c] border border-zinc-855 rounded-3xl overflow-hidden p-5 space-y-3 cursor-not-allowed select-none group/mock hover:border-yellow-500/10 transition-all duration-300">
+    <div className="flex items-center justify-between border-b border-zinc-900 pb-2">
+      <div className="flex items-center gap-2">
+        <span className="w-1.5 h-1.5 rounded-full bg-yellow-500 animate-pulse" />
+        <span className="text-[9px] font-black uppercase tracking-widest text-zinc-400">Target Role: Executive Strategist</span>
+      </div>
+      <span className="text-[8px] font-bold text-yellow-500 bg-yellow-500/10 px-2 py-0.5 rounded-md border border-yellow-500/20 uppercase tracking-widest animate-pulse">PREVIEW</span>
+    </div>
+    
+    <div className="space-y-3 text-left">
+      <div className="flex gap-3">
+        <div className="flex flex-col items-center">
+          <div className="w-4 h-4 rounded-full bg-yellow-500/10 border border-yellow-500/30 flex items-center justify-center text-[7px] font-black text-yellow-500">1</div>
+          <div className="w-0.5 h-10 bg-zinc-900" />
+        </div>
+        <div className="space-y-0.5">
+          <h4 className="text-[9px] font-black text-zinc-350 uppercase tracking-tight">Phase 1: Resume Velocity Integration</h4>
+          <p className="text-[8px] text-zinc-500 leading-normal">Score baseline at 85+ using Krypto engine optimization and keyword alignments.</p>
+        </div>
+      </div>
+
+      <div className="flex gap-3">
+        <div className="flex flex-col items-center">
+          <div className="w-4 h-4 rounded-full bg-yellow-500/10 border border-yellow-500/30 flex items-center justify-center text-[7px] font-black text-yellow-500">2</div>
+          <div className="w-0.5 h-10 bg-zinc-900" />
+        </div>
+        <div className="space-y-0.5">
+          <h4 className="text-[9px] font-black text-zinc-350 uppercase tracking-tight">Phase 2: Comp Growth Positioning</h4>
+          <p className="text-[8px] text-zinc-500 leading-normal">Calibrate compensation range to target high-yield regional premium indexes.</p>
+        </div>
+      </div>
+    </div>
+
+    {/* Graded blur covering the bottom 25% (starts at 75% height) */}
+    <div className="absolute inset-x-0 bottom-0 top-[75%] pointer-events-none overflow-hidden rounded-b-3xl flex flex-col justify-end">
+      <div className="absolute inset-0 backdrop-blur-[6px] bg-gradient-to-t from-[#0c0c0e] via-[#0c0c0e]/95 to-transparent" />
+    </div>
+  </div>
+);
+
+const MarketIntelMock: React.FC = () => (
+  <div className="relative w-full h-44 bg-[#09090c] border border-zinc-855 rounded-3xl overflow-hidden p-5 space-y-3 cursor-not-allowed select-none group/mock hover:border-blue-500/10 transition-all duration-300">
+    <div className="flex items-center justify-between border-b border-zinc-900 pb-2">
+      <div className="flex items-center gap-2">
+        <span className="w-1.5 h-1.5 rounded-full bg-blue-500 animate-pulse" />
+        <span className="text-[9px] font-black uppercase tracking-widest text-zinc-400">Target Region: United Kingdom</span>
+      </div>
+      <span className="text-[8px] font-bold text-blue-400 bg-blue-500/10 px-2 py-0.5 rounded-md border border-blue-500/20 uppercase tracking-widest animate-pulse">PREVIEW</span>
+    </div>
+    
+    <div className="grid grid-cols-2 gap-3 text-left">
+      <div className="bg-zinc-900/50 p-2.5 rounded-xl border border-zinc-850/40 space-y-0.5">
+        <span className="text-[8px] font-black text-zinc-650 uppercase tracking-widest block">Comp Index Median</span>
+        <span className="text-sm font-black text-green-400">£115,000</span>
+      </div>
+      
+      <div className="bg-zinc-900/50 p-2.5 rounded-xl border border-zinc-850/40 space-y-0.5">
+        <span className="text-[8px] font-black text-zinc-650 uppercase tracking-widest block">Visa Sponsorship</span>
+        <span className="text-[9px] font-extrabold text-blue-400 uppercase">Available</span>
+      </div>
+
+      <div className="bg-zinc-900/50 p-2.5 rounded-xl border border-zinc-850/40 space-y-0.5">
+        <span className="text-[8px] font-black text-zinc-650 uppercase tracking-widest block">Local Hub Density</span>
+        <span className="text-sm font-black text-zinc-200">92 Openings</span>
+      </div>
+
+      <div className="bg-zinc-900/50 p-2.5 rounded-xl border border-zinc-850/40 space-y-0.5">
+        <span className="text-[8px] font-black text-zinc-650 uppercase tracking-widest block">Friction Index</span>
+        <span className="text-[9px] font-extrabold text-yellow-500 uppercase">Moderate</span>
+      </div>
+    </div>
+
+    {/* Graded blur covering the bottom 25% (starts at 75% height) */}
+    <div className="absolute inset-x-0 bottom-0 top-[75%] pointer-events-none overflow-hidden rounded-b-3xl flex flex-col justify-end">
+      <div className="absolute inset-0 backdrop-blur-[6px] bg-gradient-to-t from-[#0c0c0e] via-[#0c0c0e]/95 to-transparent" />
+    </div>
+  </div>
+);
+
 interface CareerPathProps {
   userProfile?: ProfileMetadata;
   userCredits: number;
   userLocation: string;
   userSymbol?: string;
+  userPlanId?: string;
   onUse: (amt: number) => boolean;
   onNavigatePricing: () => void;
   onSaveHistory: (item: HistoryItem) => void;
@@ -355,7 +482,7 @@ interface CareerPathProps {
 }
 
 const CareerPath: React.FC<CareerPathProps> = ({ 
-  userProfile, userCredits, userLocation, userSymbol = '$', onUse, onNavigatePricing, onSaveHistory, onVerifyLocation, isVerifyingLocation, onSetManualLocation, onNavigateResumeScorer,
+  userProfile, userCredits, userLocation, userSymbol = '$', userPlanId, onUse, onNavigatePricing, onSaveHistory, onVerifyLocation, isVerifyingLocation, onSetManualLocation, onNavigateResumeScorer,
   persistedData, setPersistedData
 }) => {
   const { result, scores, dnaCode, userType, resumeData } = persistedData;
@@ -375,6 +502,15 @@ const CareerPath: React.FC<CareerPathProps> = ({
   const [subLoadingProgress, setSubLoadingProgress] = useState<Record<string, number>>({});
   const [jobSelectorModal, setJobSelectorModal] = useState<{isOpen: boolean, type: 'strategy' | 'market' | null}>({isOpen: false, type: null});
   const [selectedJobIdx, setSelectedJobIdx] = useState<number | null>(null);
+  const [showUpgradeModal, setShowUpgradeModal] = useState<{isOpen: boolean, type: 'strategy' | 'market' | null}>({isOpen: false, type: null});
+
+  const handlePremiumFeatureClick = (type: 'strategy' | 'market') => {
+    if (userPlanId !== 'pro' && userPlanId !== 'ultra-pro') {
+      setShowUpgradeModal({ isOpen: true, type });
+      return;
+    }
+    setJobSelectorModal({ isOpen: true, type });
+  };
 
   const resultRef = useRef<HTMLDivElement>(null);
   const loaderRef = useRef<HTMLDivElement>(null);
@@ -684,7 +820,7 @@ const CareerPath: React.FC<CareerPathProps> = ({
 
       {result && !loading && currentStep === 6 && (
         <div ref={resultRef} className="space-y-20 animate-in fade-in slide-in-from-bottom-8 duration-1000 scroll-mt-24">
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-10 items-center">
+          <div className="flex flex-col gap-10">
              <div className="bg-[#0c0c0e] border border-zinc-800 rounded-[48px] p-10 shadow-3xl flex flex-col items-center group">
                 <h3 className="text-[10px] font-black text-zinc-500 uppercase tracking-[0.5em] mb-12">Neural Identity Sequence</h3>
                 <RadarChart scores={scores} />
@@ -775,9 +911,22 @@ const CareerPath: React.FC<CareerPathProps> = ({
                    </div>
                    
                    <div className="space-y-4">
-                      <button onClick={() => setJobSelectorModal({isOpen: true, type: 'strategy'})} className="w-full py-6 bg-zinc-900 border-2 border-zinc-800 rounded-2xl text-xs font-black uppercase tracking-widest text-zinc-300 hover:text-white hover:border-yellow-500/50 hover:bg-zinc-800/50 transition-all shadow-lg flex flex-col items-center justify-center gap-2">
-                         <span>Strategic Roadmap</span>
-                         <span className="text-[10px] text-yellow-500">(25 Credits)</span>
+                      {/* Strategic Roadmap Mock with 75% blur */}
+                      <StrategicRoadmapMock />
+                      
+                      <button 
+                        onClick={() => handlePremiumFeatureClick('strategy')} 
+                        className="w-full py-5 bg-gradient-to-r from-yellow-500 to-amber-500 hover:from-yellow-400 hover:to-amber-400 text-zinc-950 rounded-2xl text-xs font-black uppercase tracking-widest transition-all shadow-xl flex flex-col sm:flex-row items-center justify-between px-6 gap-3 group relative overflow-hidden active:scale-98 animate-all"
+                      >
+                         <div className="flex items-center gap-2 z-10 text-left">
+                            <span className="text-[11px] font-black tracking-widest">Strategic Roadmap</span>
+                            <span className="px-2 py-0.5 rounded-full bg-zinc-950/10 text-zinc-950 text-[8px] font-black uppercase tracking-widest border border-zinc-950/20">
+                              Pro / Ultra Pro
+                            </span>
+                         </div>
+                         <span className="text-[10px] uppercase tracking-wider bg-zinc-950/10 px-3 py-1 text-zinc-950 rounded-lg shrink-0 font-black z-10">
+                            25 Credits
+                         </span>
                       </button>
                       
                       {/* Strategy Results */}
@@ -809,9 +958,22 @@ const CareerPath: React.FC<CareerPathProps> = ({
                    </div>
 
                    <div className="space-y-4">
-                      <button onClick={() => setJobSelectorModal({isOpen: true, type: 'market'})} className="w-full py-6 bg-zinc-900 border-2 border-zinc-800 rounded-2xl text-xs font-black uppercase tracking-widest text-zinc-300 hover:text-white hover:border-blue-500/50 hover:bg-zinc-800/50 transition-all shadow-lg flex flex-col items-center justify-center gap-2">
-                         <span>Market Intel</span>
-                         <span className="text-[10px] text-blue-500">(25 Credits)</span>
+                      {/* Market Intel Mock with 75% blur */}
+                      <MarketIntelMock />
+                      
+                      <button 
+                        onClick={() => handlePremiumFeatureClick('market')} 
+                        className="w-full py-5 bg-gradient-to-r from-yellow-500 to-amber-500 hover:from-yellow-400 hover:to-amber-400 text-zinc-950 rounded-2xl text-xs font-black uppercase tracking-widest transition-all shadow-xl flex flex-col sm:flex-row items-center justify-between px-6 gap-3 group relative overflow-hidden active:scale-98 animate-all"
+                      >
+                         <div className="flex items-center gap-2 z-10 text-left">
+                            <span className="text-[11px] font-black tracking-widest">Market Intel</span>
+                            <span className="px-2 py-0.5 rounded-full bg-zinc-950/10 text-zinc-950 text-[8px] font-black uppercase tracking-widest border border-zinc-950/20">
+                              Pro / Ultra Pro
+                            </span>
+                         </div>
+                         <span className="text-[10px] uppercase tracking-wider bg-zinc-950/10 px-3 py-1 text-zinc-950 rounded-lg shrink-0 font-black z-10">
+                            25 Credits
+                         </span>
                       </button>
                       
                       {/* Market Intel Results */}
@@ -908,6 +1070,48 @@ const CareerPath: React.FC<CareerPathProps> = ({
                    </button>
                 </div>
              )}
+          </div>
+        </div>
+      )}
+
+      {showUpgradeModal.isOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm animate-in fade-in duration-300">
+          <div className="bg-zinc-950 border border-zinc-850 rounded-[40px] p-8 w-full max-w-md space-y-6 text-center relative overflow-hidden shadow-2xl">
+            <div className="absolute top-0 right-0 w-32 h-32 bg-yellow-500/[0.02] rounded-bl-full pointer-events-none animate-pulse" />
+            
+            <div className="w-16 h-16 bg-yellow-500/10 border border-yellow-500/20 rounded-2xl flex items-center justify-center mx-auto">
+              <svg className="w-8 h-8 text-yellow-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m0 0v2m0-2h2m-2 0H10m4-6h.01M12 3v1m0 11h.01M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+              </svg>
+            </div>
+            
+            <div className="space-y-2">
+              <span className="px-2.5 py-0.5 rounded-full bg-yellow-500/10 text-yellow-500 text-[8px] font-black uppercase tracking-[0.2em] border border-yellow-500/20">
+                Pro / Ultra Pro Upgrade Required
+              </span>
+              <h3 className="text-2xl font-black uppercase tracking-tight text-zinc-100">Unlock Deep Sequence</h3>
+              <p className="text-xs text-zinc-500 font-medium leading-relaxed font-sans">
+                The {showUpgradeModal.type === 'strategy' ? 'Strategic Roadmap' : 'Market Intel'} is an advanced diagnostic engine, exclusively accessible to Pro and Ultra Pro users. Please upgrade from your basic plan to access them.
+              </p>
+            </div>
+            
+            <div className="pt-2 flex flex-col gap-2">
+              <button 
+                onClick={() => {
+                  setShowUpgradeModal({isOpen: false, type: null});
+                  onNavigatePricing();
+                }}
+                className="w-full py-4 bg-gradient-to-r from-yellow-500 to-amber-500 hover:from-yellow-400 hover:to-amber-400 text-zinc-950 rounded-xl text-[10px] font-black uppercase tracking-[0.2em] transition-all hover:scale-[1.02] active:scale-98 shadow-xl"
+              >
+                Initiate Upgrade Sequence
+              </button>
+              <button 
+                onClick={() => setShowUpgradeModal({isOpen: false, type: null})}
+                className="w-full py-4 bg-zinc-900 hover:bg-zinc-800 text-zinc-400 hover:text-zinc-200 rounded-xl text-[10px] font-black uppercase tracking-[0.2em] border border-zinc-800 transition-all"
+              >
+                Return
+              </button>
+            </div>
           </div>
         </div>
       )}

@@ -1,5 +1,5 @@
 
-import { supabase } from '../lib/supabase';
+import { auth } from '../lib/firebase';
 
 /**
  * Krypto AI Secure Payment Gateway Interface
@@ -8,11 +8,11 @@ import { supabase } from '../lib/supabase';
 
 export const initiateRazorpayCheckout = async (planId: string, price: number, currency: string, targetLink: string) => {
   // ATTEMPT SESSION RETRIEVAL
-  const { data: { session } } = await supabase.auth.getSession();
+  const currentUser = auth.currentUser;
   
   // LOGIC BRANCHING: Support Guest/Demo Access for testing
-  const userId = session?.user?.id || 'GUEST_ARCHITECT_ID';
-  const isGuest = !session;
+  const userId = currentUser?.uid || 'GUEST_ARCHITECT_ID';
+  const isGuest = !currentUser;
 
   if (isGuest) {
     console.warn("[SECURITY] Running in GUEST_MODE. Transaction is simulated for UI validation.");
@@ -28,10 +28,23 @@ export const initiateRazorpayCheckout = async (planId: string, price: number, cu
 
   console.log(`[PAYMENT] Secure Handshake Initialized: ${txToken}`);
   
+  // Calculate credits for plan
+  let credits = 50;
+  if (planId === 'pro') credits = 200;
+  if (planId === 'ultra-pro') credits = 500;
+
   // Append tracking and security parameters to the link
   const secureUrl = new URL(targetLink);
   secureUrl.searchParams.append('ref', 'krypto_architect');
   secureUrl.searchParams.append('sid', txToken);
+  secureUrl.searchParams.append('uid', userId);
+  secureUrl.searchParams.append('plan', planId);
+  secureUrl.searchParams.append('notes[uid]', userId);
+  secureUrl.searchParams.append('notes[plan]', planId);
+  secureUrl.searchParams.append('notes[credits]', credits.toString());
+  if (currentUser?.email) {
+    secureUrl.searchParams.append('notes[email]', currentUser.email);
+  }
   secureUrl.searchParams.append('utm_source', isGuest ? 'demo_login' : 'app_v2');
 
   return new Promise((resolve) => {
