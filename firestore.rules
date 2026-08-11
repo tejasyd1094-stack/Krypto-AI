@@ -54,5 +54,10 @@ service cloud.firestore {
         allow update: if isOwner(userId) && isValidHistoryItem(incoming());
       }
     }
+
+    match /support_tickets/{ticketId} {
+      allow create: if true;
+      allow get, list: if isSignedIn() && (resource.data.userUid == request.auth.uid || resource.data.email == request.auth.token.email);
+    }
   }
 }

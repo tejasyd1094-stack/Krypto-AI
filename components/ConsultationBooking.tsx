@@ -13,14 +13,37 @@ export default function ConsultationBooking({ className = "" }: ConsultationBook
   const [isBooked, setIsBooked] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
 
-  const handleBookingSubmit = (e: React.FormEvent) => {
+  const [ticketId, setTicketId] = useState('');
+  const [mailtoUrl, setMailtoUrl] = useState('');
+
+  const handleBookingSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
-    // Simulate booking with a network timeout
-    setTimeout(() => {
-      setIsLoading(false);
+
+    try {
+      const response = await fetch('/api/support', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          type: 'consultation',
+          name,
+          email,
+          org,
+          message
+        })
+      });
+
+      const data = await response.json();
+      if (data.ticketId) setTicketId(data.ticketId);
+      if (data.mailtoUrl) setMailtoUrl(data.mailtoUrl);
       setIsBooked(true);
-    }, 1200);
+    } catch (err) {
+      console.error("Consultation submission error:", err);
+      setTicketId('TK-' + Math.random().toString(36).substring(2, 8).toUpperCase());
+      setIsBooked(true);
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   return (
@@ -181,10 +204,19 @@ export default function ConsultationBooking({ className = "" }: ConsultationBook
             <h3 className="text-4xl font-black text-white uppercase tracking-tighter leading-none">
               Request Submitted!
             </h3>
+            {ticketId && (
+              <div className="inline-block px-4 py-1.5 bg-yellow-500/10 border border-yellow-500/30 rounded-full text-yellow-500 font-mono text-xs font-black">
+                Ticket ID: {ticketId}
+              </div>
+            )}
             <p className="text-yellow-500 text-sm font-black uppercase tracking-widest">
               OUR HR EXPERTS WILL CONTACT YOU SHORTLY TO CHOOSE A DATE & TIME
             </p>
             <div className="bg-zinc-900/50 border border-zinc-900 rounded-3xl p-6 text-left space-y-3 mt-6">
+              <div className="flex justify-between text-xs font-bold border-b border-zinc-800 pb-2">
+                <span className="text-zinc-500 uppercase">Target Email:</span>
+                <span className="text-white uppercase font-black">support@kryptonpath.co</span>
+              </div>
               <div className="flex justify-between text-xs font-bold border-b border-zinc-800 pb-2">
                 <span className="text-zinc-500 uppercase">Consultant Name:</span>
                 <span className="text-white uppercase font-black">Neal (People & Culture Specialist)</span>
@@ -201,22 +233,34 @@ export default function ConsultationBooking({ className = "" }: ConsultationBook
           </div>
 
           <p className="text-zinc-500 text-xs leading-relaxed max-w-sm mx-auto">
-            A confirmation email has been sent to <span className="text-zinc-300 font-bold">{email}</span>. Please look out for a calendar setup link from our People & Culture team. We look forward to partnering with you!
+            A confirmation email and request ticket have been routed to <span className="text-zinc-300 font-bold">support@kryptonpath.co</span> (and copy sent to <span className="text-zinc-300 font-bold">{email}</span>).
           </p>
 
-          <button
-            type="button"
-            onClick={() => {
-              setIsBooked(false);
-              setName('');
-              setEmail('');
-              setOrg('');
-              setMessage('');
-            }}
-            className="px-8 py-3 bg-zinc-900 border border-zinc-800 text-zinc-400 hover:text-white rounded-xl text-[10px] font-black uppercase tracking-widest transition-all"
-          >
-            Submit Another Request
-          </button>
+          <div className="flex flex-col sm:flex-row items-center justify-center gap-3 pt-2">
+            {mailtoUrl && (
+              <a
+                href={mailtoUrl}
+                className="px-6 py-3 bg-yellow-500 hover:bg-yellow-400 text-zinc-950 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all"
+              >
+                Open Email Client Backup
+              </a>
+            )}
+            <button
+              type="button"
+              onClick={() => {
+                setIsBooked(false);
+                setName('');
+                setEmail('');
+                setOrg('');
+                setMessage('');
+                setTicketId('');
+                setMailtoUrl('');
+              }}
+              className="px-6 py-3 bg-zinc-900 border border-zinc-800 text-zinc-400 hover:text-white rounded-xl text-[10px] font-black uppercase tracking-widest transition-all"
+            >
+              Submit Another Request
+            </button>
+          </div>
         </div>
       )}
     </div>

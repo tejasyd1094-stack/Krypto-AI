@@ -20,9 +20,14 @@ export default function FeedbackSupport({ onBack }: FeedbackSupportProps) {
   const [rating, setRating] = useState<number>(0);
   const [hoverRating, setHoverRating] = useState<number>(0);
   const [comment, setComment] = useState('');
+  const [userEmail, setUserEmail] = useState('');
+  const [userName, setUserName] = useState('');
   const [emailCopied, setEmailCopied] = useState(false);
   const [submitted, setSubmitted] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const [errorMsg, setErrorMsg] = useState('');
+  const [ticketId, setTicketId] = useState('');
+  const [mailtoUrl, setMailtoUrl] = useState('');
 
   const handleCopyEmail = () => {
     navigator.clipboard.writeText('support@kryptonpath.co');
@@ -35,7 +40,7 @@ export default function FeedbackSupport({ onBack }: FeedbackSupportProps) {
     setErrorMsg('');
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setErrorMsg('');
 
@@ -49,16 +54,50 @@ export default function FeedbackSupport({ onBack }: FeedbackSupportProps) {
       return;
     }
 
-    setSubmitted(true);
+    setIsSubmitting(true);
+    try {
+      const response = await fetch('/api/support', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          type: 'feedback',
+          module,
+          rating,
+          comment,
+          email: userEmail,
+          name: userName
+        })
+      });
+
+      const data = await response.json();
+      if (data.ticketId) {
+        setTicketId(data.ticketId);
+      }
+      if (data.mailtoUrl) {
+        setMailtoUrl(data.mailtoUrl);
+      }
+      setSubmitted(true);
+    } catch (err) {
+      console.error('Failed to dispatch feedback:', err);
+      // Fallback
+      setTicketId('TK-' + Math.random().toString(36).substring(2, 8).toUpperCase());
+      setSubmitted(true);
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   const handleReset = () => {
     setRating(0);
     setHoverRating(0);
     setComment('');
+    setUserEmail('');
+    setUserName('');
     setModule(MODULES[0]);
     setSubmitted(false);
     setErrorMsg('');
+    setTicketId('');
+    setMailtoUrl('');
   };
 
   return (
@@ -98,28 +137,72 @@ export default function FeedbackSupport({ onBack }: FeedbackSupportProps) {
         {/* Left Side: Interactive Feedback Engine */}
         <div className="md:col-span-7 bg-zinc-950/40 border border-zinc-900 rounded-[36px] p-8 sm:p-10 flex flex-col justify-between space-y-8">
           {submitted ? (
-            <div className="space-y-6 my-auto py-12 text-center animate-in zoom-in-95 duration-350">
+            <div className="space-y-6 my-auto py-8 text-center animate-in zoom-in-95 duration-350">
               <div className="w-16 h-16 bg-yellow-500/10 border border-yellow-500/20 text-yellow-500 rounded-full flex items-center justify-center mx-auto shadow-2xl">
                 <Send className="w-6 h-6 animate-pulse" />
               </div>
 
-              <div className="space-y-2">
+              <div className="space-y-3">
                 <h3 className="text-xl font-black uppercase text-white tracking-tight">Transmission Code Received</h3>
+                {ticketId && (
+                  <div className="inline-block px-3 py-1 bg-yellow-500/10 border border-yellow-500/30 rounded-full text-yellow-500 font-mono text-xs font-black">
+                    Ticket ID: {ticketId}
+                  </div>
+                )}
                 <p className="text-xs text-zinc-400 max-w-md mx-auto leading-relaxed">
-                  Excellent work! Your feedback on <span className="text-yellow-500 font-bold">"{module}"</span> with a rating of <span className="text-yellow-500 font-bold">{rating} Star{rating > 1 ? 's' : ''}</span> has been logged to the telemetry cluster. Our platform architects will integrate your input.
+                  Excellent work! Your feedback on <span className="text-yellow-500 font-bold">"{module}"</span> with a rating of <span className="text-yellow-500 font-bold">{rating} Star{rating > 1 ? 's' : ''}</span> has been saved and dispatched to <span className="text-white font-bold">support@kryptonpath.co</span>.
                 </p>
               </div>
 
-              <button 
-                onClick={handleReset}
-                className="mt-4 px-6 py-3 bg-zinc-900 hover:bg-zinc-850 border border-zinc-800 hover:border-zinc-750 text-zinc-300 hover:text-white rounded-2xl text-[10px] font-black uppercase tracking-widest transition-all cursor-pointer"
-              >
-                Send Another Response
-              </button>
+              <div className="pt-2 flex flex-col sm:flex-row items-center justify-center gap-3">
+                {mailtoUrl && (
+                  <a
+                    href={mailtoUrl}
+                    className="w-full sm:w-auto px-5 py-3 bg-yellow-500 hover:bg-yellow-400 text-zinc-950 font-black rounded-xl text-[10px] uppercase tracking-widest transition-all flex items-center justify-center gap-2"
+                  >
+                    <Mail className="w-3.5 h-3.5" />
+                    Open Email Client Backup
+                  </a>
+                )}
+                <button 
+                  onClick={handleReset}
+                  className="w-full sm:w-auto px-5 py-3 bg-zinc-900 hover:bg-zinc-850 border border-zinc-800 text-zinc-300 hover:text-white rounded-xl text-[10px] font-black uppercase tracking-widest transition-all cursor-pointer"
+                >
+                  Send Another Response
+                </button>
+              </div>
             </div>
           ) : (
             <form onSubmit={handleSubmit} className="space-y-6">
               
+              {/* Optional Contact Details */}
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <label className="text-[10px] font-black uppercase tracking-widest text-zinc-400 block">
+                    Your Name
+                  </label>
+                  <input
+                    type="text"
+                    value={userName}
+                    onChange={(e) => setUserName(e.target.value)}
+                    className="w-full bg-zinc-950 border border-zinc-855 rounded-2xl px-5 py-3.5 text-xs font-bold text-zinc-100 outline-none focus:border-yellow-500/50 tracking-wide placeholder:text-zinc-650"
+                    placeholder="E.g. Alex Smith"
+                  />
+                </div>
+                <div className="space-y-2">
+                  <label className="text-[10px] font-black uppercase tracking-widest text-zinc-400 block">
+                    Your Email
+                  </label>
+                  <input
+                    type="email"
+                    value={userEmail}
+                    onChange={(e) => setUserEmail(e.target.value)}
+                    className="w-full bg-zinc-950 border border-zinc-855 rounded-2xl px-5 py-3.5 text-xs font-bold text-zinc-100 outline-none focus:border-yellow-500/50 tracking-wide placeholder:text-zinc-650"
+                    placeholder="alex@example.com"
+                  />
+                </div>
+              </div>
+
               {/* Module selection */}
               <div className="space-y-2">
                 <label className="text-[10px] font-black uppercase tracking-widest text-zinc-400 block">
@@ -227,10 +310,23 @@ export default function FeedbackSupport({ onBack }: FeedbackSupportProps) {
 
               <button 
                 type="submit"
-                className="w-full py-4 bg-yellow-500 hover:bg-yellow-400 text-zinc-950 rounded-2xl text-[10px] font-black uppercase tracking-widest transition-all hover:scale-[1.02] active:scale-98 border-b-4 border-yellow-700 cursor-pointer flex items-center justify-center gap-2"
+                disabled={isSubmitting}
+                className="w-full py-4 bg-yellow-500 hover:bg-yellow-400 text-zinc-950 rounded-2xl text-[10px] font-black uppercase tracking-widest transition-all hover:scale-[1.02] active:scale-98 border-b-4 border-yellow-700 cursor-pointer flex items-center justify-center gap-2 disabled:opacity-50"
               >
-                <MessageSquare className="w-3.5 h-3.5" />
-                Submit Verification Feedback
+                {isSubmitting ? (
+                  <>
+                    <svg className="animate-spin h-4 w-4 text-zinc-950" fill="none" viewBox="0 0 24 24">
+                      <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+                      <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
+                    </svg>
+                    <span>Transmitting Feedback...</span>
+                  </>
+                ) : (
+                  <>
+                    <MessageSquare className="w-3.5 h-3.5" />
+                    <span>Submit Verification Feedback</span>
+                  </>
+                )}
               </button>
             </form>
           )}

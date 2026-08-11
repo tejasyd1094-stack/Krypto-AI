@@ -2,13 +2,21 @@ import express from "express";
 import path from "path";
 import cors from "cors";
 import crypto from "crypto";
+import fs from "fs";
+import nodemailer from "nodemailer";
 import { Firestore, FieldValue } from "@google-cloud/firestore";
-import { createRequire } from "module";
 import { createServer as createViteServer } from "vite";
-import * as gemini from "./server/gemini.js";
+import * as gemini from "./server/gemini";
 
-const require = createRequire(import.meta.url);
-const firebaseConfig = require("./firebase-applet-config.json");
+const firebaseConfigPath = path.join(process.cwd(), "firebase-applet-config.json");
+let firebaseConfig: any = {};
+if (fs.existsSync(firebaseConfigPath)) {
+  try {
+    firebaseConfig = JSON.parse(fs.readFileSync(firebaseConfigPath, "utf-8"));
+  } catch (err) {
+    console.error("Failed to parse firebase-applet-config.json", err);
+  }
+}
 
 const adminDb = new Firestore({
   projectId: firebaseConfig.projectId,
@@ -324,6 +332,113 @@ async function startServer() {
     }
   };
 
+  // Support, Feedback & Rating Dispatcher
+  app.post("/api/support", async (req, res) => {
+    try {
+      const { type, name, email, rating, module, comment, org, message, userUid } = req.body;
+      const targetEmail = process.env.SUPPORT_EMAIL || "support@kryptonpath.co";
+      const createdAt = new Date().toISOString();
+      const ticketId = "TK-" + crypto.randomBytes(4).toString("hex").toUpperCase();
+
+      const ticketData = {
+        ticketId,
+        type: type || "feedback",
+        name: name || "Anonymous User",
+        email: email || "Not Provided",
+        rating: rating || 0,
+        module: module || "General",
+        comment: comment || message || "",
+        org: org || "",
+        message: message || comment || "",
+        userUid: userUid || "guest",
+        status: "OPEN",
+        createdAt,
+        targetEmail
+      };
+
+      // 1. Save record to Firestore DB
+      try {
+        await adminDb.collection("support_tickets").doc(ticketId).set(ticketData);
+      } catch (dbErr) {
+        console.error("Failed to store support ticket in Firestore:", dbErr);
+      }
+
+      // 2. Email Dispatcher via Nodemailer if SMTP credentials are provided in env
+      let emailSent = false;
+      let emailError = null;
+
+      if (process.env.SMTP_USER && process.env.SMTP_PASS) {
+        try {
+          const transporter = nodemailer.createTransport({
+            host: process.env.SMTP_HOST || "smtp.gmail.com",
+            port: Number(process.env.SMTP_PORT) || 587,
+            secure: Number(process.env.SMTP_PORT) === 465,
+            auth: {
+              user: process.env.SMTP_USER,
+              pass: process.env.SMTP_PASS,
+            },
+          });
+
+          const emailSubject = `[KryptonPath ${type ? type.toUpperCase() : 'SUPPORT'}] Ticket ${ticketId} from ${name || email || 'User'}`;
+          const emailBody = `
+New Support & Telemetry Submission (${ticketId})
+--------------------------------------------------
+Type: ${type || 'feedback'}
+Target Module: ${module || 'N/A'}
+User Name: ${name || 'N/A'}
+User Email: ${email || 'N/A'}
+Organization/Role: ${org || 'N/A'}
+Rating: ${rating ? `${rating} / 5 Stars` : 'N/A'}
+User UID: ${userUid || 'N/A'}
+Date: ${createdAt}
+
+Comments / Message:
+${comment || message || 'No text provided.'}
+
+--------------------------------------------------
+Routed directly to ${targetEmail}
+          `;
+
+          await transporter.sendMail({
+            from: `"Krypto AI Support Engine" <${process.env.SMTP_USER}>`,
+            to: targetEmail,
+            replyTo: email && email.includes('@') ? email : undefined,
+            subject: emailSubject,
+            text: emailBody,
+          });
+
+          emailSent = true;
+          console.log(`[SUPPORT ENGINE] Email successfully sent to ${targetEmail} for ticket ${ticketId}`);
+        } catch (mailErr: any) {
+          console.error(`[SUPPORT ENGINE EMAIL ERROR]`, mailErr);
+          emailError = mailErr.message;
+        }
+      } else {
+        console.log(`[SUPPORT ENGINE] Ticket ${ticketId} stored in Firestore. SMTP credentials not set in env (Target: ${targetEmail}).`);
+      }
+
+      // 3. Generate Mailto URL for direct email client fallback
+      const mailtoSubject = encodeURIComponent(`[KryptonPath Support] Ticket ${ticketId} - ${module || type || 'Feedback'}`);
+      const mailtoBody = encodeURIComponent(
+        `Ticket ID: ${ticketId}\nModule: ${module || 'General'}\nName: ${name || 'User'}\nEmail: ${email || ''}\nRating: ${rating || 'N/A'}\n\nMessage:\n${comment || message || ''}`
+      );
+      const mailtoUrl = `mailto:${targetEmail}?subject=${mailtoSubject}&body=${mailtoBody}`;
+
+      res.json({
+        success: true,
+        ticketId,
+        emailSent,
+        emailError,
+        mailtoUrl,
+        message: `Your ${type || 'feedback'} has been logged and routed to ${targetEmail}. Ticket ID: ${ticketId}`
+      });
+
+    } catch (e: any) {
+      console.error("Support API endpoint error:", e);
+      res.status(500).json({ error: e.message || "Failed to process support request" });
+    }
+  });
+
   app.post("/api/razorpay-webhook", handleRazorpayWebhook);
   app.post("/api/webhooks/razorpay", handleRazorpayWebhook);
 
@@ -337,7 +452,7 @@ async function startServer() {
   } else {
     const distPath = path.join(process.cwd(), 'dist');
     app.use(express.static(distPath));
-    app.get('*', (req, res) => {
+    app.get('*all', (req, res) => {
       res.sendFile(path.join(distPath, 'index.html'));
     });
   }

@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { KryptoLogo } from './Branding';
 import KryptonPathBlog from './KryptonPathBlog';
 
@@ -60,6 +60,92 @@ export default function KryptonPath({ onLaunchKrypto }: KryptonPathProps) {
   const [scrollY, setScrollY] = useState(0);
   const [menuOpen, setMenuOpen] = useState(false);
   const [view, setView] = useState<'landing' | 'blog'>('landing');
+  const cardsScrollRef = useRef<HTMLDivElement>(null);
+  const [activeCardIndex, setActiveCardIndex] = useState(0);
+
+  const CARD_MODULES = [
+    {
+      name: 'Interview Feedback',
+      colorText: 'text-yellow-400',
+      colorBorder: 'border-yellow-500/80',
+      colorBg: 'bg-yellow-500/20',
+      dotBg: 'bg-yellow-400',
+      activePill: 'text-yellow-300 border-yellow-500/80 bg-yellow-500/20 shadow-[0_0_15px_rgba(234,179,8,0.35)] scale-105 font-black ring-1 ring-yellow-400/50',
+      activeCardBorder: 'border-yellow-500/90 shadow-[0_0_25px_rgba(234,179,8,0.25)] ring-1 ring-yellow-400/40 opacity-100',
+      inactiveCardBorder: 'border-yellow-500/30 opacity-70 hover:opacity-100 hover:border-yellow-500/60'
+    },
+    {
+      name: 'ATS Defense Shield',
+      colorText: 'text-cyan-400',
+      colorBorder: 'border-cyan-500/80',
+      colorBg: 'bg-cyan-500/20',
+      dotBg: 'bg-cyan-400',
+      activePill: 'text-cyan-300 border-cyan-500/80 bg-cyan-500/20 shadow-[0_0_15px_rgba(6,182,212,0.35)] scale-105 font-black ring-1 ring-cyan-400/50',
+      activeCardBorder: 'border-cyan-500/90 shadow-[0_0_25px_rgba(6,182,212,0.25)] ring-1 ring-cyan-400/40 opacity-100',
+      inactiveCardBorder: 'border-cyan-500/30 opacity-70 hover:opacity-100 hover:border-cyan-500/60'
+    },
+    {
+      name: 'Outreach Architect',
+      colorText: 'text-purple-400',
+      colorBorder: 'border-purple-500/80',
+      colorBg: 'bg-purple-500/20',
+      dotBg: 'bg-purple-400',
+      activePill: 'text-purple-300 border-purple-500/80 bg-purple-500/20 shadow-[0_0_15px_rgba(168,85,247,0.35)] scale-105 font-black ring-1 ring-purple-400/50',
+      activeCardBorder: 'border-purple-500/90 shadow-[0_0_25px_rgba(168,85,247,0.25)] ring-1 ring-purple-400/40 opacity-100',
+      inactiveCardBorder: 'border-purple-500/30 opacity-70 hover:opacity-100 hover:border-purple-500/60'
+    },
+    {
+      name: 'RIASEC Career Predictor',
+      colorText: 'text-emerald-400',
+      colorBorder: 'border-emerald-500/80',
+      colorBg: 'bg-emerald-500/20',
+      dotBg: 'bg-emerald-400',
+      activePill: 'text-emerald-300 border-emerald-500/80 bg-emerald-500/20 shadow-[0_0_15px_rgba(16,185,129,0.35)] scale-105 font-black ring-1 ring-emerald-400/50',
+      activeCardBorder: 'border-emerald-500/90 shadow-[0_0_25px_rgba(16,185,129,0.25)] ring-1 ring-emerald-400/40 opacity-100',
+      inactiveCardBorder: 'border-emerald-500/30 opacity-70 hover:opacity-100 hover:border-emerald-500/60'
+    }
+  ];
+
+  const handleScrollCards = (direction: 'left' | 'right') => {
+    const nextIndex = direction === 'left' ? Math.max(0, activeCardIndex - 1) : Math.min(CARD_MODULES.length - 1, activeCardIndex + 1);
+    scrollToCard(nextIndex);
+  };
+
+  const handleCardsScroll = (e: React.UIEvent<HTMLDivElement>) => {
+    const container = e.currentTarget;
+    if (!container || !container.children.length) return;
+    const scrollLeft = container.scrollLeft;
+    const containerCenter = scrollLeft + container.clientWidth / 2;
+    const children = Array.from(container.children) as HTMLElement[];
+    let closestIndex = 0;
+    let minDistance = Infinity;
+
+    children.forEach((child, index) => {
+      const childCenter = child.offsetLeft + child.clientWidth / 2;
+      const distance = Math.abs(containerCenter - childCenter);
+      if (distance < minDistance) {
+        minDistance = distance;
+        closestIndex = index;
+      }
+    });
+
+    if (closestIndex !== activeCardIndex) {
+      setActiveCardIndex(closestIndex);
+    }
+  };
+
+  const scrollToCard = (index: number) => {
+    if (cardsScrollRef.current && cardsScrollRef.current.children[index]) {
+      const container = cardsScrollRef.current;
+      const child = container.children[index] as HTMLElement;
+      const targetLeft = child.offsetLeft - (container.clientWidth - child.clientWidth) / 2;
+      container.scrollTo({
+        left: targetLeft,
+        behavior: 'smooth'
+      });
+      setActiveCardIndex(index);
+    }
+  };
 
   useEffect(() => {
     const handleScroll = () => setScrollY(window.scrollY);
@@ -127,154 +213,289 @@ export default function KryptonPath({ onLaunchKrypto }: KryptonPathProps) {
           </div>
 
           {/* Meet Krypto AI Section below Discover Vision button */}
-          <div className="pt-10 sm:pt-14 max-w-4xl mx-auto">
-            <div className="p-6 sm:p-12 rounded-[32px] bg-zinc-950/80 border border-zinc-800/80 backdrop-blur-xl space-y-6 shadow-2xl relative overflow-hidden">
+          <div className="pt-8 sm:pt-14 max-w-4xl mx-auto px-2 sm:px-0">
+            <div className="p-3 sm:p-8 md:p-12 rounded-[24px] sm:rounded-[32px] bg-zinc-950/80 border border-zinc-800/80 backdrop-blur-xl space-y-4 sm:space-y-6 shadow-2xl relative overflow-hidden">
               <div className="absolute top-0 right-0 w-64 h-64 bg-yellow-500/10 blur-[90px] pointer-events-none" />
               
-              {/* HD Colorful Krypto AI Animation */}
-              <div className="relative w-full rounded-2xl overflow-hidden bg-zinc-900/90 border border-zinc-800/80 p-4 sm:p-6 mb-8 shadow-2xl group">
+              {/* HD Colorful Krypto AI Animation with Horizontal Scrolling Cards */}
+              <div className="relative w-full rounded-xl sm:rounded-2xl overflow-hidden bg-zinc-900/90 border border-zinc-800/80 p-2.5 sm:p-6 mb-6 sm:mb-8 shadow-2xl group">
                 {/* Dynamic Ambient Glow Background */}
-                <div className="absolute inset-0 bg-gradient-to-r from-yellow-500/15 via-purple-500/10 to-cyan-500/15 animate-pulse duration-[3000ms] pointer-events-none" />
-                <div className="absolute -top-24 -left-24 w-64 h-64 bg-yellow-500/20 rounded-full blur-[80px] pointer-events-none animate-bounce duration-[6000ms]" />
-                <div className="absolute -bottom-24 -right-24 w-64 h-64 bg-cyan-500/20 rounded-full blur-[80px] pointer-events-none animate-bounce duration-[8000ms]" />
+                <div className="absolute inset-0 bg-gradient-to-r from-yellow-500/10 via-purple-500/10 to-cyan-500/10 pointer-events-none" />
+                <div className="absolute -top-24 -left-24 w-64 h-64 bg-yellow-500/15 rounded-full blur-[80px] pointer-events-none" />
+                <div className="absolute -bottom-24 -right-24 w-64 h-64 bg-cyan-500/15 rounded-full blur-[80px] pointer-events-none" />
 
-                {/* Main Interactive Stage */}
-                <div className="relative z-10 grid grid-cols-1 md:grid-cols-3 gap-4 items-center">
+                {/* Top Control Bar with Module Label & Professional Arrow Controls */}
+                <div className="relative z-20 flex items-center justify-between pb-3 sm:pb-4 mb-2 border-b border-zinc-800/80">
+                  <div className="flex items-center gap-2 min-w-0">
+                    <span className={`w-2 h-2 rounded-full ${CARD_MODULES[activeCardIndex].dotBg} shrink-0`} />
+                    <span className="text-[10px] font-black uppercase tracking-[0.15em] sm:tracking-[0.2em] text-zinc-400 truncate">
+                      Module: <span className={`${CARD_MODULES[activeCardIndex].colorText} font-black drop-shadow-[0_0_8px_currentColor]`}>
+                        {CARD_MODULES[activeCardIndex].name}
+                      </span>
+                    </span>
+                  </div>
+
+                  {/* Professional Arrow Controls */}
+                  <div className="flex items-center gap-1.5 sm:gap-2 shrink-0 ml-1">
+                    <span className="text-[10px] font-mono font-bold text-zinc-500 mr-1 hidden sm:inline">
+                      {activeCardIndex + 1} / 4
+                    </span>
+                    <button
+                      onClick={() => handleScrollCards('left')}
+                      aria-label="Scroll cards left"
+                      className="w-8 h-8 sm:w-9 sm:h-9 rounded-full bg-zinc-950/90 border border-zinc-800 hover:border-yellow-500/60 text-zinc-400 hover:text-yellow-400 hover:bg-zinc-900 transition-all flex items-center justify-center shadow-lg active:scale-95 group/arrow hover:shadow-[0_0_15px_rgba(234,179,8,0.2)]"
+                    >
+                      <svg className="w-3.5 h-3.5 sm:w-4 sm:h-4 group-hover/arrow:-translate-x-0.5 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M15 19l-7-7 7-7" />
+                      </svg>
+                    </button>
+                    <button
+                      onClick={() => handleScrollCards('right')}
+                      aria-label="Scroll cards right"
+                      className="w-8 h-8 sm:w-9 sm:h-9 rounded-full bg-zinc-950/90 border border-zinc-800 hover:border-yellow-500/60 text-zinc-400 hover:text-yellow-400 hover:bg-zinc-900 transition-all flex items-center justify-center shadow-lg active:scale-95 group/arrow hover:shadow-[0_0_15px_rgba(234,179,8,0.2)]"
+                    >
+                      <svg className="w-3.5 h-3.5 sm:w-4 sm:h-4 group-hover/arrow:translate-x-0.5 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M9 5l7 7-7 7" />
+                      </svg>
+                    </button>
+                  </div>
+                </div>
+
+                {/* Horizontal Scroll Track */}
+                <div 
+                  ref={cardsScrollRef}
+                  onScroll={handleCardsScroll}
+                  className="relative z-10 flex gap-3 sm:gap-5 overflow-x-auto scroll-smooth snap-x snap-mandatory py-2 px-0.5"
+                  style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}
+                >
                   
-                  {/* Left Card: Interview Simulation & Executive Feedback Audit */}
-                  <div className="bg-black/75 border border-yellow-500/40 rounded-xl p-3.5 shadow-2xl backdrop-blur-md relative overflow-hidden flex flex-col justify-between h-48 group/card">
-                    <div className="absolute top-0 right-0 bg-yellow-500/20 text-yellow-400 text-[9px] font-black px-2.5 py-0.5 rounded-bl uppercase tracking-widest flex items-center gap-1.5 border-b border-l border-yellow-500/30">
-                      <span className="w-1.5 h-1.5 rounded-full bg-yellow-400 animate-ping" />
-                      Interview Feedback
+                  {/* Card 1: Interview Feedback Audit */}
+                  <div className={`snap-center shrink-0 w-[calc(100vw-3.25rem)] max-w-[295px] sm:w-[320px] md:w-[340px] bg-black/85 rounded-xl p-3 sm:p-4 backdrop-blur-md relative overflow-hidden flex flex-col justify-between min-h-[210px] group/card transition-all ${
+                    activeCardIndex === 0 ? CARD_MODULES[0].activeCardBorder : CARD_MODULES[0].inactiveCardBorder
+                  }`}>
+                    {/* Top Respective Card Label Header */}
+                    <div className="flex items-center justify-between border-b border-zinc-800/80 pb-2 mb-1 gap-1">
+                      <span className="text-[9px] sm:text-[9.5px] font-black uppercase tracking-wider text-yellow-400 flex items-center gap-1.5 truncate">
+                        <span className="w-1.5 h-1.5 rounded-full bg-yellow-400 shrink-0" />
+                        Interview Feedback
+                      </span>
+                      <span className="px-1.5 py-0.5 bg-yellow-500/20 text-yellow-300 text-[7.5px] sm:text-[8px] font-black rounded uppercase tracking-wider border border-yellow-500/30 shrink-0">
+                        Live Simulation
+                      </span>
                     </div>
                     
-                    {/* Header & Feature Mention */}
-                    <div className="pt-0.5">
-                      <p className="text-white font-black text-xs uppercase tracking-wider flex items-center gap-1.5">
-                        <svg className="w-3.5 h-3.5 text-yellow-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                    {/* Header & Highlighted Caption */}
+                    <div className="mb-1">
+                      <p className="text-yellow-400 font-black text-[11px] sm:text-xs uppercase tracking-wider flex items-center gap-1.5 truncate">
+                        <svg className="w-3.5 h-3.5 text-yellow-400 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 0 0118 0z" />
                         </svg>
-                        Executive AI Feedback
+                        <span className="truncate">Executive AI Feedback</span>
                       </p>
-                      <p className="text-zinc-400 text-[9.5px] font-semibold mt-0.5">
-                        Live Executive Interview Audit Report
-                      </p>
+                      <div className="mt-0.5">
+                        <span className="px-1.5 py-0.5 rounded bg-yellow-500/20 border border-yellow-500/40 text-yellow-300 text-[8.5px] sm:text-[9.5px] font-bold inline-block max-w-full truncate">
+                          Live Executive Interview Audit Report
+                        </span>
+                      </div>
                     </div>
 
-                    {/* Live Screenshot / Mockup of Actual Feedback Output Users Receive */}
-                    <div className="my-1 bg-zinc-950/95 p-2 rounded-lg border border-yellow-500/30 relative overflow-hidden shadow-inner">
+                    {/* Live Screenshot / Mockup */}
+                    <div className="bg-zinc-950/95 p-2 sm:p-2.5 rounded-lg border border-yellow-500/30 relative overflow-hidden shadow-inner mb-1">
                       <div className="flex items-center justify-between mb-1 pb-1 border-b border-zinc-800">
-                        <div className="flex items-center gap-1.5">
-                          <span className="px-1.5 py-0.5 bg-emerald-500/20 text-emerald-400 text-[8px] font-black rounded uppercase">STRONG HIRE</span>
-                          <span className="text-[9px] text-zinc-300 font-bold">Audit Score</span>
+                        <div className="flex items-center gap-1 min-w-0">
+                          <span className="px-1.5 py-0.5 bg-emerald-500/20 text-emerald-400 text-[7.5px] sm:text-[8px] font-black rounded uppercase shrink-0">STRONG HIRE</span>
+                          <span className="text-[8.5px] sm:text-[9px] text-zinc-300 font-bold truncate">Audit Score</span>
                         </div>
-                        <span className="text-yellow-400 font-mono font-black text-xs">92 / 100</span>
+                        <span className="text-yellow-400 font-mono font-black text-[11px] sm:text-xs shrink-0 ml-1">92 / 100</span>
                       </div>
 
                       {/* Metric Bar & Strengths Preview */}
-                      <div className="space-y-1 text-[8.5px]">
+                      <div className="space-y-1 text-[8px] sm:text-[8.5px]">
                         <div className="flex justify-between text-zinc-300 font-medium">
                           <span>STAR Impact & Metrics</span>
                           <span className="text-emerald-400 font-bold">95%</span>
                         </div>
-                        <div className="w-full bg-zinc-800 h-1 rounded-full overflow-hidden">
+                        <div className="w-full bg-zinc-800 h-1.5 rounded-full overflow-hidden">
                           <div className="bg-gradient-to-r from-yellow-500 to-emerald-400 h-full w-[95%]" />
                         </div>
-                        <p className="text-[8.5px] text-zinc-300 font-mono truncate pt-0.5 italic">
+                        <p className="text-[8px] sm:text-[8.5px] text-zinc-300 font-mono truncate pt-0.5 italic">
                           "✓ Quantified STAR metric results verified."
                         </p>
                       </div>
                     </div>
 
-                    {/* Footer Attributes Tagline */}
-                    <div className="flex items-center justify-between text-[8.5px] font-bold text-yellow-400 uppercase tracking-wider pt-0.5">
-                      <span className="text-zinc-400 font-semibold flex items-center gap-1">
-                        <span className="w-1.5 h-1.5 rounded-full bg-emerald-400" />
+                    {/* Footer Tagline */}
+                    <div className="flex items-center justify-between text-[8px] sm:text-[8.5px] font-bold text-yellow-400 uppercase tracking-wider pt-1 border-t border-zinc-900 mt-auto">
+                      <span className="text-zinc-400 font-semibold flex items-center gap-1 truncate">
+                        <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 shrink-0" />
                         Actual Report Users Get
                       </span>
-                      <span className="animate-pulse text-yellow-400 font-black">Full AI Audit</span>
+                      <span className="text-yellow-400 font-black shrink-0 ml-1">Full AI Audit</span>
                     </div>
                   </div>
 
-                  {/* Center Card: Central Neural Core & ATS Scanner */}
-                  <div className="relative bg-black/80 border border-zinc-800 rounded-xl p-4 flex flex-col items-center justify-center text-center h-48 overflow-hidden shadow-2xl">
-                    {/* Laser Scanning Beam Line */}
-                    <div className="absolute inset-x-0 h-0.5 bg-gradient-to-r from-transparent via-cyan-400 to-transparent shadow-[0_0_15px_#06b6d4] animate-[bounce_2.5s_infinite_ease-in-out]" />
+                  {/* Card 2: Central Neural Core & ATS Scanner */}
+                  <div className={`snap-center shrink-0 w-[calc(100vw-3.25rem)] max-w-[295px] sm:w-[320px] md:w-[340px] bg-black/85 rounded-xl p-3 sm:p-4 backdrop-blur-md relative overflow-hidden flex flex-col justify-between min-h-[210px] group/card transition-all ${
+                    activeCardIndex === 1 ? CARD_MODULES[1].activeCardBorder : CARD_MODULES[1].inactiveCardBorder
+                  }`}>
+                    {/* Top Respective Card Label Header */}
+                    <div className="flex items-center justify-between border-b border-zinc-800/80 pb-2 mb-1 z-10 gap-1">
+                      <span className="text-[9px] sm:text-[9.5px] font-black uppercase tracking-wider text-cyan-400 flex items-center gap-1.5 truncate">
+                        <span className="w-1.5 h-1.5 rounded-full bg-cyan-400 shrink-0" />
+                        ATS Defense Shield
+                      </span>
+                      <span className="px-1.5 py-0.5 bg-cyan-500/20 text-cyan-300 text-[7.5px] sm:text-[8px] font-black rounded uppercase tracking-wider border border-cyan-500/30 shrink-0">
+                        Shield 98%
+                      </span>
+                    </div>
 
-                    {/* Central Animated Orb */}
-                    <div className="relative w-16 h-16 mb-2 flex items-center justify-center">
-                      <div className="absolute inset-0 rounded-full bg-gradient-to-tr from-yellow-500 via-purple-500 to-cyan-500 animate-spin duration-[6000ms] opacity-70 blur-xs" />
-                      <div className="relative w-12 h-12 rounded-full bg-zinc-950 border border-yellow-500/50 flex items-center justify-center shadow-[0_0_20px_rgba(234,179,8,0.5)]">
-                        <KryptoLogo size={24} className="text-yellow-400 animate-pulse" />
+                    {/* Central Orb & Title */}
+                    <div className="flex flex-col items-center justify-center text-center my-auto py-1 z-10">
+                      <div className="relative w-10 h-10 mb-1 flex items-center justify-center">
+                        <div className="absolute inset-0 rounded-full bg-gradient-to-tr from-yellow-500/30 via-purple-500/20 to-cyan-500/30 blur-xs" />
+                        <div className="relative w-8.5 h-8.5 rounded-full bg-zinc-950 border border-cyan-500/50 flex items-center justify-center shadow-[0_0_12px_rgba(6,182,212,0.3)]">
+                          <KryptoLogo size={16} className="text-yellow-400" />
+                        </div>
+                      </div>
+
+                      <div className="space-y-1 w-full">
+                        <div className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full bg-cyan-500/20 border border-cyan-500/40 text-cyan-300 text-[9px] sm:text-[9.5px] font-black uppercase tracking-wider max-w-full">
+                          <span className="w-1.5 h-1.5 rounded-full bg-cyan-400 shrink-0" />
+                          <span className="truncate">ATS Defense Shield • 98%</span>
+                        </div>
+                        <div>
+                          <span className="px-1.5 py-0.5 rounded bg-cyan-500/20 border border-cyan-500/40 text-cyan-300 text-[8.5px] sm:text-[9.5px] font-bold inline-block max-w-full truncate">
+                            Google XYZ Format Engine
+                          </span>
+                        </div>
                       </div>
                     </div>
 
-                    {/* Real-time metrics */}
-                    <div className="space-y-1">
-                      <div className="inline-flex items-center gap-1.5 px-3 py-0.5 rounded-full bg-cyan-500/10 border border-cyan-500/30 text-cyan-400 text-[10px] font-black uppercase tracking-wider">
-                        <span className="w-1.5 h-1.5 rounded-full bg-cyan-400 animate-ping" />
-                        ATS Defense Shield • 98%
-                      </div>
-                      <p className="text-[10px] text-zinc-400 font-medium">RIASEC Holland Career Match</p>
+                    {/* Footer */}
+                    <div className="flex items-center justify-between text-[8px] sm:text-[8.5px] font-bold text-cyan-400 uppercase tracking-wider pt-1 border-t border-zinc-900 z-10 mt-auto">
+                      <span className="text-zinc-400 font-semibold truncate">100% Keyword Alignment</span>
+                      <span className="text-cyan-300 font-black shrink-0 ml-1">Shield Active</span>
                     </div>
                   </div>
 
-                  {/* Right Card: Outreach Architect & Cold Pitch Engine */}
-                  <div className="bg-black/70 border border-yellow-500/30 rounded-xl p-4 shadow-xl backdrop-blur-md relative overflow-hidden flex flex-col justify-between h-48">
-                    <div className="absolute top-0 right-0 bg-yellow-500/20 text-yellow-400 text-[9px] font-black px-2.5 py-0.5 rounded-bl uppercase tracking-widest flex items-center gap-1.5 border-b border-l border-yellow-500/30">
-                      <span className="w-1.5 h-1.5 rounded-full bg-yellow-400 animate-ping" />
-                      Outreach Architect
+                  {/* Card 3: Outreach Architect & Cold Pitch Engine */}
+                  <div className={`snap-center shrink-0 w-[calc(100vw-3.25rem)] max-w-[295px] sm:w-[320px] md:w-[340px] bg-black/85 rounded-xl p-3 sm:p-4 backdrop-blur-md relative overflow-hidden flex flex-col justify-between min-h-[210px] group/card transition-all ${
+                    activeCardIndex === 2 ? CARD_MODULES[2].activeCardBorder : CARD_MODULES[2].inactiveCardBorder
+                  }`}>
+                    {/* Top Respective Card Label Header */}
+                    <div className="flex items-center justify-between border-b border-zinc-800/80 pb-2 mb-1 gap-1">
+                      <span className="text-[9px] sm:text-[9.5px] font-black uppercase tracking-wider text-purple-400 flex items-center gap-1.5 truncate">
+                        <span className="w-1.5 h-1.5 rounded-full bg-purple-400 shrink-0" />
+                        Outreach Architect
+                      </span>
+                      <span className="px-1.5 py-0.5 bg-purple-500/20 text-purple-300 text-[7.5px] sm:text-[8px] font-black rounded uppercase tracking-wider border border-purple-500/30 shrink-0">
+                        Pitch Engine
+                      </span>
                     </div>
 
-                    <div className="pt-1">
-                      <p className="text-white font-black text-xs uppercase tracking-wider flex items-center gap-1.5">
-                        <svg className="w-3.5 h-3.5 text-yellow-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    {/* Header & Highlighted Caption */}
+                    <div className="mb-1">
+                      <p className="text-purple-300 font-black text-[11px] sm:text-xs uppercase tracking-wider flex items-center gap-1.5 truncate">
+                        <svg className="w-3.5 h-3.5 text-purple-400 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 002-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
                         </svg>
-                        Cold Email & LinkedIn Pitch
+                        <span className="truncate">Cold Email & LinkedIn Pitch</span>
                       </p>
-                      <p className="text-zinc-400 text-[10px] font-semibold mt-0.5">High-Response Recruiter Campaign</p>
-                    </div>
-
-                    <div className="space-y-1.5 my-1 bg-zinc-950/90 p-2.5 rounded-lg border border-zinc-800">
-                      <p className="text-[10px] text-zinc-300 font-mono italic truncate">
-                        "Hi Sarah, scaled backend throughput by 320% at..."
-                      </p>
-                      <div className="flex items-center justify-between text-[9px] pt-1 border-t border-zinc-800/80">
-                        <span className="text-emerald-400 font-bold flex items-center gap-1">
-                          <span className="w-1.5 h-1.5 rounded-full bg-emerald-400" />
-                          +340% Response Rate
+                      <div className="mt-0.5">
+                        <span className="px-1.5 py-0.5 rounded bg-purple-500/20 border border-purple-500/40 text-purple-300 text-[8.5px] sm:text-[9.5px] font-bold inline-block max-w-full truncate">
+                          High-Response Recruiter Campaign
                         </span>
-                        <span className="text-cyan-400 font-mono font-bold">Google XYZ Verified</span>
                       </div>
                     </div>
 
-                    <div className="flex items-center justify-between text-[9px] font-bold text-yellow-400 uppercase tracking-wider">
-                      <span className="flex items-center gap-1 text-zinc-300">
-                        Target: <strong className="text-white">Tech Recruiters</strong>
+                    <div className="space-y-1 bg-zinc-950/90 p-2 sm:p-2.5 rounded-lg border border-purple-500/30 mb-1">
+                      <p className="text-[9.5px] sm:text-[10px] text-purple-200 font-mono italic truncate">
+                        "Hi Sarah, scaled backend throughput by 320% at..."
+                      </p>
+                      <div className="flex items-center justify-between text-[8.5px] sm:text-[9px] pt-1 border-t border-zinc-800/80">
+                        <span className="text-emerald-400 font-bold flex items-center gap-1 truncate">
+                          <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 shrink-0" />
+                          +340% Response
+                        </span>
+                        <span className="text-purple-300 font-mono font-bold shrink-0 ml-1">Google XYZ</span>
+                      </div>
+                    </div>
+
+                    <div className="flex items-center justify-between text-[8px] sm:text-[8.5px] font-bold text-purple-300 uppercase tracking-wider pt-1 border-t border-zinc-900 mt-auto">
+                      <span className="flex items-center gap-1 text-zinc-300 truncate">
+                        Target: <strong className="text-purple-300">Tech Recruiters</strong>
                       </span>
-                      <span className="animate-pulse text-emerald-400">1-Click Auto Pitch</span>
+                      <span className="text-purple-300 font-black shrink-0 ml-1">1-Click Pitch</span>
+                    </div>
+                  </div>
+
+                  {/* Card 4: RIASEC Holland Career Predictor */}
+                  <div className={`snap-center shrink-0 w-[calc(100vw-3.25rem)] max-w-[295px] sm:w-[320px] md:w-[340px] bg-black/85 rounded-xl p-3 sm:p-4 backdrop-blur-md relative overflow-hidden flex flex-col justify-between min-h-[210px] group/card transition-all ${
+                    activeCardIndex === 3 ? CARD_MODULES[3].activeCardBorder : CARD_MODULES[3].inactiveCardBorder
+                  }`}>
+                    {/* Top Respective Card Label Header */}
+                    <div className="flex items-center justify-between border-b border-zinc-800/80 pb-2 mb-1 gap-1">
+                      <span className="text-[9px] sm:text-[9.5px] font-black uppercase tracking-wider text-emerald-400 flex items-center gap-1.5 truncate">
+                        <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 shrink-0" />
+                        RIASEC Career Predictor
+                      </span>
+                      <span className="px-1.5 py-0.5 bg-emerald-500/20 text-emerald-300 text-[7.5px] sm:text-[8px] font-black rounded uppercase tracking-wider border border-emerald-500/30 shrink-0">
+                        Predictor
+                      </span>
+                    </div>
+
+                    {/* Header & Highlighted Caption */}
+                    <div className="mb-1">
+                      <p className="text-emerald-300 font-black text-[11px] sm:text-xs uppercase tracking-wider flex items-center gap-1.5 truncate">
+                        <svg className="w-3.5 h-3.5 text-emerald-400 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6" />
+                        </svg>
+                        <span className="truncate">Holland RIASEC Career Model</span>
+                      </p>
+                      <div className="mt-0.5">
+                        <span className="px-1.5 py-0.5 rounded bg-emerald-500/20 border border-emerald-500/40 text-emerald-300 text-[8.5px] sm:text-[9.5px] font-bold inline-block max-w-full truncate">
+                          Personality-to-Job Role Predictor
+                        </span>
+                      </div>
+                    </div>
+
+                    <div className="space-y-1 bg-zinc-950/90 p-2 sm:p-2.5 rounded-lg border border-emerald-500/30 mb-1">
+                      <div className="flex items-center justify-between text-[8.5px] sm:text-[9px] gap-1">
+                        <span className="text-zinc-300 font-bold shrink-0">Top Role:</span>
+                        <span className="text-emerald-400 font-mono font-bold truncate">Senior AI Engineer • 96%</span>
+                      </div>
+                      <div className="w-full bg-zinc-800 h-1.5 rounded-full overflow-hidden">
+                        <div className="bg-gradient-to-r from-yellow-500 via-emerald-400 to-cyan-400 h-full w-[96%]" />
+                      </div>
+                      <p className="text-[8px] sm:text-[8.5px] text-emerald-300 font-mono pt-0.5 font-semibold truncate">
+                        Analytical (94%) • Investigative (90%)
+                      </p>
+                    </div>
+
+                    <div className="flex items-center justify-between text-[8px] sm:text-[8.5px] font-bold text-emerald-400 uppercase tracking-wider pt-1 border-t border-zinc-900 mt-auto">
+                      <span className="text-zinc-300 truncate">Avg Hike: <strong className="text-emerald-400">+$35k/yr</strong></span>
+                      <span className="text-emerald-300 font-black shrink-0 ml-1">Predictive Match</span>
                     </div>
                   </div>
 
                 </div>
 
-                {/* Bottom Feature Badges */}
-                <div className="mt-4 pt-3 border-t border-zinc-800/80 flex flex-wrap items-center justify-around gap-2 text-[10px] font-black text-zinc-300 uppercase tracking-wider">
-                  <span className="flex items-center gap-1.5 text-yellow-400">
-                    <span className="w-2 h-2 rounded-full bg-yellow-400 animate-pulse" />
-                    AI Mock Interviews
-                  </span>
-                  <span className="text-zinc-600 hidden sm:inline">•</span>
-                  <span className="flex items-center gap-1.5 text-cyan-400">
-                    <span className="w-2 h-2 rounded-full bg-cyan-400 animate-pulse" />
-                    ATS Resume Defense
-                  </span>
-                  <span className="text-zinc-600 hidden sm:inline">•</span>
-                  <span className="flex items-center gap-1.5 text-purple-400">
-                    <span className="w-2 h-2 rounded-full bg-purple-400 animate-pulse" />
-                    RIASEC Career Predictor
-                  </span>
+                {/* Interactive Card Label Navigation Pills */}
+                <div className="mt-4 pt-3 border-t border-zinc-800/80 flex flex-wrap items-center justify-center gap-2 text-[10px] font-black uppercase tracking-wider">
+                  {CARD_MODULES.map((mod, idx) => (
+                    <button
+                      key={idx}
+                      onClick={() => scrollToCard(idx)}
+                      className={`px-3.5 py-1.5 rounded-full border transition-all text-[9.5px] font-black flex items-center gap-1.5 ${
+                        activeCardIndex === idx
+                          ? mod.activePill
+                          : 'text-zinc-500 border-zinc-800 bg-zinc-950 hover:text-zinc-300 hover:border-zinc-700'
+                      }`}
+                    >
+                      <span className={`w-1.5 h-1.5 rounded-full ${activeCardIndex === idx ? mod.dotBg : 'bg-zinc-600'}`} />
+                      {mod.name}
+                    </button>
+                  ))}
                 </div>
               </div>
 

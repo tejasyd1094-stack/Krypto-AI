@@ -34,6 +34,26 @@
         "optimizedResult": { "type": "string" }
       },
       "required": ["id", "type", "title", "date", "result"]
+    },
+    "SupportTicket": {
+      "title": "SupportTicket",
+      "description": "Feedback, ratings, queries, and consultation requests routed to support@kryptonpath.co.",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "type": { "type": "string" },
+        "name": { "type": "string" },
+        "email": { "type": "string" },
+        "rating": { "type": "number" },
+        "module": { "type": "string" },
+        "comment": { "type": "string" },
+        "org": { "type": "string" },
+        "message": { "type": "string" },
+        "userUid": { "type": "string" },
+        "status": { "type": "string" },
+        "createdAt": { "type": "string" }
+      },
+      "required": ["type", "createdAt"]
     }
   },
   "firestore": {
@@ -44,6 +64,10 @@
     "users/{userId}/history/{historyId}": {
       "schema": "HistoryItem",
       "description": "Historical re-engineered templates, simulations, and career calculations."
+    },
+    "support_tickets/{ticketId}": {
+      "schema": "SupportTicket",
+      "description": "User queries, ratings, feedback, and expert consultation requests."
     }
   }
 }
