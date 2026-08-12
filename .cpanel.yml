@@ -2,6 +2,4 @@
 deployment:
   tasks:
     - export DEPLOYPATH=/home/krypnsvh/public_html
-    - npm install
-    - npm run build
-    - "/bin/cp -R dist/. $DEPLOYPATH"
+    - /bin/cp -R * $DEPLOYPATH
