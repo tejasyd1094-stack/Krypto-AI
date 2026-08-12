@@ -67,42 +67,42 @@ export default function KryptonPath({ onLaunchKrypto }: KryptonPathProps) {
     {
       name: 'Interview Feedback',
       colorText: 'text-yellow-400',
-      colorBorder: 'border-yellow-500/80',
+      colorBorder: 'border-yellow-500',
       colorBg: 'bg-yellow-500/20',
       dotBg: 'bg-yellow-400',
-      activePill: 'text-yellow-300 border-yellow-500/80 bg-yellow-500/20 shadow-[0_0_15px_rgba(234,179,8,0.35)] scale-105 font-black ring-1 ring-yellow-400/50',
-      activeCardBorder: 'border-yellow-500/90 shadow-[0_0_25px_rgba(234,179,8,0.25)] ring-1 ring-yellow-400/40 opacity-100',
-      inactiveCardBorder: 'border-yellow-500/30 opacity-70 hover:opacity-100 hover:border-yellow-500/60'
+      activePill: 'text-yellow-300 border-2 border-yellow-400 bg-yellow-500/25 shadow-[0_0_18px_rgba(234,179,8,0.4)] scale-105 font-black ring-1 ring-yellow-400/60',
+      activeCardBorder: 'border-2 border-yellow-400 shadow-[0_0_30px_rgba(234,179,8,0.35)] ring-2 ring-yellow-400/60 opacity-100 scale-[1.01]',
+      inactiveCardBorder: 'border-2 border-yellow-500/45 opacity-80 hover:opacity-100 hover:border-yellow-400/80 hover:shadow-[0_0_15px_rgba(234,179,8,0.2)]'
     },
     {
       name: 'ATS Defense Shield',
       colorText: 'text-cyan-400',
-      colorBorder: 'border-cyan-500/80',
+      colorBorder: 'border-cyan-500',
       colorBg: 'bg-cyan-500/20',
       dotBg: 'bg-cyan-400',
-      activePill: 'text-cyan-300 border-cyan-500/80 bg-cyan-500/20 shadow-[0_0_15px_rgba(6,182,212,0.35)] scale-105 font-black ring-1 ring-cyan-400/50',
-      activeCardBorder: 'border-cyan-500/90 shadow-[0_0_25px_rgba(6,182,212,0.25)] ring-1 ring-cyan-400/40 opacity-100',
-      inactiveCardBorder: 'border-cyan-500/30 opacity-70 hover:opacity-100 hover:border-cyan-500/60'
+      activePill: 'text-cyan-300 border-2 border-cyan-400 bg-cyan-500/25 shadow-[0_0_18px_rgba(6,182,212,0.4)] scale-105 font-black ring-1 ring-cyan-400/60',
+      activeCardBorder: 'border-2 border-cyan-400 shadow-[0_0_30px_rgba(6,182,212,0.35)] ring-2 ring-cyan-400/60 opacity-100 scale-[1.01]',
+      inactiveCardBorder: 'border-2 border-cyan-500/45 opacity-80 hover:opacity-100 hover:border-cyan-400/80 hover:shadow-[0_0_15px_rgba(6,182,212,0.2)]'
     },
     {
       name: 'Outreach Architect',
       colorText: 'text-purple-400',
-      colorBorder: 'border-purple-500/80',
+      colorBorder: 'border-purple-500',
       colorBg: 'bg-purple-500/20',
       dotBg: 'bg-purple-400',
-      activePill: 'text-purple-300 border-purple-500/80 bg-purple-500/20 shadow-[0_0_15px_rgba(168,85,247,0.35)] scale-105 font-black ring-1 ring-purple-400/50',
-      activeCardBorder: 'border-purple-500/90 shadow-[0_0_25px_rgba(168,85,247,0.25)] ring-1 ring-purple-400/40 opacity-100',
-      inactiveCardBorder: 'border-purple-500/30 opacity-70 hover:opacity-100 hover:border-purple-500/60'
+      activePill: 'text-purple-300 border-2 border-purple-400 bg-purple-500/25 shadow-[0_0_18px_rgba(168,85,247,0.4)] scale-105 font-black ring-1 ring-purple-400/60',
+      activeCardBorder: 'border-2 border-purple-400 shadow-[0_0_30px_rgba(168,85,247,0.35)] ring-2 ring-purple-400/60 opacity-100 scale-[1.01]',
+      inactiveCardBorder: 'border-2 border-purple-500/45 opacity-80 hover:opacity-100 hover:border-purple-400/80 hover:shadow-[0_0_15px_rgba(168,85,247,0.2)]'
     },
     {
       name: 'RIASEC Career Predictor',
       colorText: 'text-emerald-400',
-      colorBorder: 'border-emerald-500/80',
+      colorBorder: 'border-emerald-500',
       colorBg: 'bg-emerald-500/20',
       dotBg: 'bg-emerald-400',
-      activePill: 'text-emerald-300 border-emerald-500/80 bg-emerald-500/20 shadow-[0_0_15px_rgba(16,185,129,0.35)] scale-105 font-black ring-1 ring-emerald-400/50',
-      activeCardBorder: 'border-emerald-500/90 shadow-[0_0_25px_rgba(16,185,129,0.25)] ring-1 ring-emerald-400/40 opacity-100',
-      inactiveCardBorder: 'border-emerald-500/30 opacity-70 hover:opacity-100 hover:border-emerald-500/60'
+      activePill: 'text-emerald-300 border-2 border-emerald-400 bg-emerald-500/25 shadow-[0_0_18px_rgba(16,185,129,0.4)] scale-105 font-black ring-1 ring-emerald-400/60',
+      activeCardBorder: 'border-2 border-emerald-400 shadow-[0_0_30px_rgba(16,185,129,0.35)] ring-2 ring-emerald-400/60 opacity-100 scale-[1.01]',
+      inactiveCardBorder: 'border-2 border-emerald-500/45 opacity-80 hover:opacity-100 hover:border-emerald-400/80 hover:shadow-[0_0_15px_rgba(16,185,129,0.2)]'
     }
   ];
 
