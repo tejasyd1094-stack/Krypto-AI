@@ -1,5 +1,5 @@
 ---
 deployment:
   tasks:
-    - export DEPLOYPATH=/home/example/public_html/
-    - /bin/cp -R images $DEPLOYPATH
+    - export DEPLOYPATH=/home/krypnsvh/repositories/Krypto-AI
+    - /bin/cp -R * $DEPLOYPATH
