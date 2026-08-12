@@ -1,5 +1,7 @@
 ---
 deployment:
   tasks:
-    - export DEPLOYPATH=/home/krypnsvh/repositories/Krypto-AI
-    - /bin/cp -R * $DEPLOYPATH
+    - export DEPLOYPATH=/home/krypnsvh/public_html/
+    - npm install
+    - npm run build
+    - /bin/cp -R dist/* $DEPLOYPATH
