@@ -811,6 +811,18 @@ const ResumeScorer: React.FC<ResumeScorerProps> = ({
 
         {formattedResume && !isArchitecting && (
           <div ref={architectRef} className="space-y-16 animate-in slide-in-from-bottom-12 duration-1000 scroll-mt-24 pb-32">
+            
+            {/* Eye-catching Success Banner */}
+            <div className="mx-auto max-w-4xl bg-gradient-to-r from-emerald-500/20 via-emerald-400/20 to-emerald-500/20 border border-emerald-500/30 rounded-2xl p-6 text-center shadow-[0_0_40px_rgba(16,185,129,0.15)] animate-in zoom-in duration-700">
+              <h4 className="text-xl sm:text-2xl font-black text-emerald-400 uppercase tracking-wide mb-2 flex items-center justify-center gap-3">
+                <svg className="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 0 0118 0z" /></svg>
+                Your fully ATS optimised resume is ready!
+              </h4>
+              <p className="text-emerald-100/80 font-medium text-sm sm:text-base">
+                Get ready to receive calls from Recruiters.
+              </p>
+            </div>
+
             <div className="text-center space-y-6">
               <span className="text-[12px] font-black uppercase tracking-[0.6em] text-zinc-700 block">Neural Rebuild Complete</span>
               <h3 className="text-5xl sm:text-8xl font-black tracking-tighter uppercase text-zinc-100">Executive <span className="gold-text-gradient">Blueprint</span></h3>
