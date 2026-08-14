@@ -137,7 +137,7 @@ export default function KryptonPath({ onLaunchKrypto }: KryptonPathProps) {
                   <video 
                     controls 
                     className="w-full h-full object-cover"
-                    poster="https://images.unsplash.com/photo-1522071820081-009f0129c71c?auto=format&fit=crop&w=1200&q=80"
+                    poster="/krypto_thumbnail.jpeg"
                   >
                     <source src="/krypto_video.mp4" type="video/mp4" />
                     Your browser does not support the video tag.
