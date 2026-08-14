@@ -29,7 +29,6 @@ var import_crypto = __toESM(require("crypto"), 1);
 var import_fs = __toESM(require("fs"), 1);
 var import_nodemailer = __toESM(require("nodemailer"), 1);
 var import_firestore = require("@google-cloud/firestore");
-var import_vite = require("vite");
 
 // server/gemini.ts
 var import_genai = require("@google/genai");
@@ -1154,7 +1153,8 @@ ${comment || message || ""}`
   app.post("/api/razorpay-webhook", handleRazorpayWebhook);
   app.post("/api/webhooks/razorpay", handleRazorpayWebhook);
   if (process.env.NODE_ENV !== "production") {
-    const vite = await (0, import_vite.createServer)({
+    const { createServer: createViteServer } = await import("vite");
+    const vite = await createViteServer({
       server: { middlewareMode: true },
       appType: "spa"
     });

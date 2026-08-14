@@ -5,7 +5,6 @@ import crypto from "crypto";
 import fs from "fs";
 import nodemailer from "nodemailer";
 import { Firestore, FieldValue } from "@google-cloud/firestore";
-import { createServer as createViteServer } from "vite";
 import * as gemini from "./server/gemini";
 
 const firebaseConfigPath = path.join(process.cwd(), "firebase-applet-config.json");
@@ -444,6 +443,7 @@ Routed directly to ${targetEmail}
 
   // Vite middleware for development
   if (process.env.NODE_ENV !== "production") {
+    const { createServer: createViteServer } = await import("vite");
     const vite = await createViteServer({
       server: { middlewareMode: true },
       appType: "spa",
