@@ -1107,7 +1107,6 @@ Comments / Message:
 ${comment || message || "No text provided."}
 
 --------------------------------------------------
-Routed directly to ${targetEmail}
           `;
           await transporter.sendMail({
             from: `"Krypto AI Support Engine" <${process.env.SMTP_USER}>`,
@@ -1142,8 +1141,7 @@ ${comment || message || ""}`
         ticketId,
         emailSent,
         emailError,
-        mailtoUrl,
-        message: `Your ${type || "feedback"} has been logged and routed to ${targetEmail}. Ticket ID: ${ticketId}`
+        message: `Your ${type || "request"} has been successfully logged. Ticket ID: ${ticketId}`
       });
     } catch (e) {
       console.error("Support API endpoint error:", e);

@@ -12,7 +12,9 @@ import {
   signInWithPhoneNumber,
   sendEmailVerification,
   sendPasswordResetEmail,
-  linkWithCredential
+  linkWithCredential,
+  getAdditionalUserInfo,
+  linkWithPhoneNumber
 } from 'firebase/auth';
 import { auth, googleProvider } from '../lib/firebase';
 import { KryptoLogo } from './Branding';
@@ -74,7 +76,6 @@ interface LoginProps {
 const Login: React.FC<LoginProps> = ({ onClose }) => {
   // Default mode set to 'signup'
   const [mode, setMode] = useState<AuthMode>('signup');
-  const [signupVerifyMethod, setSignupVerifyMethod] = useState<'email' | 'phone'>('email');
   const [signinMethod, setSigninMethod] = useState<'password' | 'sms'>('password');
 
   const [email, setEmail] = useState('');
@@ -94,6 +95,8 @@ const Login: React.FC<LoginProps> = ({ onClose }) => {
   const [mfaVerificationRequired, setMfaVerificationRequired] = useState(false);
   const [mfaResolver, setMfaResolver] = useState<any>(null);
   const [mfaPhoneHint, setMfaPhoneHint] = useState('');
+  
+  const [linkConfirmationResult, setLinkConfirmationResult] = useState<any>(null);
 
   // SMS MFA Onboarding Enrollment State (Signup-time)
   const [mfaEnrollmentRequired, setMfaEnrollmentRequired] = useState(false);
@@ -134,21 +137,19 @@ const Login: React.FC<LoginProps> = ({ onClose }) => {
     setMessage(null);
 
     // Basic Validation
-    if (!email || !password) {
-      setError("Email and password are mandatory for account creation.");
+    if (!email || !password || !phoneNumber) {
+      setError("Email, password, and mobile number are mandatory for account creation.");
       setLoading(false);
       return;
     }
 
-    if (signupVerifyMethod === 'phone') {
-      const { formatted, isValid } = formatToE164(phoneNumber);
-      if (!isValid) {
-        setError("Please specify a valid mobile phone number in international E.164 format (e.g. +15551234567 or +919876543210).");
-        setLoading(false);
-        return;
-      }
-      setPhoneNumber(formatted);
+    const { formatted, isValid } = formatToE164(phoneNumber);
+    if (!isValid) {
+      setError("Please specify a valid mobile phone number in international E.164 format (e.g. +15551234567 or +919876543210).");
+      setLoading(false);
+      return;
     }
+    setPhoneNumber(formatted);
 
     try {
       // 1. Create the base email + password account (mandated)
@@ -161,18 +162,14 @@ const Login: React.FC<LoginProps> = ({ onClose }) => {
         });
       }
 
-      if (signupVerifyMethod === 'phone') {
-        // Enforce immediate SMS MFA Enrollment
-        setMfaPhoneNumber(phoneNumber);
-        setMfaEnrollmentRequired(true);
-        setMessage("Account created. Please configure and verify your secure SMS security code below.");
-      } else {
-        // Send email verification link
-        await sendEmailVerification(userCredential.user);
-        setRegisteredEmail(email);
-        setMessage("A verification email has been dispatched. Please verify your email before your first sign-in.");
-        await auth.signOut(); // Sign out to enforce verification check on login
-      }
+      // Send email verification link
+      await sendEmailVerification(userCredential.user);
+
+      // Enforce immediate SMS Verification
+      setMfaPhoneNumber(formatted);
+      setMfaEnrollmentRequired(true);
+      setMessage("Account created. Please configure and verify your secure SMS security code below.");
+      
     } catch (err: any) {
       console.error("SignUp Error:", err);
       setError(`REGISTRATION_FAILED: ${getCleanErrorMessage(err)}`);
@@ -285,7 +282,16 @@ const Login: React.FC<LoginProps> = ({ onClose }) => {
       if (!signInConfirmationResult) {
         throw new Error("No active SMS verification session found.");
       }
-      await signInConfirmationResult.confirm(signInOtp);
+      const userCredential = await signInConfirmationResult.confirm(signInOtp);
+      const additionalInfo = getAdditionalUserInfo(userCredential);
+      
+      // Prevent new users from signing in directly through SMS
+      if (additionalInfo?.isNewUser) {
+        await userCredential.user.delete();
+        await auth.signOut();
+        throw new Error("This phone number is not registered. Please sign up using email first, or log in with your registered method.");
+      }
+
       setMessage("Access granted! Entering secure workspace...");
       setTimeout(() => {
         if (onClose) onClose();
@@ -313,14 +319,9 @@ const Login: React.FC<LoginProps> = ({ onClose }) => {
       const user = auth.currentUser;
       if (!user) throw new Error("No authenticated user session found.");
 
-      const session = await multiFactor(user).getSession();
-      const phoneInfoOptions = {
-        phoneNumber: formatted,
-        session: session
-      };
-      const phoneAuthProvider = new PhoneAuthProvider(auth);
-      const verificationId = await phoneAuthProvider.verifyPhoneNumber(phoneInfoOptions, verifier);
-      setMfaVerificationId(verificationId);
+      const confirmationResult = await linkWithPhoneNumber(user, formatted, verifier);
+      setLinkConfirmationResult(confirmationResult);
+      setMfaVerificationId("sent"); // used just to switch the UI state
       setMessage("Verification code sent to your phone number!");
     } catch (err: any) {
       console.error("SMS Enrollment Error:", err);
@@ -335,21 +336,11 @@ const Login: React.FC<LoginProps> = ({ onClose }) => {
     setError(null);
     setMessage(null);
     try {
-      const cred = PhoneAuthProvider.credential(mfaVerificationId, mfaVerificationCode);
-      const multiFactorAssertion = PhoneMultiFactorGenerator.assertion(cred);
-      const user = auth.currentUser;
-      if (!user) throw new Error("No authenticated user session.");
-
-      // Link phone provider to existing email/password user so they can login directly via SMS without creating duplicates
-      try {
-        await linkWithCredential(user, cred);
-        console.log("Phone credential linked successfully.");
-      } catch (linkErr: any) {
-        console.warn("Phone linking warning (it might be already linked or in use):", linkErr);
-      }
-
-      await multiFactor(user).enroll(multiFactorAssertion, "Primary Phone");
-      setMessage("MFA Activated! Your profile is now completely secure.");
+      if (!linkConfirmationResult) throw new Error("No active SMS verification session.");
+      
+      await linkConfirmationResult.confirm(mfaVerificationCode);
+      
+      setMessage("Phone Verified! Your profile is now completely secure.");
       setTimeout(() => {
         if (onClose) onClose();
       }, 2000);
@@ -509,19 +500,19 @@ const Login: React.FC<LoginProps> = ({ onClose }) => {
           </div>
         )}
 
-        {/* SCREEN 2: Multi-Factor Authentication Enrollment (At Sign-up onboarding) */}
+        {/* SCREEN 2: Phone Verification (At Sign-up onboarding) */}
         {mfaEnrollmentRequired && (
           <div className="space-y-6 animate-in fade-in duration-500">
             <div className="p-4 bg-zinc-950 border border-zinc-800/80 rounded-2xl text-center">
               <p className="text-zinc-400 text-xs leading-relaxed">
-                Enhance your security. Verify your mobile number to complete authentication enrollment.
+                Link your phone. Verify your mobile number to complete account registration.
               </p>
             </div>
 
             {mfaVerificationId === '' ? (
               <div className="space-y-4">
                 <div className="space-y-2">
-                  <label className="text-[9px] font-black text-zinc-600 uppercase tracking-widest px-1">Mobile Phone Number (E.164 Format)</label>
+                  <label className="text-[9px] font-black text-zinc-600 uppercase tracking-widest px-1">Mobile Phone Number</label>
                   <input 
                     type="tel" 
                     required
@@ -539,7 +530,7 @@ const Login: React.FC<LoginProps> = ({ onClose }) => {
                     disabled={loading || !mfaPhoneNumber}
                     className="flex-1 py-4 bg-yellow-500 text-zinc-950 rounded-[20px] text-[9px] font-black uppercase tracking-[0.2em] hover:bg-yellow-400 transition-all font-sans"
                   >
-                    {loading ? 'Sending...' : 'Configure Device'}
+                    {loading ? 'Sending...' : 'Send OTP'}
                   </button>
                   <button
                     onClick={async () => {
@@ -703,24 +694,6 @@ const Login: React.FC<LoginProps> = ({ onClose }) => {
             ) : mode === 'signup' ? (
               /* ==================== SIGN UP SCREEN_ ==================== */
               <div className="animate-in fade-in duration-500">
-                {/* Sign-Up Verification Method Selector */}
-                <div className="flex bg-zinc-950 p-1.5 rounded-[24px] mb-6 border border-zinc-800/50">
-                  <button 
-                    type="button"
-                    onClick={() => { setSignupVerifyMethod('email'); setError(null); setMessage(null); }}
-                    className={`flex-1 py-3 text-[9px] font-black uppercase tracking-widest rounded-[18px] transition-all ${signupVerifyMethod === 'email' ? 'bg-zinc-800 text-yellow-500 shadow-lg' : 'text-zinc-500 hover:text-zinc-400'}`}
-                  >
-                    Verify via Email
-                  </button>
-                  <button 
-                    type="button"
-                    onClick={() => { setSignupVerifyMethod('phone'); setError(null); setMessage(null); }}
-                    className={`flex-1 py-3 text-[9px] font-black uppercase tracking-widest rounded-[18px] transition-all ${signupVerifyMethod === 'phone' ? 'bg-zinc-800 text-yellow-500 shadow-lg' : 'text-zinc-500 hover:text-zinc-400'}`}
-                  >
-                    Verify via Phone
-                  </button>
-                </div>
-
                 <form onSubmit={handleSignupSubmit} className="space-y-4 mb-6">
                   <div className="space-y-2">
                     <label className="text-[9px] font-black text-zinc-600 uppercase tracking-widest px-1">Full Name</label>
@@ -746,22 +719,20 @@ const Login: React.FC<LoginProps> = ({ onClose }) => {
                     />
                   </div>
 
-                  {signupVerifyMethod === 'phone' && (
-                    <div className="space-y-2 animate-in slide-in-from-top-2 duration-300">
-                      <label className="text-[9px] font-black text-zinc-600 uppercase tracking-widest px-1">Mobile number (E.164 Format)</label>
-                      <input 
-                        type="tel" 
-                        required
-                        placeholder="e.g. +15551234567"
-                        value={phoneNumber}
-                        onChange={(e) => setPhoneNumber(e.target.value)}
-                        className="w-full bg-zinc-950 border border-zinc-800 rounded-2xl px-5 py-4 text-sm text-zinc-200 focus:outline-none focus:border-yellow-500/50 transition-all placeholder:text-zinc-800 font-mono"
-                      />
-                      <span className="text-[8px] text-zinc-500 font-medium px-1 leading-normal block">
-                        Must include country code (e.g., +1 for USA, +91 for India).
-                      </span>
-                    </div>
-                  )}
+                  <div className="space-y-2 animate-in slide-in-from-top-2 duration-300">
+                    <label className="text-[9px] font-black text-zinc-600 uppercase tracking-widest px-1">Mobile number</label>
+                    <input 
+                      type="tel" 
+                      required
+                      placeholder="e.g. +15551234567"
+                      value={phoneNumber}
+                      onChange={(e) => setPhoneNumber(e.target.value)}
+                      className="w-full bg-zinc-950 border border-zinc-800 rounded-2xl px-5 py-4 text-sm text-zinc-200 focus:outline-none focus:border-yellow-500/50 transition-all placeholder:text-zinc-800 font-mono"
+                    />
+                    <span className="text-[8px] text-zinc-500 font-medium px-1 leading-normal block">
+                      Must include country code (e.g., +1 for USA, +91 for India).
+                    </span>
+                  </div>
 
                   <div className="space-y-2">
                     <label className="text-[9px] font-black text-zinc-600 uppercase tracking-widest px-1">Password</label>

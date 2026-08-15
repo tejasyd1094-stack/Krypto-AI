@@ -1,50 +1,76 @@
-import React, { useState } from 'react';
-import { CheckCircle2, Users, Award, ShieldCheck, Sparkles, Send } from 'lucide-react';
+import React, { useEffect, useRef, useState } from 'react';
+import { Calendar, Clock, Video, Users, Award, ShieldCheck, Sparkles, ExternalLink } from 'lucide-react';
 
 interface ConsultationBookingProps {
   className?: string;
 }
 
+const GOOGLE_CALENDAR_URL = 'https://calendar.google.com/calendar/appointments/schedules/AcZssZ2EwI-Bc4z-u9ogjxlBLZrEcpQ7C6h8B4N-VgyGWIF1Uipks3kD86dGbUsS0wuvvaDK1etaE8NE?gv=true';
+
 export default function ConsultationBooking({ className = "" }: ConsultationBookingProps) {
-  const [name, setName] = useState('');
-  const [email, setEmail] = useState('');
-  const [org, setOrg] = useState('');
-  const [message, setMessage] = useState('');
-  const [isBooked, setIsBooked] = useState(false);
-  const [isLoading, setIsLoading] = useState(false);
+  const calendarButtonRef = useRef<HTMLDivElement>(null);
+  const isInitializedRef = useRef(false);
 
-  const [ticketId, setTicketId] = useState('');
-  const [mailtoUrl, setMailtoUrl] = useState('');
+  useEffect(() => {
+    const initCalendarButton = () => {
+      if (typeof window !== 'undefined' && (window as any).calendar?.schedulingButton && calendarButtonRef.current) {
+        if (isInitializedRef.current) return;
+        
+        calendarButtonRef.current.innerHTML = '';
+        try {
+          (window as any).calendar.schedulingButton.load({
+            url: GOOGLE_CALENDAR_URL,
+            color: '#F6BF26',
+            label: 'Book an appointment',
+            target: calendarButtonRef.current,
+          });
+          isInitializedRef.current = true;
+        } catch (err) {
+          console.warn('Google Calendar schedulingButton load error:', err);
+        }
+      }
+    };
 
-  const handleBookingSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setIsLoading(true);
+    // If script is already loaded
+    if ((window as any).calendar?.schedulingButton) {
+      initCalendarButton();
+    } else {
+      // Load CSS
+      const cssHref = 'https://calendar.google.com/calendar/scheduling-button-script.css';
+      if (!document.querySelector(`link[href="${cssHref}"]`)) {
+        const link = document.createElement('link');
+        link.href = cssHref;
+        link.rel = 'stylesheet';
+        document.head.appendChild(link);
+      }
 
-    try {
-      const response = await fetch('/api/support', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          type: 'consultation',
-          name,
-          email,
-          org,
-          message
-        })
-      });
+      // Load Script
+      const scriptSrc = 'https://calendar.google.com/calendar/scheduling-button-script.js';
+      let script = document.querySelector(`script[src="${scriptSrc}"]`) as HTMLScriptElement;
+      if (!script) {
+        script = document.createElement('script');
+        script.src = scriptSrc;
+        script.async = true;
+        document.body.appendChild(script);
+      }
 
-      const data = await response.json();
-      if (data.ticketId) setTicketId(data.ticketId);
-      if (data.mailtoUrl) setMailtoUrl(data.mailtoUrl);
-      setIsBooked(true);
-    } catch (err) {
-      console.error("Consultation submission error:", err);
-      setTicketId('TK-' + Math.random().toString(36).substring(2, 8).toUpperCase());
-      setIsBooked(true);
-    } finally {
-      setIsLoading(false);
+      const checkInterval = setInterval(() => {
+        if ((window as any).calendar?.schedulingButton) {
+          initCalendarButton();
+          clearInterval(checkInterval);
+        }
+      }, 150);
+
+      const timeout = setTimeout(() => {
+        clearInterval(checkInterval);
+      }, 6000);
+
+      return () => {
+        clearInterval(checkInterval);
+        clearTimeout(timeout);
+      };
     }
-  };
+  }, []);
 
   return (
     <div id="expert-consultation" className={`relative bg-zinc-950 border border-zinc-900 rounded-[48px] p-8 sm:p-12 lg:p-16 overflow-hidden shadow-2xl ${className}`}>
@@ -52,217 +78,125 @@ export default function ConsultationBooking({ className = "" }: ConsultationBook
       <div className="absolute top-0 right-0 w-96 h-96 bg-yellow-500/5 blur-[120px] pointer-events-none" />
       <div className="absolute bottom-0 left-0 w-96 h-96 bg-yellow-600/5 blur-[120px] pointer-events-none" />
 
-      {!isBooked ? (
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 items-center relative z-10">
-          {/* Information Column */}
-          <div className="lg:col-span-5 space-y-8">
-            <div className="space-y-4">
-              <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full border border-yellow-500/20 bg-yellow-500/10 text-yellow-500 text-[9px] uppercase font-black tracking-widest">
-                <Sparkles className="w-3 h-3" />
-                <span>100% Free Trial</span>
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 items-center relative z-10">
+        {/* Information Column */}
+        <div className="lg:col-span-6 space-y-8">
+          <div className="space-y-4">
+            <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full border border-yellow-500/20 bg-yellow-500/10 text-yellow-500 text-[9px] uppercase font-black tracking-widest">
+              <Sparkles className="w-3 h-3" />
+              <span>100% Free Trial</span>
+            </div>
+            <h3 className="text-3xl sm:text-4xl lg:text-5xl font-black text-white uppercase tracking-tighter leading-[0.95]">
+              Book An <span className="gold-text-gradient">Expert Consultation</span>
+            </h3>
+            <p className="text-zinc-500 text-sm font-medium uppercase tracking-widest">
+              HUMAN-IN-THE-LOOP COACHING & PREMIUM RECRUITMENT ASSISTANCE
+            </p>
+          </div>
+
+          <p className="text-zinc-400 text-sm leading-relaxed font-medium">
+            Ready to scale your organization or supercharge your professional career? Partner directly with our elite recruitment architects. Get customized consultation, resume deep-dives, or strategic team hiring workflows.
+          </p>
+
+          {/* Premium details */}
+          <div className="space-y-4 pt-4 border-t border-zinc-900">
+            <div className="flex items-start gap-4">
+              <div className="w-10 h-10 bg-yellow-500/10 border border-yellow-500/20 rounded-xl flex items-center justify-center text-yellow-500 flex-shrink-0">
+                <Users className="w-5 h-5" />
               </div>
-              <h3 className="text-3xl sm:text-4xl lg:text-5xl font-black text-white uppercase tracking-tighter leading-[0.95]">
-                Book An <span className="gold-text-gradient">Expert Consultation</span>
-              </h3>
-              <p className="text-zinc-500 text-sm font-medium uppercase tracking-widest">
-                HUMAN-IN-THE-LOOP COACHING & PREMIUM RECRUITMENT ASSISTANCE
+              <div>
+                <h4 className="text-white text-xs font-black uppercase tracking-widest mb-1">People & Culture Veterans</h4>
+                <p className="text-zinc-500 text-xs leading-relaxed">
+                  Our elite consultants are highly experienced professionals who have spent years working inside the People & Culture and HR departments of top-tier global companies.
+                </p>
+              </div>
+            </div>
+
+            <div className="flex items-start gap-4">
+              <div className="w-10 h-10 bg-yellow-500/10 border border-yellow-500/20 rounded-xl flex items-center justify-center text-yellow-500 flex-shrink-0">
+                <Award className="w-5 h-5" />
+              </div>
+              <div>
+                <h4 className="text-white text-xs font-black uppercase tracking-widest mb-1">First 15 Mins Free</h4>
+                <p className="text-zinc-500 text-xs leading-relaxed">
+                  Try our premium consultation completely risk-free. The first 15 minutes are 100% free to test our coaching style and alignment methodologies.
+                </p>
+              </div>
+            </div>
+
+            <div className="flex items-start gap-4">
+              <div className="w-10 h-10 bg-yellow-500/10 border border-yellow-500/20 rounded-xl flex items-center justify-center text-yellow-500 flex-shrink-0">
+                <ShieldCheck className="w-5 h-5" />
+              </div>
+              <div>
+                <h4 className="text-white text-xs font-black uppercase tracking-widest mb-1">Enterprise-Grade Match</h4>
+                <p className="text-zinc-500 text-xs leading-relaxed">
+                  Perfect for both founders/hiring managers seeking purple-squirrel candidates and senior candidates seeking strategic executive coaching.
+                </p>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* Google Calendar Interactive Scheduling Column */}
+        <div className="lg:col-span-6 bg-zinc-900/40 border border-zinc-800/80 rounded-[36px] p-8 sm:p-10 relative overflow-hidden shadow-2xl flex flex-col justify-between space-y-8">
+          <div className="absolute top-0 right-0 w-64 h-64 bg-yellow-500/10 blur-[90px] pointer-events-none" />
+          
+          <div className="space-y-6 relative z-10">
+            <div className="flex items-center justify-between">
+              <div className="w-12 h-12 bg-yellow-500/10 border border-yellow-500/30 rounded-2xl flex items-center justify-center text-yellow-500 shadow-lg">
+                <Calendar className="w-6 h-6" />
+              </div>
+              <span className="text-[10px] font-black text-yellow-500 bg-yellow-500/10 border border-yellow-500/20 px-3 py-1 rounded-full uppercase tracking-widest">
+                Live Google Calendar
+              </span>
+            </div>
+
+            <div>
+              <h4 className="text-2xl sm:text-3xl font-black text-white uppercase tracking-tight leading-tight mb-2">
+                Schedule Your Session
+              </h4>
+              <p className="text-zinc-400 text-xs leading-relaxed font-medium">
+                Pick a date and convenient time slot directly on our official Google Calendar appointment scheduler.
               </p>
             </div>
 
-            <p className="text-zinc-400 text-sm leading-relaxed font-medium">
-              Ready to scale your organization or supercharge your professional career? Partner directly with our elite recruitment architects. Get customized consultation, resume deep-dives, or strategic team hiring workflows.
-            </p>
-
-            {/* Premium details */}
-            <div className="space-y-4 pt-4 border-t border-zinc-900">
-              <div className="flex items-start gap-4">
-                <div className="w-10 h-10 bg-yellow-500/10 border border-yellow-500/20 rounded-xl flex items-center justify-center text-yellow-500 flex-shrink-0">
-                  <Users className="w-5 h-5" />
-                </div>
-                <div>
-                  <h4 className="text-white text-xs font-black uppercase tracking-widest mb-1">People & Culture Veterans</h4>
-                  <p className="text-zinc-500 text-xs leading-relaxed">
-                    Our elite consultants are highly experienced professionals who have spent years working inside the People & Culture and HR departments of top-tier global companies.
-                  </p>
-                </div>
+            {/* Session Highlights Card */}
+            <div className="bg-zinc-950/70 border border-zinc-850 rounded-2xl p-5 space-y-3">
+              <div className="flex items-center gap-3 text-xs text-zinc-300">
+                <Clock className="w-4 h-4 text-yellow-500 flex-shrink-0" />
+                <span><strong className="text-white">Duration:</strong> 15 Minutes (1-on-1 Strategy Session)</span>
               </div>
-
-              <div className="flex items-start gap-4">
-                <div className="w-10 h-10 bg-yellow-500/10 border border-yellow-500/20 rounded-xl flex items-center justify-center text-yellow-500 flex-shrink-0">
-                  <Award className="w-5 h-5" />
-                </div>
-                <div>
-                  <h4 className="text-white text-xs font-black uppercase tracking-widest mb-1">First 15 Mins Free</h4>
-                  <p className="text-zinc-500 text-xs leading-relaxed">
-                    Try our premium consultation completely risk-free. The first 15 minutes are 100% free to test our coaching style and alignment methodologies.
-                  </p>
-                </div>
+              <div className="flex items-center gap-3 text-xs text-zinc-300">
+                <Video className="w-4 h-4 text-yellow-500 flex-shrink-0" />
+                <span><strong className="text-white">Format:</strong> Google Meet (Video Call Link Included)</span>
               </div>
-
-              <div className="flex items-start gap-4">
-                <div className="w-10 h-10 bg-yellow-500/10 border border-yellow-500/20 rounded-xl flex items-center justify-center text-yellow-500 flex-shrink-0">
-                  <ShieldCheck className="w-5 h-5" />
-                </div>
-                <div>
-                  <h4 className="text-white text-xs font-black uppercase tracking-widest mb-1">Enterprise-Grade Match</h4>
-                  <p className="text-zinc-500 text-xs leading-relaxed">
-                    Perfect for both founders/hiring managers seeking purple-squirrel candidates and senior candidates seeking strategic executive coaching.
-                  </p>
-                </div>
+              <div className="flex items-center gap-3 text-xs text-zinc-300">
+                <Award className="w-4 h-4 text-yellow-500 flex-shrink-0" />
+                <span><strong className="text-white">Specialist:</strong> Neal (People & Culture Specialist)</span>
+              </div>
+              <div className="flex items-center gap-3 text-xs text-zinc-300">
+                <Sparkles className="w-4 h-4 text-yellow-500 flex-shrink-0" />
+                <span><strong className="text-white">Cost:</strong> 100% Free (Zero Commitment)</span>
               </div>
             </div>
           </div>
 
-          {/* Interactive Booking Widget Column */}
-          <div className="lg:col-span-7 bg-zinc-900/30 border border-zinc-900 rounded-[32px] p-8 sm:p-10 relative overflow-hidden">
-            <div className="absolute top-0 left-0 w-64 h-64 bg-yellow-500/5 blur-[80px] pointer-events-none" />
-            
-            <form onSubmit={handleBookingSubmit} className="space-y-6 relative z-10">
-              
-              {/* Step 1: Fill Details */}
-              <div className="space-y-4">
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                  <div className="space-y-2">
-                    <label className="text-[9px] uppercase font-black tracking-widest text-zinc-500">Your Full Name</label>
-                    <input
-                      type="text"
-                      required
-                      value={name}
-                      onChange={(e) => setName(e.target.value)}
-                      className="w-full bg-zinc-950 border border-zinc-850 rounded-xl px-4 py-3 text-white text-xs focus:outline-none focus:border-yellow-500/50 transition-all placeholder:text-zinc-600 font-medium"
-                      placeholder="Jane Doe"
-                    />
-                  </div>
-                  <div className="space-y-2">
-                    <label className="text-[9px] uppercase font-black tracking-widest text-zinc-500">Your Email Address</label>
-                    <input
-                      type="email"
-                      required
-                      value={email}
-                      onChange={(e) => setEmail(e.target.value)}
-                      className="w-full bg-zinc-950 border border-zinc-850 rounded-xl px-4 py-3 text-white text-xs focus:outline-none focus:border-yellow-500/50 transition-all placeholder:text-zinc-600 font-medium"
-                      placeholder="jane@company.com"
-                    />
-                  </div>
-                </div>
+          {/* Embedded Google Calendar Button Container */}
+          <div className="relative z-10 space-y-4 pt-2">
+            {/* Google Calendar embedded button will be injected into this container */}
+            <div 
+              ref={calendarButtonRef} 
+              id="google-calendar-schedule-target" 
+              className="w-full flex items-center justify-center min-h-[58px]"
+            />
 
-                <div className="space-y-2">
-                  <label className="text-[9px] uppercase font-black tracking-widest text-zinc-500">Company / Target Role</label>
-                  <input
-                    type="text"
-                    required
-                    value={org}
-                    onChange={(e) => setOrg(e.target.value)}
-                    className="w-full bg-zinc-950 border border-zinc-850 rounded-xl px-4 py-3 text-white text-xs focus:outline-none focus:border-yellow-500/50 transition-all placeholder:text-zinc-600 font-medium"
-                    placeholder="Acme Corp / Senior Tech Lead"
-                  />
-                </div>
-
-                <div className="space-y-2">
-                  <label className="text-[9px] uppercase font-black tracking-widest text-zinc-500">Briefly state your consultation goals</label>
-                  <textarea
-                    rows={4}
-                    value={message}
-                    onChange={(e) => setMessage(e.target.value)}
-                    className="w-full bg-zinc-950 border border-zinc-850 rounded-xl px-4 py-3 text-white text-xs focus:outline-none focus:border-yellow-500/50 transition-all placeholder:text-zinc-600 resize-none font-medium"
-                    placeholder="E.g., I want human-in-the-loop coaching for mock interview support or organizational headhunting help..."
-                  />
-                </div>
-              </div>
-
-              {/* Submit button - Supercharged Big, Professional & Impactful */}
-              <button
-                type="submit"
-                disabled={isLoading}
-                className="w-full py-5 sm:py-6 bg-yellow-500 hover:bg-yellow-400 text-zinc-950 rounded-2xl font-black text-xs sm:text-sm uppercase tracking-widest hover:scale-[1.01] active:scale-[0.99] transition-all shadow-xl border-b-4 border-yellow-700 flex items-center justify-center gap-3 disabled:opacity-50 cursor-pointer"
-              >
-                {isLoading ? (
-                  <span className="flex items-center gap-2">
-                    <svg className="animate-spin h-5 w-5 text-zinc-950" fill="none" viewBox="0 0 24 24">
-                      <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
-                      <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
-                    </svg>
-                    <span>Submitting Request...</span>
-                  </span>
-                ) : (
-                  <>
-                    <span>Book Free 15-Min Strategy Session</span>
-                    <Send className="w-4 h-4" strokeWidth={3} />
-                  </>
-                )}
-              </button>
-            </form>
-          </div>
-        </div>
-      ) : (
-        <div className="max-w-xl mx-auto text-center py-12 space-y-8 relative z-10 animate-in zoom-in-95 duration-500">
-          <div className="w-20 h-20 bg-yellow-500/20 border border-yellow-500 text-yellow-500 rounded-full flex items-center justify-center mx-auto shadow-2xl animate-pulse">
-            <CheckCircle2 className="w-10 h-10" />
-          </div>
-          
-          <div className="space-y-4">
-            <h3 className="text-4xl font-black text-white uppercase tracking-tighter leading-none">
-              Request Submitted!
-            </h3>
-            {ticketId && (
-              <div className="inline-block px-4 py-1.5 bg-yellow-500/10 border border-yellow-500/30 rounded-full text-yellow-500 font-mono text-xs font-black">
-                Ticket ID: {ticketId}
-              </div>
-            )}
-            <p className="text-yellow-500 text-sm font-black uppercase tracking-widest">
-              OUR HR EXPERTS WILL CONTACT YOU SHORTLY TO CHOOSE A DATE & TIME
+            <p className="text-[10px] text-center text-zinc-500 font-medium tracking-wide pt-2">
+              Instant automated confirmation with Google Meet invite will be sent directly to your email.
             </p>
-            <div className="bg-zinc-900/50 border border-zinc-900 rounded-3xl p-6 text-left space-y-3 mt-6">
-              <div className="flex justify-between text-xs font-bold border-b border-zinc-800 pb-2">
-                <span className="text-zinc-500 uppercase">Target Email:</span>
-                <span className="text-white uppercase font-black">support@kryptonpath.co</span>
-              </div>
-              <div className="flex justify-between text-xs font-bold border-b border-zinc-800 pb-2">
-                <span className="text-zinc-500 uppercase">Consultant Name:</span>
-                <span className="text-white uppercase font-black">Neal (People & Culture Specialist)</span>
-              </div>
-              <div className="flex justify-between text-xs font-bold border-b border-zinc-800 pb-2">
-                <span className="text-zinc-500 uppercase">Status:</span>
-                <span className="text-yellow-500 font-bold uppercase">Contacting within 24 Hours</span>
-              </div>
-              <div className="flex justify-between text-xs font-bold pt-1">
-                <span className="text-zinc-500 uppercase">Rate:</span>
-                <span className="text-yellow-500 font-black uppercase">100% Free (First 15 mins)</span>
-              </div>
-            </div>
-          </div>
-
-          <p className="text-zinc-500 text-xs leading-relaxed max-w-sm mx-auto">
-            A confirmation email and request ticket have been routed to <span className="text-zinc-300 font-bold">support@kryptonpath.co</span> (and copy sent to <span className="text-zinc-300 font-bold">{email}</span>).
-          </p>
-
-          <div className="flex flex-col sm:flex-row items-center justify-center gap-3 pt-2">
-            {mailtoUrl && (
-              <a
-                href={mailtoUrl}
-                className="px-6 py-3 bg-yellow-500 hover:bg-yellow-400 text-zinc-950 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all"
-              >
-                Open Email Client Backup
-              </a>
-            )}
-            <button
-              type="button"
-              onClick={() => {
-                setIsBooked(false);
-                setName('');
-                setEmail('');
-                setOrg('');
-                setMessage('');
-                setTicketId('');
-                setMailtoUrl('');
-              }}
-              className="px-6 py-3 bg-zinc-900 border border-zinc-800 text-zinc-400 hover:text-white rounded-xl text-[10px] font-black uppercase tracking-widest transition-all"
-            >
-              Submit Another Request
-            </button>
           </div>
         </div>
-      )}
+      </div>
     </div>
   );
 }

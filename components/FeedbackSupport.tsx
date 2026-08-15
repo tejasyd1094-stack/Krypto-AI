@@ -155,15 +155,6 @@ export default function FeedbackSupport({ onBack }: FeedbackSupportProps) {
               </div>
 
               <div className="pt-2 flex flex-col sm:flex-row items-center justify-center gap-3">
-                {mailtoUrl && (
-                  <a
-                    href={mailtoUrl}
-                    className="w-full sm:w-auto px-5 py-3 bg-yellow-500 hover:bg-yellow-400 text-zinc-950 font-black rounded-xl text-[10px] uppercase tracking-widest transition-all flex items-center justify-center gap-2"
-                  >
-                    <Mail className="w-3.5 h-3.5" />
-                    Open Email Client Backup
-                  </a>
-                )}
                 <button 
                   onClick={handleReset}
                   className="w-full sm:w-auto px-5 py-3 bg-zinc-900 hover:bg-zinc-850 border border-zinc-800 text-zinc-300 hover:text-white rounded-xl text-[10px] font-black uppercase tracking-widest transition-all cursor-pointer"
