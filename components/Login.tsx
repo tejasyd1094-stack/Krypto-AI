@@ -76,20 +76,15 @@ interface LoginProps {
 const Login: React.FC<LoginProps> = ({ onClose }) => {
   // Default mode set to 'signup'
   const [mode, setMode] = useState<AuthMode>('signup');
-  const [signinMethod, setSigninMethod] = useState<'password' | 'sms'>('password');
 
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [username, setUsername] = useState('');
-  const [phoneNumber, setPhoneNumber] = useState(''); // For both direct sms sign-in and signup with phone verification
+  const [phoneNumber, setPhoneNumber] = useState(''); // Used for signup phone verification
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [message, setMessage] = useState<string | null>(null);
   const [registeredEmail, setRegisteredEmail] = useState<string | null>(null);
-
-  // Phone Sign-In Confirmation Result
-  const [signInConfirmationResult, setSignInConfirmationResult] = useState<any>(null);
-  const [signInOtp, setSignInOtp] = useState('');
 
   // SMS MFA Challenge Verification State (Login-time)
   const [mfaVerificationRequired, setMfaVerificationRequired] = useState(false);
@@ -239,71 +234,6 @@ const Login: React.FC<LoginProps> = ({ onClose }) => {
     }
   };
 
-  // 3. Direct SMS Sign-In (OTP Send & OTP Confirm)
-  const handleSendSmsOtp = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setLoading(true);
-    setError(null);
-    setMessage(null);
-
-    const { formatted, isValid } = formatToE164(phoneNumber);
-    if (!isValid) {
-      setError("Please specify a valid mobile phone number in international E.164 format (e.g., +15551234567 or +919876543210).");
-      setLoading(false);
-      return;
-    }
-
-    try {
-      const verifier = initRecaptcha();
-      const confirmation = await signInWithPhoneNumber(auth, formatted, verifier);
-      setSignInConfirmationResult(confirmation);
-      setMessage("SMS verification OTP sent! Please verify your device below.");
-    } catch (err: any) {
-      console.error("SMS Sign In Error:", err);
-      setError(`SMS_SEND_FAILED: ${getCleanErrorMessage(err)}`);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const handleVerifySmsOtp = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setLoading(true);
-    setError(null);
-    setMessage(null);
-
-    if (!signInOtp) {
-      setError("Please specify the SMS verification code received.");
-      setLoading(false);
-      return;
-    }
-
-    try {
-      if (!signInConfirmationResult) {
-        throw new Error("No active SMS verification session found.");
-      }
-      const userCredential = await signInConfirmationResult.confirm(signInOtp);
-      const additionalInfo = getAdditionalUserInfo(userCredential);
-      
-      // Prevent new users from signing in directly through SMS
-      if (additionalInfo?.isNewUser) {
-        await userCredential.user.delete();
-        await auth.signOut();
-        throw new Error("This phone number is not registered. Please sign up using email first, or log in with your registered method.");
-      }
-
-      setMessage("Access granted! Entering secure workspace...");
-      setTimeout(() => {
-        if (onClose) onClose();
-      }, 1000);
-    } catch (err: any) {
-      console.error("SMS Verify Error:", err);
-      setError(`SMS_VERIFICATION_FAILED: ${getCleanErrorMessage(err)}`);
-    } finally {
-      setLoading(false);
-    }
-  };
-
   // MFA Enrollment helpers (Signup phone validation path)
   const handleSendEnrollmentSms = async () => {
     setLoading(true);
@@ -400,7 +330,6 @@ const Login: React.FC<LoginProps> = ({ onClose }) => {
   const toggleAuthMode = () => {
     setError(null);
     setMessage(null);
-    setSignInConfirmationResult(null);
     setRegisteredEmail(null);
     setMode(prev => prev === 'signup' ? 'signin' : 'signup');
   };
@@ -779,26 +708,7 @@ const Login: React.FC<LoginProps> = ({ onClose }) => {
             ) : (
               /* ==================== SIGN IN SCREEN_ ==================== */
               <div className="animate-in fade-in duration-500">
-                {/* Sign-In Selector (Quick Password vs SMS OTP verification) */}
-                <div className="flex bg-zinc-950 p-1.5 rounded-[24px] mb-6 border border-zinc-800/50">
-                  <button 
-                    type="button"
-                    onClick={() => { setSigninMethod('password'); setError(null); setMessage(null); }}
-                    className={`flex-1 py-3 text-[9px] font-black uppercase tracking-widest rounded-[18px] transition-all ${signinMethod === 'password' ? 'bg-zinc-800 text-yellow-500 shadow-lg' : 'text-zinc-500 hover:text-zinc-400'}`}
-                  >
-                    Quick Password
-                  </button>
-                  <button 
-                    type="button"
-                    onClick={() => { setSigninMethod('sms'); setError(null); setMessage(null); }}
-                    className={`flex-1 py-3 text-[9px] font-black uppercase tracking-widest rounded-[18px] transition-all ${signinMethod === 'sms' ? 'bg-zinc-800 text-yellow-500 shadow-lg' : 'text-zinc-500 hover:text-zinc-400'}`}
-                  >
-                    SMS OTP
-                  </button>
-                </div>
-
-                {signinMethod === 'password' ? (
-                  /* PASSWORD SIGN-IN FORM */
+                  {/* PASSWORD SIGN-IN FORM */}
                   <form onSubmit={handlePasswordSigninSubmit} className="space-y-4 mb-6">
                     <div className="space-y-2">
                       <label className="text-[9px] font-black text-zinc-600 uppercase tracking-widest px-1">Email Address</label>
@@ -857,84 +767,6 @@ const Login: React.FC<LoginProps> = ({ onClose }) => {
                       )}
                     </button>
                   </form>
-                ) : (
-                  /* SMS DIRECT PASSWORDLESS SIGN-IN FORM */
-                  <div className="space-y-4 mb-6">
-                    {signInConfirmationResult === null ? (
-                      <form onSubmit={handleSendSmsOtp} className="space-y-4">
-                        <div className="space-y-2">
-                          <label className="text-[9px] font-black text-zinc-600 uppercase tracking-widest px-1">Mobile Number (E.164 Format)</label>
-                          <input 
-                            type="tel" 
-                            required
-                            placeholder="e.g. +15551234567"
-                            value={phoneNumber}
-                            onChange={(e) => setPhoneNumber(e.target.value)}
-                            className="w-full bg-zinc-950 border border-zinc-800 rounded-2xl px-5 py-4 text-sm text-zinc-200 focus:outline-none focus:border-yellow-500/50 transition-all placeholder:text-zinc-800 font-mono"
-                          />
-                          <span className="text-[8px] text-zinc-500 font-medium px-1 leading-normal block">
-                            Must include country code (e.g., +1 for USA, +91 for India).
-                          </span>
-                        </div>
-
-                        {error && (
-                          <div className="p-4 bg-red-500/10 border border-red-500/20 rounded-2xl animate-in shake">
-                             <p className="text-red-500 text-[9px] font-black uppercase tracking-widest text-center">{error}</p>
-                          </div>
-                        )}
-
-                        {message && <p className="text-green-500 text-xs font-semibold text-center px-2 py-1 leading-relaxed border border-green-500/15 bg-green-500/5 rounded-2xl">{message}</p>}
-
-                        <button
-                          type="submit"
-                          disabled={loading || !phoneNumber}
-                          className="w-full py-5 bg-yellow-500 text-zinc-950 rounded-[24px] text-[10px] font-black uppercase tracking-[0.3em] hover:bg-yellow-400 transition-all shadow-xl active:scale-95 disabled:opacity-50 border-b-4 border-yellow-700"
-                        >
-                          {loading ? 'Sending OTP...' : 'Send SMS Sign-In Code'}
-                        </button>
-                      </form>
-                    ) : (
-                      <form onSubmit={handleVerifySmsOtp} className="space-y-4">
-                        <div className="space-y-2">
-                          <label className="text-[9px] font-black text-zinc-600 uppercase tracking-widest px-1">SMS verification Code</label>
-                          <input 
-                            type="text" 
-                            required
-                            placeholder="e.g. 123456"
-                            value={signInOtp}
-                            onChange={(e) => setSignInOtp(e.target.value)}
-                            className="w-full bg-zinc-950 border border-zinc-800 rounded-2xl px-5 py-4 text-center font-mono text-lg text-yellow-500 tracking-[0.5em] focus:outline-none focus:border-yellow-500/50 transition-all placeholder:text-zinc-800"
-                          />
-                        </div>
-
-                        {error && (
-                          <div className="p-4 bg-red-500/10 border border-red-500/20 rounded-2xl animate-in shake">
-                             <p className="text-red-500 text-[9px] font-black uppercase tracking-widest text-center">{error}</p>
-                          </div>
-                        )}
-
-                        {message && <p className="text-green-500 text-xs font-semibold text-center px-2 py-1 leading-relaxed border border-green-500/15 bg-green-500/5 rounded-2xl">{message}</p>}
-
-                        <div className="flex gap-3">
-                          <button
-                            type="submit"
-                            disabled={loading || !signInOtp}
-                            className="flex-1 py-5 bg-yellow-500 text-zinc-950 rounded-[24px] text-[10px] font-black uppercase tracking-[0.3em] hover:bg-yellow-400 transition-all shadow-xl active:scale-95 disabled:opacity-50 border-b-4 border-yellow-700"
-                          >
-                            {loading ? 'Verifying...' : 'Verify OTP'}
-                          </button>
-                          <button
-                            type="button"
-                            onClick={() => { setSignInConfirmationResult(null); setError(null); setMessage(null); }}
-                            className="flex-1 py-5 bg-transparent border border-zinc-800 text-zinc-500 rounded-[24px] text-[10px] font-bold uppercase tracking-[0.2em] hover:text-zinc-300 transition-all"
-                          >
-                            Change Number
-                          </button>
-                        </div>
-                      </form>
-                    )}
-                  </div>
-                )}
 
                 <div className="text-center mt-6">
                   <button 
